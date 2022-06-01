@@ -4,12 +4,19 @@ require("@nomiclabs/hardhat-waffle");
  * @type import('hardhat/config').HardhatUserConfig
  */
 module.exports = {
-    solidity: "0.7.3",
-
     defaultNetwork: 'localhost',
     networks: {
         hardhat: {},
         localhost: {},
+    },
+    solidity: {
+        version: "0.8.1",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 1000,
+          },
+        },
     }
 };
 

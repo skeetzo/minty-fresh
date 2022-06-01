@@ -1,6 +1,6 @@
 {
-  "name": "minty",
-  "version": "1.0.0",
+  "name": "minty-fresh",
+  "version": "1.0.1",
   "description": "",
   "main": "src/minty.js",
   "scripts": {
@@ -21,7 +21,7 @@
     "hardhat": "^2.1.1"
   },
   "dependencies": {
-    "@openzeppelin/contracts": "^3.4.1",
+    "@openzeppelin/contracts": "^4.5.0",
     "chalk": "^4.1.0",
     "cids": "^1.1.6",
     "commander": "^7.1.0",
