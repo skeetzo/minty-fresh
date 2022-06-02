@@ -9,4 +9,6 @@
 
 # TODO
 
-- decide how to further implment / interface project with others or if at all
+- implement addon methodology
+-- addons should have code locally in project repos; should call 'minty' command from repo/ base folder; should detect 'minty' file for additional program options 
+-- update minty to check local dir for minty.js file
