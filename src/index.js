@@ -22,7 +22,12 @@ const colorizeOptions = {
 };
 
 async function main() {
-    const program = new Command()
+    const program = new Command();
+
+    program
+      .name('Minty-Fresh')
+      .description('CLI to some JavaScript NFT utilities')
+      .version('1.0.1');
 
     // commands
     program
@@ -65,6 +70,7 @@ async function main() {
 
     await program.parseAsync(process.argv);
 }
+module.exports.main = main;
 
 // ---- command action functions
 

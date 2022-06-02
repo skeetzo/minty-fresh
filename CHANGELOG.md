@@ -9,4 +9,4 @@
 
 # TODO
 
-- debug gasLimit calculations for complex contracts
+- decide how to further implment / interface project with others or if at all

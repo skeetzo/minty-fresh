@@ -12,11 +12,11 @@ contract Minty is ERC721PresetMinterPauserAutoId, ERC721URIStorage {
 
     constructor(string memory tokenName, string memory symbol) ERC721PresetMinterPauserAutoId(tokenName, symbol, "ipfs://") {}
 
-    function mint(address owner) public override {
-        _tokenIds.increment();
-        uint256 id = _tokenIds.current();
-        super._safeMint(owner, id);
-    }
+    // function mint(address owner) public override {
+    //     _tokenIds.increment();
+    //     uint256 id = _tokenIds.current();
+    //     super._safeMint(owner, id);
+    // }
 
     function mintToken(address owner, string memory metadataURI) public returns (uint256) {
         _tokenIds.increment();

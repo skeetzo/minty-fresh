@@ -8,7 +8,6 @@ const uint8ArrayConcat = require('uint8arrays/concat');
 const uint8ArrayToString = require('uint8arrays/to-string');
 const {BigNumber} = require('ethers');
 
-
 const { loadDeploymentInfo } = require('./deploy');
 
 // The getconfig package loads configuration from files located in the the `config` directory.
