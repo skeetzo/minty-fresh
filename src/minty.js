@@ -6,7 +6,7 @@ const ipfsClient = require('ipfs-http-client');
 const all = require('it-all');
 const uint8ArrayConcat = require('uint8arrays/concat');
 const uint8ArrayToString = require('uint8arrays/to-string');
-const {BigNumber} = require('ethers');
+const { BigNumber } = require('ethers');
 
 const { loadDeploymentInfo } = require('./deploy');
 

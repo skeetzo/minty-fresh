@@ -1,8 +1,8 @@
 const fs = require('fs/promises')
-const {F_OK} = require('fs')
+const { F_OK } = require('fs')
 
 const inquirer = require('inquirer')
-const {BigNumber} = require('ethers')
+const { BigNumber } = require('ethers')
 const config = require('getconfig')
 
 // const CONTRACT_NAME = "Minty"
@@ -44,7 +44,6 @@ async function saveDeploymentInfo(info, filename = undefined) {
             return false;
         }
     }
-
     console.log(`Writing deployment info to ${filename}`);
     const content = JSON.stringify(info, null, 2);
     await fs.writeFile(filename, content, {encoding: 'utf-8'});
@@ -77,7 +76,6 @@ function validateDeploymentInfo(deployInfo) {
             throw new Error(`required field "contract.${arg}" not found`);
         }
     }
-
     required('name');
     required('address');
     required('abi');
@@ -106,6 +104,7 @@ async function confirmOverwrite(filename) {
 
 module.exports = {
     deployContract,
+    fileExists,
     loadDeploymentInfo,
     saveDeploymentInfo,
 }

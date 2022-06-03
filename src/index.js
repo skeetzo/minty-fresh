@@ -5,13 +5,13 @@
 
 const fs = require('fs/promises');
 const path = require('path');
-const {Command} = require('commander');
+const { Command } = require('commander');
 const inquirer = require('inquirer');
 const chalk = require('chalk');
 const colorize = require('json-colorizer');
 const config = require('getconfig');
-const {MakeMinty} = require('./minty');
-const {deployContract, saveDeploymentInfo} = require('./deploy');
+const { MakeMinty } = require('./minty');
+const { deployContract, fileExists, saveDeploymentInfo } = require('./deploy');
 
 const colorizeOptions = {
     pretty: true,
@@ -22,45 +22,78 @@ const colorizeOptions = {
 };
 
 async function main() {
-    const program = new Command();
 
-    program
-      .name('Minty-Fresh')
-      .description('CLI to some JavaScript NFT utilities')
-      .version('1.0.1');
+    var program;
+
+    // get .env of current dir so command must be ran at project root to use corresponding addon
+    var exists = await fileExists('./.env');
+    if (exists) {
+        console.debug("minty addon .env found");
+        const dotenv = require('dotenv').config({ path: './.env' });
+        exists = await fileExists(path.resolve(".", dotenv.parsed.MINTY_ADDON));
+        if (exists) {
+            console.debug("minty addon found");
+            program = await require(path.resolve(".", dotenv.parsed.MINTY_ADDON))();
+        }
+        else {
+            console.debug("minty addon does not exist");
+            process.exit(0);
+        }
+    }
+    else
+        console.debug("minty addon .env not found");
+
+    function _commandExists(cmd) {
+        if (isNaN(program.commands.filter(obj => {return obj._name === cmd.toString()})))
+            return true;
+        return false;
+    }
+
+    if (!program) {
+        program = new Command();
+        program
+          .name('Minty Fresh')
+          .description('CLI to some JavaScript NFT utilities')
+          .version('1.0.1');
+      }
 
     // commands
-    program
-        .command('mint <image-path>')
-        .description('create a new NFT from an image file')
-        .option('-n, --name <name>', 'The name of the NFT')
-        .option('-d, --description <desc>', 'A description of the NFT')
-        .option('-o, --owner <address>', 'The ethereum address that should own the NFT.' +
-            'If not provided, defaults to the first signing address.')
-        .action(createNFT);
+    if (!_commandExists("mint"))
+        program
+            .command('mint <image-path>')
+            .description('create a new NFT from an image file')
+            .option('-n, --name <name>', 'The name of the NFT')
+            .option('-d, --description <desc>', 'A description of the NFT')
+            .option('-o, --owner <address>', 'The ethereum address that should own the NFT.' +
+                'If not provided, defaults to the first signing address.')
+            .action(createNFT);
 
-    program.command('show <token-id>')
-        .description('get info about an NFT using its token ID')
-        .option('-c, --creation-info', 'include the creator address and block number the NFT was minted')
-        .action(getNFT);
+    if (!_commandExists("show"))
+        program.command('show <token-id>')
+            .description('get info about an NFT using its token ID')
+            .option('-c, --creation-info', 'include the creator address and block number the NFT was minted')
+            .action(getNFT);
 
+    if (!_commandExists("transfer"))
+        program.command('transfer <token-id> <to-address>')
+            .description('transfer an NFT to a new owner')
+            .action(transferNFT);
 
-    program.command('transfer <token-id> <to-address>')
-        .description('transfer an NFT to a new owner')
-        .action(transferNFT);
+    if (!_commandExists("pin"))
+        program.command('pin <token-id>')
+            .description('"pin" the data for an NFT to a remote IPFS Pinning Service')
+            .action(pinNFTData);
 
-    program.command('pin <token-id>')
-        .description('"pin" the data for an NFT to a remote IPFS Pinning Service')
-        .action(pinNFTData);
+    if (!_commandExists("deploy"))
+        program.command('deploy')
+            .description('deploy an instance of the Minty NFT contract')
+            .option('-o, --output <deploy-file-path>', 'Path to write deployment info to', config.deploymentConfigFile || 'minty-deployment.json')
+            .option('-c, --contract <name>', 'The name of the contract', 'Minty')
+            .option('-n, --name <name>', 'The name of the token', 'Julep')
+            .option('-s, --symbol <symbol>', 'A short symbol for the tokens', 'JLP')
+            .action(deploy);
 
-    program.command('deploy')
-        .description('deploy an instance of the Minty NFT contract')
-        .option('-o, --output <deploy-file-path>', 'Path to write deployment info to', config.deploymentConfigFile || 'minty-deployment.json')
-        .option('-c, --contract <name>', 'The name of the contract', 'Minty')
-        .option('-n, --name <name>', 'The name of the token', 'Julep')
-        .option('-s, --symbol <symbol>', 'A short symbol for the tokens', 'JLP')
-        .action(deploy);
-
+    // console.log(program)
 
     // The hardhat and getconfig modules both expect to be running from the root directory of the project,
     // so we change the current directory to the parent dir of this script file to make things work
@@ -70,7 +103,6 @@ async function main() {
 
     await program.parseAsync(process.argv);
 }
-module.exports.main = main;
 
 // ---- command action functions
 
@@ -170,6 +202,7 @@ function alignOutput(labelValuePairs) {
         console.log(label.padEnd(maxLabelLength+1), value);
     }
 }
+
 
 // ---- main entry point when running as a script
 

@@ -4,11 +4,15 @@
 	- setup
 	- updates to `minty deploy`
 	- added gasLimit calculations to mint process
+	**1.0.2 : 6/2/2022**
+	- implemented addon methodology
+	-- addons should have code locally in project repos; should call 'minty' command from repo/ base folder; should detect 'minty' file via .env for additional program options 
 
 ------------------------------------------------------------------------
 
 # TODO
 
-- implement addon methodology
--- addons should have code locally in project repos; should call 'minty' command from repo/ base folder; should detect 'minty' file for additional program options 
--- update minty to check local dir for minty.js file
+- update minty-deployment.json process for handling multiple contracts
+-- update to handle from addon / plugin project calls
+
+- update addon minty process to use contracts / hardhat found locally in calling project space
