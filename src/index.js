@@ -36,7 +36,7 @@ async function main() {
             program = await require(path.resolve(".", dotenv.parsed.MINTY_ADDON))();
         }
         else {
-            console.debug("minty addon does not exist");
+            console.error("minty addon missing");
             process.exit(0);
         }
     }

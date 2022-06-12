@@ -5,7 +5,7 @@ import "hardhat/console.sol";
 import "@openzeppelin/contracts/token/ERC721/presets/ERC721PresetMinterPauserAutoId.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 
-contract Minty is ERC721PresetMinterPauserAutoId, ERC721URIStorage {
+contract MintyPreset is ERC721PresetMinterPauserAutoId, ERC721URIStorage {
 
     using Counters for Counters.Counter;
     Counters.Counter private _tokenIds;
@@ -48,7 +48,7 @@ contract Minty is ERC721PresetMinterPauserAutoId, ERC721URIStorage {
     }
 
     function tokenURI(uint256 tokenId) public view virtual override(ERC721, ERC721URIStorage) returns (string memory) {
-        super.tokenURI(tokenId);
+        return super.tokenURI(tokenId);
     }
 
 

@@ -28,7 +28,7 @@
     "concurrently": "^6.0.0",
     "dotenv": "^16.0.1",
     "getconfig": "^4.5.0",
-    "go-ipfs": "^0.8.0",
+    "go-ipfs": "^0.13.0",
     "inquirer": "^8.0.0",
     "ipfs-http-client": "^49.0.4",
     "it-all": "^1.0.5",
