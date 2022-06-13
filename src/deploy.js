@@ -35,7 +35,8 @@ function deploymentInfo(hardhat, minty, CONTRACT_NAME = "Minty") {
 
 async function saveDeploymentInfo(info, filename = undefined) {
     if (!filename) {
-        filename = config.deploymentConfigFile || 'minty-deployment.json';
+        // filename = config.deploymentConfigFile || 'minty-deployment.json';
+        filename = `${info.contract.name}-deployment.json`;
     }
     const exists = await fileExists(filename)
     if (exists) {
@@ -50,12 +51,14 @@ async function saveDeploymentInfo(info, filename = undefined) {
     return true;
 }
 
-async function loadDeploymentInfo() {
+async function loadDeploymentInfo(contract) {
     let {deploymentConfigFile} = config
     if (!deploymentConfigFile) {
-        console.log('no deploymentConfigFile field found in minty config. attempting to read from default path "./minty-deployment.json"');
-        deploymentConfigFile = 'minty-deployment.json';
+        // console.log('no deploymentConfigFile field found in minty config. attempting to read from default path "./minty-deployment.json"');
+        deploymentConfigFile = `${contract}-deployment.json`;
     }
+    if (!await fileExists(deploymentConfigFile))
+        throw `Deployment file for ${contract} does not exist!`;
     const content = await fs.readFile(deploymentConfigFile, {encoding: 'utf8'});
     deployInfo = JSON.parse(content);
     try {

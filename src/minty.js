@@ -4,8 +4,8 @@ const path = require('path');
 const CID = require('cids');
 const ipfsClient = require('ipfs-http-client');
 const all = require('it-all');
-const uint8ArrayConcat = require('uint8arrays/concat');
-const uint8ArrayToString = require('uint8arrays/to-string');
+const uint8ArrayConcat = require('uint8arrays/concat').concat;
+const uint8ArrayToString = require('uint8arrays/to-string').toString;
 const { BigNumber } = require('ethers');
 
 const { loadDeploymentInfo } = require('./deploy');
@@ -21,12 +21,14 @@ const ipfsAddOptions = {
   hashAlg: 'sha2-256'
 };
 
+const ERC721URIStorage_QUERY_ERROR = "ERC721URIStorage: URI query for nonexistent token";
+
 /**
  * Construct and asynchronously initialize a new Minty instance.
  * @returns {Promise<Minty>} a new instance of Minty, ready to mint NFTs.
  */
- async function MakeMinty() {
-    const m = new Minty();
+ async function MakeMinty(contract) {
+    const m = new Minty(contract);
     await m.init();
     return m;
 }
@@ -40,7 +42,8 @@ const ipfsAddOptions = {
  * To make one, use the async {@link MakeMinty} function.
  */
 class Minty {
-    constructor() {
+    constructor(_name="Minty") {
+        this.name = _name;
         this.ipfs = null;
         this.contract = null;
         this.deployInfo = null;
@@ -56,7 +59,7 @@ class Minty {
         // The Minty object expects that the contract has already been deployed, with
         // details written to a deployment info file. The default location is `./minty-deployment.json`,
         // in the config.
-        this.deployInfo = await loadDeploymentInfo();
+        this.deployInfo = await loadDeploymentInfo(this.name);
 
         // connect to the smart contract using the address and ABI from the deploy info
         const {abi, address} = this.deployInfo.contract;
@@ -230,10 +233,16 @@ class Minty {
      * metadata URI. Fails if the token does not exist, or if fetching the data fails.
      */
     async getNFTMetadata(tokenId) {
-        const metadataURI = await this.contract.tokenURI(tokenId);
-        const metadata = await this.getIPFSJSON(metadataURI);
+        try {
+            const metadataURI = await this.contract.tokenURI(tokenId);
+            const metadata = await this.getIPFSJSON(metadataURI);
 
-        return {metadata, metadataURI};
+            return {metadata, metadataURI};
+        }
+        catch (err) {
+            if (err.hasOwnProperty("reason") && err.reason === ERC721URIStorage_QUERY_ERROR)
+                throw "Token id does not exist!";
+        }
     }
 
     //////////////////////////////////////////////

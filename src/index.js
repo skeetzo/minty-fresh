@@ -62,6 +62,7 @@ async function main() {
         program
             .command('mint <image-path>')
             .description('create a new NFT from an image file')
+            .option('-c, --contract <name>', 'The name of the contract', 'Minty')
             .option('-n, --name <name>', 'The name of the NFT')
             .option('-d, --description <desc>', 'A description of the NFT')
             .option('-o, --owner <address>', 'The ethereum address that should own the NFT.' +
@@ -71,23 +72,26 @@ async function main() {
     if (!_commandExists("show"))
         program.command('show <token-id>')
             .description('get info about an NFT using its token ID')
+            .option('-c, --contract <name>', 'The name of the contract', 'Minty')
             .option('-c, --creation-info', 'include the creator address and block number the NFT was minted')
             .action(getNFT);
 
     if (!_commandExists("transfer"))
         program.command('transfer <token-id> <to-address>')
             .description('transfer an NFT to a new owner')
+            .option('-c, --contract <name>', 'The name of the contract', 'Minty')
             .action(transferNFT);
 
     if (!_commandExists("pin"))
         program.command('pin <token-id>')
             .description('"pin" the data for an NFT to a remote IPFS Pinning Service')
+            .option('-c, --contract <name>', 'The name of the contract', 'Minty')
             .action(pinNFTData);
 
     if (!_commandExists("deploy"))
         program.command('deploy')
             .description('deploy an instance of the Minty NFT contract')
-            .option('-o, --output <deploy-file-path>', 'Path to write deployment info to', config.deploymentConfigFile || 'minty-deployment.json')
+            // .option('-o, --output <deploy-file-path>', 'Path to write deployment info to', config.deploymentConfigFile || 'minty-deployment.json')
             .option('-c, --contract <name>', 'The name of the contract', 'Minty')
             .option('-n, --name <name>', 'The name of the token', 'Julep')
             .option('-s, --symbol <symbol>', 'A short symbol for the tokens', 'JLP')
@@ -107,7 +111,7 @@ async function main() {
 // ---- command action functions
 
 async function createNFT(imagePath, options) {
-    const minty = await MakeMinty();
+    const minty = await MakeMinty(options.contract);
 
     // prompt for missing details if not provided as cli args
     const answers = await promptForMissing(options, {
@@ -124,6 +128,8 @@ async function createNFT(imagePath, options) {
     console.log('🌿 Minted a new NFT: ');
 
     alignOutput([
+        ['Contract Name:', chalk.green(minty.name)],
+        ['Contract Address:', chalk.yellow(minty.contract.address)],
         ['Token ID:', chalk.green(nft.tokenId)],
         ['Metadata Address:', chalk.blue(nft.metadataURI)],
         ['Metadata Gateway URL:', chalk.blue(nft.metadataGatewayURL)],
@@ -136,10 +142,12 @@ async function createNFT(imagePath, options) {
 
 async function getNFT(tokenId, options) {
     const { creationInfo: fetchCreationInfo } = options;
-    const minty = await MakeMinty();
+    const minty = await MakeMinty(options.contract);
     const nft = await minty.getNFT(tokenId, {fetchCreationInfo});
 
     const output = [
+        ['Contract Name:', chalk.green(minty.name)],
+        ['Contract Address:', chalk.yellow(minty.contract.address)],
         ['Token ID:', chalk.green(nft.tokenId)],
         ['Owner Address:', chalk.yellow(nft.ownerAddress)],
     ];
@@ -157,23 +165,24 @@ async function getNFT(tokenId, options) {
     console.log(colorize(JSON.stringify(nft.metadata), colorizeOptions));
 }
 
-async function transferNFT(tokenId, toAddress) {
-    const minty = await MakeMinty();
+async function transferNFT(tokenId, toAddress, options) {
+    const minty = await MakeMinty(options.contract);
 
     await minty.transferToken(tokenId, toAddress);
     console.log(`🌿 Transferred token ${chalk.green(tokenId)} to ${chalk.yellow(toAddress)}`);
 }
 
-async function pinNFTData(tokenId) {
-    const minty = await MakeMinty();
+async function pinNFTData(tokenId, options) {
+    const minty = await MakeMinty(options.contract);
     const {assetURI, metadataURI} = await minty.pinTokenData(tokenId);
     console.log(`🌿 Pinned all data for token id ${chalk.green(tokenId)}`);
 }
 
 async function deploy(options) {
-    const filename = options.output;
+    // const filename = options.output;
     const info = await deployContract(options.name, options.symbol, options.contract);
-    await saveDeploymentInfo(info, filename);
+    // await saveDeploymentInfo(info, filename);
+    await saveDeploymentInfo(info);
 }
 
 // ---- helpers

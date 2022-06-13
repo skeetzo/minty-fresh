@@ -9,17 +9,15 @@
 	-- addons should have code locally in project repos; should call 'minty' command from repo/ base folder; should detect 'minty' file via .env for additional program options 
 	**1.0.3 : 6/11/2022**
 	- updated go-ipfs --> fixed ipfs error in ./start-local-environment.sh
-
+	**1.0.4 : 6/12/2022**
+	- fix `minty show <token-id>` "TypeError: uint8ArrayConcat is not a function" and then proceeding "TypeError: uint8ArrayToString is not a function" issue
+	- added better error handling for missing token id queries
+	- added additional output to mint & show processes
+	- updated minty-deployment.json process for handling multiple contracts; no longer uses assignment in local config for path
 
 ------------------------------------------------------------------------
 
 # TODO
 
-- fix `minty show <token-id>` uint8array concat bug
-
-- update minty-deployment.json process for handling multiple contracts
--- update to handle from addon / plugin project calls
-
-- update addon minty process to use contracts / hardhat found locally in calling project space
-
-- add template prompts for additional NFT metadata; or add in addons?
+- update addon minty process to use contracts / hardhat found locally in calling project addon space
+- add template prompts for additional NFT metadata to display via show; or add in addons?

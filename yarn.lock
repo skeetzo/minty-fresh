@@ -8428,12 +8428,6 @@ uint8arrays@^3.0.0:
   dependencies:
     multiformats "^9.4.2"
 
-"uint8arrays@https://github.com/achingbrain/uint8arrays":
-  version "3.0.0"
-  resolved "https://github.com/achingbrain/uint8arrays#02a8abb91ca7219db0d80c8a0859944dd95c6b09"
-  dependencies:
-    multiformats "^9.4.2"
-
 ultron@~1.1.0:
   version "1.1.1"
   resolved "https://registry.yarnpkg.com/ultron/-/ultron-1.1.1.tgz#9fe1536a10a664a65266a1e3ccf85fd36302bc9c"
