@@ -2,6 +2,8 @@
 
 echo "Compiling smart contract"
 npx hardhat compile
+
+# ($?) is a return value of previous command
 if [ $? -ne 0 ]; then
   echo "compilation error"
   exit 1

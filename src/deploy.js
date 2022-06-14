@@ -58,7 +58,7 @@ async function loadDeploymentInfo(contract) {
         deploymentConfigFile = `${contract}-deployment.json`;
     }
     if (!await fileExists(deploymentConfigFile))
-        throw `Deployment file for ${contract} does not exist!`;
+        throw `Deployment file for '${contract}' does not exist!`;
     const content = await fs.readFile(deploymentConfigFile, {encoding: 'utf8'});
     deployInfo = JSON.parse(content);
     try {

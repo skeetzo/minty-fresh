@@ -14,10 +14,31 @@
 	- added better error handling for missing token id queries
 	- added additional output to mint & show processes
 	- updated minty-deployment.json process for handling multiple contracts; no longer uses assignment in local config for path
+	**1.0.5 : 6/14/2022**
+	- added beginning work for template prompts for additional NFT metadata to be entered upon creation 
 
 ------------------------------------------------------------------------
 
+- finish implementing template prompts
+- finish implementing json schemas to validate metadata
+
 # TODO
 
-- update addon minty process to use contracts / hardhat found locally in calling project addon space
-- add template prompts for additional NFT metadata to display via show; or add in addons?
+- add method for addons to be able to add prompts to the mint process / detect metadata schemas
+- add a metadata schema validation process
+
+
+- add option for providing contract address instead of contract name
+-- contract address should retrieve contract name from existing deployment on blockchain
+- add 'live' option for allowing transactions on mainnets
+- add method for interacting with wallets
+-- add most of the above to the config
+
+- create process for minty being ran on mainnets and with live wallets
+- add method to connect to ipfs without starting local ipfs daemon
+
+- update minty addon process to use contracts from local project spaces
+
+- add Drizzle front end
+npm install --save @drizzle/store
+

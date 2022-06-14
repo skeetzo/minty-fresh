@@ -3,7 +3,8 @@
 // This file contains the main entry point for the command line `minty` app, and the command line option parsing code.
 // See minty.js for the core functionality.
 
-const fs = require('fs/promises');
+const fs_ = require('fs/promises');
+const fs = require('fs');
 const path = require('path');
 const { Command } = require('commander');
 const inquirer = require('inquirer');
@@ -113,16 +114,100 @@ async function main() {
 async function createNFT(imagePath, options) {
     const minty = await MakeMinty(options.contract);
 
-    // prompt for missing details if not provided as cli args
-    const answers = await promptForMissing(options, {
-        name: {
-            message: 'Enter a name for your new NFT: '
-        },
+    ////////////////////////////////////////////////////////////////////////
 
-        description: {
-            message: 'Enter a description for your new NFT: '
-        }
-    });
+    // get list of template files from available files in /schema
+    const templates = [];
+
+    // TODO
+    // i'm probably going to need to fix the pathing here when called from an addon
+    // and i'll want to update it to also check from the addons local schema dir
+    fs.readdirSync("./schema").forEach(file => {templates.push(file.replace(".json",""))});
+    // prompt for templates
+    const question = {
+        'type': "rawlist",
+        'name': "question",
+        'message': "Select an NFT template:",
+        'default': 0,
+        'choices': templates
+    }
+    const schema = JSON.parse(fs.readFileSync(`./schema/${(await inquirer.prompt(question))["question"]}.json`));
+
+    // create questions from schema
+    const questions = [], attributes = [], properties = [];
+    // if value is not set, prompt to set
+    for (const [key, value] of Object.entries(schema)) {
+        // base properties
+        if (value === "")
+            questions.push({
+                'type': 'input',
+                'name': key,
+                'message': `Enter a(n) ${key} for your new NFT: `
+            });
+        // attributes
+        if (key === "attributes" && Array.isArray(value))
+            for (const attribute of value)
+                if (attribute["value"] === "" && attribute["trait_type"] != "")
+                    attributes.push({
+                        'type': 'input',
+                        'name': attribute["trait_type"],
+                        'message' : `Enter a(n) ${attribute["trait_type"]} attribute for your new NFT: `
+                    });
+        // properties
+        if (key === "properties" && typeof value === "object")
+            for (const [key_, value_] of Object.entries(schema[key]))
+                properties.push({
+                    'type': 'input',
+                    'name': key_,
+                    'message' : `Enter a(n) ${key_} property for your new NFT: `
+                });
+    }
+
+    // prompt for missing details if not provided as cli args
+    const answers, attributeAnswers, propertiesAnswers = await promptForMissing(options, [questions, attributes, properties]);
+    // const answers = await promptForMissing(options, template);
+
+    // TODO
+    // flesh these functions out if necessary to prompt for additional properties and attributes
+    function promptForAdditionalAttributes(existingAnswers) {}
+    function promptForAdditionalProperties(existingAnswers) {}
+    
+    // prompt to add additional properties or attributes
+    const addA = {
+        'type': "confirm",
+        'name': "answer",
+        'message': "Add additional attributes?"
+    }
+    if (await inquirer.prompt(addA)["answer"])
+        attributeAnswers = await promptForAdditionalAttributes(attributeAnswers);
+    
+    const addP = {
+        'type': "confirm",
+        'name': "answer",
+        'message': "Add additional properties?"
+    }
+    if (await inquirer.prompt(addP)["answer"])
+        propertiesAnswers = await promptForAdditionalProperties(propertiesAnswers);
+
+    // TODO
+    // finish testing
+
+    console.log(answers);
+    console.log(attributeAnswers);
+    console.log(propertiesAnswers);
+
+    return;
+
+    ////////////////////////////////////////////////////////////////////////
+
+    // do i want to mint from an image path or any path when general minting? does every nft have an asset?
+    // some nfts might just be metadata? that don't point to any further assets?
+    // some nfts might point to multiple assets
+
+    // TODO
+    // separate creation process amongst multiple NFT types: simple, complex
+
+    ////////////////////////////////////////////////////////////////////////
 
     const nft = await minty.createNFTFromAssetFile(imagePath, answers);
     console.log('🌿 Minted a new NFT: ');
