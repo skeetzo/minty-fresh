@@ -111,160 +111,26 @@ async function main() {
     await program.parseAsync(process.argv);
 }
 
-
-
-
-////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-
-
-async function selectSchema() {
-    const SCHEMA_PATH = "./schema";
-    // get list of template files from available files in available /schema directories
-    const templates = [];
-    let localPath = path.join(__dirname, SCHEMA_PATH), // path local to this script
-        addonPath = path.join(process.env.INIT_CWD, SCHEMA_PATH);// path to where the cwd is
-    console.log(await fileExists(localPath));
-    console.log(await fileExists(addonPath));
-    for (const schemaPath of [...localPath, ...addonPath])
-        fs.readdirSync(schemaPath).forEach(file => {templates.indexOf(file.replace(".json","")) === -1 ? templates.push(file.replace(".json","")) : console.debug(`duplicate template found: ${file.replace(".json","")}`)});
-    // prompt for templates
-    // TODO
-    // figure out a way to make the 'simple.json' option the default
-    const question = {
-        'type': "rawlist",
-        'name': "question",
-        'message': "Select an NFT template:",
-        'default': 0,
-        'choices': templates
-    }
-    return JSON.parse(fs.readFileSync(`${SCHEMA_PATH}/${(await inquirer.prompt(question))["question"]}.json`));
-}
-
-async function promptNFTMetadata(schema, options) {
-    // create questions from schema
-    const questions = [], attributes = [], properties = [];
-    // if value is not set, prompt to set
-    for (const [key, value] of Object.entries(schema)) {
-        // base properties
-        if (value === "")
-            questions.push({
-                'type': 'input',
-                'name': key,
-                'message': `Enter a(n) ${key} for your new NFT: `
-            });
-        // attributes
-        if (key === "attributes" && Array.isArray(value))
-            for (const attribute of value)
-                if (attribute["value"] === "" && attribute["trait_type"] != "")
-                    attributes.push({
-                        'type': 'input',
-                        'name': attribute["trait_type"],
-                        'message' : `Enter a(n) ${attribute["trait_type"]} attribute for your new NFT: `
-                    });
-        // properties
-        if (key === "properties" && typeof value === "object")
-            for (const [key_, value_] of Object.entries(schema[key]))
-                properties.push({
-                    'type': 'input',
-                    'name': key_,
-                    'message' : `Enter a(n) ${key_} property for your new NFT: `
-                });
-    }
-
-    // prompt for missing details if not provided as cli args
-    const answers, attributeAnswers, propertiesAnswers = await promptForMissing(options, [questions, attributes, properties]);
-    // const answers = await promptForMissing(options, template);
-
-    // TODO
-    // flesh these functions out if necessary to prompt for additional properties and attributes
-    function promptForAdditionalAttributes(existingAnswers) {}
-    function promptForAdditionalProperties(existingAnswers) {}
-    
-    // prompt to add additional properties or attributes
-    const addA = {
-        'type': "confirm",
-        'name': "answer",
-        'message': "Add additional attributes?"
-    }
-    if (await inquirer.prompt(addA)["answer"])
-        attributeAnswers = await promptForAdditionalAttributes(attributeAnswers);
-    
-    const addP = {
-        'type': "confirm",
-        'name': "answer",
-        'message': "Add additional properties?"
-    }
-    if (await inquirer.prompt(addP)["answer"])
-        propertiesAnswers = await promptForAdditionalProperties(propertiesAnswers);
-
-    // TODO
-    // finish testing
-
-    console.log(answers);
-    console.log(attributeAnswers);
-    console.log(propertiesAnswers);
-
-    return;
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-
-
-
 // ---- command action functions
 
 async function createNFT(options) {
     const minty = await MakeMinty(options.contract);
 
-
-
-
 ////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-
-
-
-    ////////////////////////////////////////////////////////////////////////
 
     let {schema} = options;
     if (!schema)
         schema = await selectSchema();
+
     const metadata = promptNFTMetadata(schema, options);
 
-    ////////////////////////////////////////////////////////////////////////
-
-    // do i want to mint from an image path or any path when general minting? does every nft have an asset?
-    // some nfts might just be metadata? that don't point to any further assets?
-    // some nfts might point to multiple assets
-
-    // TODO
-    // separate creation process amongst multiple NFT types: simple, complex
-
-    ////////////////////////////////////////////////////////////////////////
-
     let nft;
-    // nft metadata contains an asset (image, video) that is also uploaded and referenced to (as .image)
     if (options.image)
         nft = await minty.createNFTFromAssetFile(imagePath, metadata);
     else
         nft = await minty.createNFT(metadata); // TODO: add this function
 
-
-
-
-
 ////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-
-
 
     console.log('🌿 Minted a new NFT: ');
 
@@ -327,6 +193,106 @@ async function deploy(options) {
 }
 
 // ---- helpers
+
+async function selectSchema() {
+    const SCHEMA_PATH = "./schema";
+    // get list of template files from available files in available /schema directories
+    const templates = [];
+    const localPath = path.join(__dirname, "../", SCHEMA_PATH), // path local to this script
+          addonPath = path.join(process.env.PWD, SCHEMA_PATH);// path to where the cwd is
+    const schemas = [];
+    if (await fileExists(localPath)) schemas.push(localPath);
+    if (addonPath != localPath && await fileExists(addonPath)) schemas.push(addonPath);
+    for (const schemaPath of schemas)
+        fs.readdirSync(schemaPath).forEach(file => {
+            let filename = file.replace(".json","");
+            templates.indexOf(filename) === -1 ? templates.push(filename) : console.debug(`duplicate template found: ${filename}`)
+        });
+    // prompt for templates
+    // TODO
+    // figure out a way to make the 'simple.json' option the default
+    const question = {
+        'type': "rawlist",
+        'name': "question",
+        'message': "Select an NFT template:",
+        'default': 0,
+        'choices': templates
+    }
+    return JSON.parse(fs.readFileSync(`${SCHEMA_PATH}/${(await inquirer.prompt(question))["question"]}.json`));
+}
+
+async function promptNFTMetadata(schema, options) {
+    // create questions from schema
+    const questions = [], attributes = [], properties = [];
+    // if value is not set, prompt to set
+    for (const [key, value] of Object.entries(schema)) {
+        // base properties
+        if (value === "")
+            questions.push({
+                'type': 'input',
+                'name': key,
+                'message': `Enter a(n) ${key} for your new NFT: `
+            });
+        // attributes
+        if (key === "attributes" && Array.isArray(value))
+            for (const attribute of value)
+                if (attribute["value"] === "" && attribute["trait_type"] != "")
+                    attributes.push({
+                        'type': 'input',
+                        'name': attribute["trait_type"],
+                        'message' : `Enter a(n) ${attribute["trait_type"]} attribute for your new NFT: `
+                    });
+        // properties
+        if (key === "properties" && typeof value === "object")
+            for (const [key_, value_] of Object.entries(schema[key]))
+                properties.push({
+                    'type': 'input',
+                    'name': key_,
+                    'message' : `Enter a(n) ${key_} property for your new NFT: `
+                });
+    }
+
+    // prompt for missing details if not provided as cli args
+    const answers = await promptForMissing(options, [...questions, ...attributes, ...properties]);
+
+    // const answers = await promptForMissing(options, template);
+
+    // TODO
+    // flesh these functions out if necessary to prompt for additional properties and attributes
+    async function promptForAdditionalAttributes(existingAnswers) {
+
+    }
+
+    async function promptForAdditionalProperties(existingAnswers) {
+
+    }
+    
+    // prompt to add additional properties or attributes
+    const addA = {
+        'type': "confirm",
+        'name': "answer",
+        'message': "Add additional attributes?"
+    }
+    if (await inquirer.prompt(addA)["answer"])
+        attributes = await promptForAdditionalAttributes(attributes);
+    
+    const addP = {
+        'type': "confirm",
+        'name': "answer",
+        'message': "Add additional properties?"
+    }
+    if (await inquirer.prompt(addP)["answer"])
+        properties = await promptForAdditionalProperties(properties);
+
+    // TODO
+    // finish testing
+
+    console.log(answers);
+    console.log(attributes);
+    console.log(properties);
+
+    return;
+}
 
 async function promptForMissing(cliOptions, prompts) {
     const questions = []

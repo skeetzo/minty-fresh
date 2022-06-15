@@ -75,6 +75,33 @@ class Minty {
     // ------ NFT Creation
     //////////////////////////////////////////////
 
+
+
+
+    async createNFT(metadata) {
+
+        return {
+            tokenId,
+            ownerAddress,
+            metadata,
+            assetURI,
+            metadataURI,
+            assetGatewayURL: makeGatewayURL(assetURI),
+            metadataGatewayURL: makeGatewayURL(metadataURI),
+        };
+    }
+
+
+
+
+
+
+
+
+
+
+
+
     /**
      * Create a new NFT from the given asset data.
      * 

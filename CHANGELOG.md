@@ -16,6 +16,8 @@
 	- updated minty-deployment.json process for handling multiple contracts; no longer uses assignment in local config for path
 	**1.0.5 : 6/14/2022**
 	- added beginning work for template prompts for additional NFT metadata to be entered upon creation 
+	**1.0.6 : 6/15/2022**
+	- more nft implementing
 
 ------------------------------------------------------------------------
 
@@ -24,6 +26,8 @@
 
 
 # TODO
+
+- update comment documentation
 
 - add method for addons to be able to add prompts to the mint process / detect metadata schemas
 - add a metadata schema validation process
