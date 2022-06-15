@@ -114,6 +114,22 @@ class Minty {
         const assetURI = ensureIpfsUriPrefix(assetCid) + '/' + basename;
         const metadata = await this.makeNFTMetadata(assetURI, options);
 
+
+
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+        // TODO
+        // does this name them all the same 'metadata.json'?
+        // should i change this to some setting that can be changed to match something?
+
+////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
         // add the metadata to IPFS
         const { cid: metadataCid } = await this.ipfs.add({ path: '/nft/metadata.json', content: JSON.stringify(metadata)}, ipfsAddOptions);
         const metadataURI = ensureIpfsUriPrefix(metadataCid) + '/metadata.json';
@@ -164,6 +180,18 @@ class Minty {
      * @param {?string} description - optional description to store in NFT metadata
      * @returns {object} - NFT metadata object
      */
+
+
+
+
+
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////
+
+     // TODO
+     // i need to change this or change the call to here to prevent this cause this will break my stuff
+     // so i might want to move the stuff i've made here or vice versa?
     async makeNFTMetadata(assetURI, options) {
         const {name, description} = options;
         assetURI = ensureIpfsUriPrefix(assetURI);
@@ -173,6 +201,15 @@ class Minty {
             image: assetURI
         };
     }
+
+////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+
+
+
 
     //////////////////////////////////////////////
     // -------- NFT Retreival

@@ -61,8 +61,10 @@ async function main() {
     // commands
     if (!_commandExists("mint"))
         program
-            .command('mint <image-path>')
-            .description('create a new NFT from an image file')
+            .command('mint <nft-schema>')
+            .description('create a new NFT from a schema template')
+            .option('-s, --schema <name>', 'The name of the schema template to use')
+            .option('-i, --image <path>', 'The path to the image of the asset')
             .option('-c, --contract <name>', 'The name of the contract', 'Minty')
             .option('-n, --name <name>', 'The name of the NFT')
             .option('-d, --description <desc>', 'A description of the NFT')
@@ -109,21 +111,27 @@ async function main() {
     await program.parseAsync(process.argv);
 }
 
-// ---- command action functions
 
-async function createNFT(imagePath, options) {
-    const minty = await MakeMinty(options.contract);
 
-    ////////////////////////////////////////////////////////////////////////
 
-    // get list of template files from available files in /schema
+////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+async function selectSchema() {
+    const SCHEMA_PATH = "./schema";
+    // get list of template files from available files in available /schema directories
     const templates = [];
-
-    // TODO
-    // i'm probably going to need to fix the pathing here when called from an addon
-    // and i'll want to update it to also check from the addons local schema dir
-    fs.readdirSync("./schema").forEach(file => {templates.push(file.replace(".json",""))});
+    let localPath = path.join(__dirname, SCHEMA_PATH), // path local to this script
+        addonPath = path.join(process.env.INIT_CWD, SCHEMA_PATH);// path to where the cwd is
+    console.log(await fileExists(localPath));
+    console.log(await fileExists(addonPath));
+    for (const schemaPath of [...localPath, ...addonPath])
+        fs.readdirSync(schemaPath).forEach(file => {templates.indexOf(file.replace(".json","")) === -1 ? templates.push(file.replace(".json","")) : console.debug(`duplicate template found: ${file.replace(".json","")}`)});
     // prompt for templates
+    // TODO
+    // figure out a way to make the 'simple.json' option the default
     const question = {
         'type': "rawlist",
         'name': "question",
@@ -131,8 +139,10 @@ async function createNFT(imagePath, options) {
         'default': 0,
         'choices': templates
     }
-    const schema = JSON.parse(fs.readFileSync(`./schema/${(await inquirer.prompt(question))["question"]}.json`));
+    return JSON.parse(fs.readFileSync(`${SCHEMA_PATH}/${(await inquirer.prompt(question))["question"]}.json`));
+}
 
+async function promptNFTMetadata(schema, options) {
     // create questions from schema
     const questions = [], attributes = [], properties = [];
     // if value is not set, prompt to set
@@ -197,6 +207,36 @@ async function createNFT(imagePath, options) {
     console.log(propertiesAnswers);
 
     return;
+}
+
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+
+// ---- command action functions
+
+async function createNFT(options) {
+    const minty = await MakeMinty(options.contract);
+
+
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+
+    ////////////////////////////////////////////////////////////////////////
+
+    let {schema} = options;
+    if (!schema)
+        schema = await selectSchema();
+    const metadata = promptNFTMetadata(schema, options);
 
     ////////////////////////////////////////////////////////////////////////
 
@@ -209,7 +249,23 @@ async function createNFT(imagePath, options) {
 
     ////////////////////////////////////////////////////////////////////////
 
-    const nft = await minty.createNFTFromAssetFile(imagePath, answers);
+    let nft;
+    // nft metadata contains an asset (image, video) that is also uploaded and referenced to (as .image)
+    if (options.image)
+        nft = await minty.createNFTFromAssetFile(imagePath, metadata);
+    else
+        nft = await minty.createNFT(metadata); // TODO: add this function
+
+
+
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+
     console.log('🌿 Minted a new NFT: ');
 
     alignOutput([

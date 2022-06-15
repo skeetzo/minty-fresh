@@ -22,6 +22,7 @@
 - finish implementing template prompts
 - finish implementing json schemas to validate metadata
 
+
 # TODO
 
 - add method for addons to be able to add prompts to the mint process / detect metadata schemas
