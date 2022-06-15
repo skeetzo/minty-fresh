@@ -122,7 +122,7 @@ async function createNFT(options) {
     if (!schema)
         schema = await selectSchema();
 
-    const metadata = promptNFTMetadata(schema, options);
+    const metadata = await promptNFTMetadata(schema, options);
 
     let nft;
     if (options.image)
@@ -221,6 +221,18 @@ async function selectSchema() {
     return JSON.parse(fs.readFileSync(`${SCHEMA_PATH}/${(await inquirer.prompt(question))["question"]}.json`));
 }
 
+
+
+
+
+
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////
+
+// TODO
+// finish implementing the schema reader for the nft metadata
+
 async function promptNFTMetadata(schema, options) {
     // create questions from schema
     const questions = [], attributes = [], properties = [];
@@ -231,7 +243,7 @@ async function promptNFTMetadata(schema, options) {
             questions.push({
                 'type': 'input',
                 'name': key,
-                'message': `Enter a(n) ${key} for your new NFT: `
+                'message': `Enter the ${key} for your new NFT: `
             });
         // attributes
         if (key === "attributes" && Array.isArray(value))
@@ -240,7 +252,7 @@ async function promptNFTMetadata(schema, options) {
                     attributes.push({
                         'type': 'input',
                         'name': attribute["trait_type"],
-                        'message' : `Enter a(n) ${attribute["trait_type"]} attribute for your new NFT: `
+                        'message' : `Enter the ${attribute["trait_type"]} attribute for your new NFT: `
                     });
         // properties
         if (key === "properties" && typeof value === "object")
@@ -248,9 +260,12 @@ async function promptNFTMetadata(schema, options) {
                 properties.push({
                     'type': 'input',
                     'name': key_,
-                    'message' : `Enter a(n) ${key_} property for your new NFT: `
+                    'message' : `Enter the ${key_} property for your new NFT: `
                 });
     }
+    console.log(questions);
+    console.log(attributes);
+    console.log(properties);
 
     // prompt for missing details if not provided as cli args
     const answers = await promptForMissing(options, [...questions, ...attributes, ...properties]);
@@ -293,6 +308,18 @@ async function promptNFTMetadata(schema, options) {
 
     return;
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+
+
+
+
+
+
 
 async function promptForMissing(cliOptions, prompts) {
     const questions = []

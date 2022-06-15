@@ -23,7 +23,7 @@
 
 - finish implementing template prompts
 - finish implementing json schemas to validate metadata
-
+- finish implementing the schema parser via cli for creating nft metadata
 
 # TODO
 
