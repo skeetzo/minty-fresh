@@ -18,10 +18,14 @@
 	- added beginning work for template prompts for additional NFT metadata to be entered upon creation 
 	**1.0.6 : 6/15/2022**
 	- more nft implementing
+	- updated json schemas
 
 ------------------------------------------------------------------------
 
-- finish implementing template prompts
+- finish implementing template prompts --> promptNFTMetadata
+
+
+
 - finish implementing json schemas to validate metadata
 - finish implementing the schema parser via cli for creating nft metadata
 
