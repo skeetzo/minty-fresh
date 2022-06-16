@@ -38,6 +38,6 @@
     "youtube_url": {
       "type": "string",
       "description": "A URL to a YouTube video."
-    },
+    }
   }
 }

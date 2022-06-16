@@ -19,15 +19,13 @@
 	**1.0.6 : 6/15/2022**
 	- more nft implementing
 	- updated json schemas
+	**1.0.7 : 6/16/2022**
+	- finished implementing template prompts --> promptNFTMetadata
 
 ------------------------------------------------------------------------
 
-- finish implementing template prompts --> promptNFTMetadata
-
-
-
-- finish implementing json schemas to validate metadata
-- finish implementing the schema parser via cli for creating nft metadata
+- finish implementing json schemas to validate metadata --> validateSchema in index.js
+- finished implementing all of the schema parser via cli for creating nft metadata
 
 # TODO
 
@@ -36,9 +34,10 @@
 - add method for addons to be able to add prompts to the mint process / detect metadata schemas
 - add a metadata schema validation process
 
-
 - add option for providing contract address instead of contract name
 -- contract address should retrieve contract name from existing deployment on blockchain
+- update minty addon process to use contracts from local project spaces
+
 - add 'live' option for allowing transactions on mainnets
 - add method for interacting with wallets
 -- add most of the above to the config
@@ -46,8 +45,7 @@
 - create process for minty being ran on mainnets and with live wallets
 - add method to connect to ipfs without starting local ipfs daemon
 
-- update minty addon process to use contracts from local project spaces
 
-- add Drizzle front end
+- add Drizzle front end for basic web interface
 npm install --save @drizzle/store
 
