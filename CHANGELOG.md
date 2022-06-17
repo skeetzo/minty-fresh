@@ -21,6 +21,7 @@
 	- updated json schemas
 	**1.0.7 : 6/16/2022**
 	- finished implementing template prompts --> promptNFTMetadata
+	- debugged prompt process
 
 ------------------------------------------------------------------------
 

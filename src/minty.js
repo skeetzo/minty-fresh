@@ -75,32 +75,33 @@ class Minty {
     // ------ NFT Creation
     //////////////////////////////////////////////
 
-
-
-
-    async createNFT(metadata) {
-
+    // TODO
+    // add docstring comments
+    async createNFT(options, content=null) {
+        if (content) return await createNFTFromAssetData(content, options); // redirect to 
+        const metadata = await this.makeNFTMetadata(content, options);
+        console.debug("creating NFT")
+        // add the metadata to IPFS
+        const { cid: metadataCid } = await this.ipfs.add({ path: `/nfts/metadata/${metadata.name}.json`, content: JSON.stringify(metadata)}, ipfsAddOptions);
+        const metadataURI = ensureIpfsUriPrefix(metadataCid) + `/metadata/${metadata.name}.json`;
+        // get the address of the token owner from options, or use the default signing address if no owner is given
+        let ownerAddress = options.owner;
+        if (!ownerAddress) {
+            ownerAddress = await this.defaultOwnerAddress();
+        }
+        // mint a new token referencing the metadata URI
+        const tokenId = await this.mint(ownerAddress, metadataURI);
+        // format and return the results
         return {
             tokenId,
             ownerAddress,
             metadata,
-            assetURI,
+            assetURI: null,
             metadataURI,
-            assetGatewayURL: makeGatewayURL(assetURI),
+            assetGatewayURL: null,
             metadataGatewayURL: makeGatewayURL(metadataURI),
         };
     }
-
-
-
-
-
-
-
-
-
-
-
 
     /**
      * Create a new NFT from the given asset data.
@@ -125,6 +126,7 @@ class Minty {
      * @returns {Promise<CreateNFTResult>}
      */
     async createNFTFromAssetData(content, options) {
+        console.debug("creating NFT from asset data")
         // add the asset to IPFS
         const filePath = options.path || 'asset.bin';
         const basename =  path.basename(filePath);
@@ -134,32 +136,16 @@ class Minty {
         // it gives us URIs with descriptive filenames in them e.g.
         // 'ipfs://QmaNZ2FCgvBPqnxtkbToVVbK2Nes6xk5K4Ns6BsmkPucAM/cat-pic.png' instead of
         // 'ipfs://QmaNZ2FCgvBPqnxtkbToVVbK2Nes6xk5K4Ns6BsmkPucAM'
-        const ipfsPath = '/nft/' + basename;
+        const ipfsPath = '/nfts/assets/' + basename;
         const { cid: assetCid } = await this.ipfs.add({ path: ipfsPath, content }, ipfsAddOptions);
 
         // make the NFT metadata JSON
         const assetURI = ensureIpfsUriPrefix(assetCid) + '/' + basename;
         const metadata = await this.makeNFTMetadata(assetURI, options);
 
-
-
-
-
-////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-        // TODO
-        // does this name them all the same 'metadata.json'?
-        // should i change this to some setting that can be changed to match something?
-
-////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-
-
         // add the metadata to IPFS
-        const { cid: metadataCid } = await this.ipfs.add({ path: '/nft/metadata.json', content: JSON.stringify(metadata)}, ipfsAddOptions);
-        const metadataURI = ensureIpfsUriPrefix(metadataCid) + '/metadata.json';
+        const { cid: metadataCid } = await this.ipfs.add({ path: `/nfts/metadata/${metadata.name}.json`, content: JSON.stringify(metadata)}, ipfsAddOptions);
+        const metadataURI = ensureIpfsUriPrefix(metadataCid) + `/metadata/${metadata.name}.json`;
 
         // get the address of the token owner from options, or use the default signing address if no owner is given
         let ownerAddress = options.owner;
@@ -207,36 +193,19 @@ class Minty {
      * @param {?string} description - optional description to store in NFT metadata
      * @returns {object} - NFT metadata object
      */
-
-
-
-
-
-
-
-////////////////////////////////////////////////////////////////////////////////////////////////
-
-     // TODO
-     // i need to change this or change the call to here to prevent this cause this will break my stuff
-     // so i might want to move the stuff i've made here or vice versa?
     async makeNFTMetadata(assetURI, options) {
-        const {name, description} = options;
-        assetURI = ensureIpfsUriPrefix(assetURI);
-        return {
-            name,
-            description,
-            image: assetURI
-        };
+        // const {name, description} = options;
+        // assetURI = ensureIpfsUriPrefix(assetURI);
+        if (options.hasOwnProperty("image") && options.image.length > 0 && assetURI) {
+            options.image = ensureIpfsUriPrefix(assetURI);
+        }
+        return options;
+        // return {
+        //     name,
+        //     description,
+        //     image: assetURI
+        // };
     }
-
-////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-
-
-
-
-
 
     //////////////////////////////////////////////
     // -------- NFT Retreival
