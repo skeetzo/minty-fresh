@@ -77,8 +77,17 @@ class Minty {
 
     // TODO
     // add docstring comments
-    async createNFT(options, content=null) {
+    async createNFT(options, skipMint=false) {
+
+        // TODO
+        // update to upload multiple content sources found in options
+        let {content} = options.image;
         if (content) return await this.createNFTFromAssetData(content, options); // redirect to 
+        
+
+
+
+
         const metadata = await this.makeNFTMetadata(content, options);
         console.debug("creating NFT")
         // add the metadata to IPFS
@@ -89,8 +98,11 @@ class Minty {
         if (!ownerAddress) {
             ownerAddress = await this.defaultOwnerAddress();
         }
-        // mint a new token referencing the metadata URI
-        const tokenId = await this.mint(ownerAddress, metadataURI);
+        let tokenId = null;
+        if (!skipMint) {
+            // mint a new token referencing the metadata URI
+            tokenId = await this.mint(ownerAddress, metadataURI);
+        }
         // format and return the results
         return {
             tokenId,

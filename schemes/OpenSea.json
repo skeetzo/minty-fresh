@@ -40,6 +40,6 @@
       "description": "The attributes which will show up on the OpenSea page for the item."
     }
   },
-  "required": ["name", "description", "image"],
+  "required": ["name","description","image"],
   "additionalProperties": false
 }

@@ -33,6 +33,8 @@
 
 # TODO
 
+- update minty for uploading multiple assets references at once along with image; image, placeholder, image_data, etc
+
 - add method for addons to be able to add prompts to the mint process / detect metadata schemas
 
 - add option for providing contract address instead of contract name
@@ -48,3 +50,5 @@
 
 - add Drizzle front end for basic web interface
 npm install --save @drizzle/store
+
+- add ability to mint from schemas found already uploaded on IPFS

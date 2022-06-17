@@ -54,24 +54,31 @@ async function main() {
 
     if (!program) {
         program = new Command();
-        program
-          .name('Minty Fresh')
+        program.name('Minty Fresh')
           .description('CLI to some JavaScript NFT utilities')
           .version('1.0.1');
       }
 
     // commands
     if (!_commandExists("mint"))
-        program
-            .command('mint <nft-schema>')
-            .description('create a new NFT from a schema template')
-            .option('-s, --schema <name>', 'The name of the schema template to use')
-            .option('-i, --image <path>', 'The path to the image of the asset')
+        program.command('add <schema>')
+            .description('add an NFT schema to IPFS as an available template')
+            .option('-s, --schema <name>', 'The name of the schema template to mint')
+            .option('-i, --image <path>', 'The path to the image asset')
+            .option('-n, --name <name>', 'The name of the token')
+            .option('-d, --description <desc>', 'A text description of the token')
+            .action(addNFT)
+
+    if (!_commandExists("mint"))
+        program.command('mint <schema>')
+            .description('mint a new NFT from an existing schema template')
+            .option('-s, --schema <name>', 'The name of the schema template to mint')
+            .option('-i, --image <path>', 'The path to the image asset')
             .option('-c, --contract <name>', 'The name of the contract', 'Minty')
             .option('-a, --address <address>', 'The address of a deployed contract')
-            .option('-n, --name <name>', 'The name of the NFT')
-            .option('-d, --description <desc>', 'A description of the NFT')
-            .option('-o, --owner <address>', 'The ethereum address that should own the NFT.' +
+            .option('-n, --name <name>', 'The name of the token')
+            .option('-d, --description <desc>', 'A text description of the token')
+            .option('-o, --owner <address>', 'The ethereum address that should own the token' +
                 'If not provided, defaults to the first signing address.')
             .action(createNFT);
 
@@ -114,13 +121,32 @@ async function main() {
 
 // ---- command action functions
 
+async function addNFT(options) {
+    const minty = await MakeMinty(options.contract);
+    let {schema} = options;
+    if (!schema) schema = await selectSchema();
+    options = await promptNFTMetadata(schema, options);
+    validateSchema(options, schema);
+    const nft = await minty.createNFT(options, true);
+    console.log('🌿 Added a new NFT template: ');
+    alignOutput(
+        ['Contract Name:', chalk.green(minty.name)],
+        ['Contract Address:', chalk.yellow(minty.contract.address)],
+        ['Token ID:', chalk.green(nft.tokenId)],
+        ['Metadata Address:', chalk.blue(nft.metadataURI)],
+        ['Metadata Gateway URL:', chalk.blue(nft.metadataGatewayURL)],
+        ['Asset Address:', chalk.blue(nft.assetURI)],
+        ['Asset Gateway URL:', chalk.blue(nft.assetGatewayURL)]);
+    console.log(colorize(JSON.stringify(nft.metadata), colorizeOptions));
+}
+
 async function createNFT(options) {
     const minty = await MakeMinty(options.contract);
     let {schema} = options;
     if (!schema) schema = await selectSchema();
     options = await promptNFTMetadata(schema, options);
     validateSchema(options, schema);
-    const nft = await minty.createNFT(options, options.image);
+    const nft = await minty.createNFT(options);
     console.log('🌿 Minted a new NFT: ');
     const output = [
         ['Contract Name:', chalk.green(minty.name)],
