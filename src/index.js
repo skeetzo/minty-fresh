@@ -13,6 +13,8 @@ const colorize = require('json-colorizer');
 const config = require('getconfig');
 const { MakeMinty } = require('./minty');
 const { deployContract, fileExists, saveDeploymentInfo } = require('./deploy');
+const Ajv = require("ajv");
+const ajv = new Ajv(); // options can be passed, e.g. {allErrors: true}
 
 const colorizeOptions = {
     pretty: true,
@@ -114,17 +116,12 @@ async function main() {
 
 async function createNFT(options) {
     const minty = await MakeMinty(options.contract);
-
     let {schema} = options;
     if (!schema) schema = await selectSchema();
     options = await promptNFTMetadata(schema, options);
-
     validateSchema(options, schema);
-
     const nft = await minty.createNFT(options, options.image);
-
     console.log('🌿 Minted a new NFT: ');
-
     const output = [
         ['Contract Name:', chalk.green(minty.name)],
         ['Contract Address:', chalk.yellow(minty.contract.address)],
@@ -137,7 +134,6 @@ async function createNFT(options) {
         output.push(['Asset Gateway URL:', chalk.blue(nft.assetGatewayURL)]);
     }
     alignOutput(output);
-
     console.log('NFT Metadata:');
     console.log(colorize(JSON.stringify(nft.metadata), colorizeOptions));
 }
@@ -146,7 +142,6 @@ async function getNFT(tokenId, options) {
     const { creationInfo: fetchCreationInfo } = options;
     const minty = await MakeMinty(options.contract);
     const nft = await minty.getNFT(tokenId, {fetchCreationInfo});
-
     const output = [
         ['Contract Name:', chalk.green(minty.name)],
         ['Contract Address:', chalk.yellow(minty.contract.address)],
@@ -162,14 +157,12 @@ async function getNFT(tokenId, options) {
     output.push(['Asset Address:', chalk.blue(nft.assetURI)]);
     output.push(['Asset Gateway URL:', chalk.blue(nft.assetGatewayURL)]);
     alignOutput(output);
-
     console.log('NFT Metadata:');
     console.log(colorize(JSON.stringify(nft.metadata), colorizeOptions));
 }
 
 async function transferNFT(tokenId, toAddress, options) {
     const minty = await MakeMinty(options.contract);
-
     await minty.transferToken(tokenId, toAddress);
     console.log(`🌿 Transferred token ${chalk.green(tokenId)} to ${chalk.yellow(toAddress)}`);
 }
@@ -307,17 +300,18 @@ async function promptNFTMetadata(schema, options) {
     return {...answers, ...nft};
 }
 
-////////////////////////////////////////////////////////////////////////////////////////////////
-
-// TODO
-// do this
 function validateSchema(nft, schema) {
-    // console.debug(nft);
-    // console.debug(schema);
-    console.log("validating nft schema...");
+    console.debug("validating nft schema...");
+    // replace empty values with null for flagging validation
+    for (const [key, value] of Object.entries(nft))
+        if (value === "") nft[key] = null;
+    const validate = ajv.compile(schema);
+    const valid = validate(nft);
+    if (!valid) {
+        console.error(validate.errors);
+        throw "Error: unable to validate data";
+    }
 }
-
-////////////////////////////////////////////////////////////////////////////////////////////////
 
 async function promptForMissing(cliOptions, prompts) {
     const questions = []

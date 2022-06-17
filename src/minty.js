@@ -78,7 +78,7 @@ class Minty {
     // TODO
     // add docstring comments
     async createNFT(options, content=null) {
-        if (content) return await createNFTFromAssetData(content, options); // redirect to 
+        if (content) return await this.createNFTFromAssetData(content, options); // redirect to 
         const metadata = await this.makeNFTMetadata(content, options);
         console.debug("creating NFT")
         // add the metadata to IPFS

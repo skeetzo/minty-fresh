@@ -22,6 +22,7 @@
   },
   "dependencies": {
     "@openzeppelin/contracts": "^4.5.0",
+    "ajv": "^8.11.0",
     "chalk": "^4.1.0",
     "cids": "^1.1.6",
     "commander": "^7.1.0",

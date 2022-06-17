@@ -16,24 +16,24 @@
 	- updated minty-deployment.json process for handling multiple contracts; no longer uses assignment in local config for path
 	**1.0.5 : 6/14/2022**
 	- added beginning work for template prompts for additional NFT metadata to be entered upon creation 
+	- added a metadata schema validation process
 	**1.0.6 : 6/15/2022**
 	- more nft implementing
 	- updated json schemas
 	**1.0.7 : 6/16/2022**
 	- finished implementing template prompts --> promptNFTMetadata
 	- debugged prompt process
+	**1.1.0 : 6/17/2022**
+	- finished implementing json schemas to validate metadata --> validateSchema in index.js
+	- finished implementing all of the schema parser via cli for creating nft metadata
 
 ------------------------------------------------------------------------
 
-- finish implementing json schemas to validate metadata --> validateSchema in index.js
-- finished implementing all of the schema parser via cli for creating nft metadata
+- update / add docstring comments
 
 # TODO
 
-- update comment documentation
-
 - add method for addons to be able to add prompts to the mint process / detect metadata schemas
-- add a metadata schema validation process
 
 - add option for providing contract address instead of contract name
 -- contract address should retrieve contract name from existing deployment on blockchain
@@ -46,7 +46,5 @@
 - create process for minty being ran on mainnets and with live wallets
 - add method to connect to ipfs without starting local ipfs daemon
 
-
 - add Drizzle front end for basic web interface
 npm install --save @drizzle/store
-
