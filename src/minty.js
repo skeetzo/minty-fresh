@@ -7,6 +7,7 @@ const all = require('it-all');
 const uint8ArrayConcat = require('uint8arrays/concat').concat;
 const uint8ArrayToString = require('uint8arrays/to-string').toString;
 const { BigNumber } = require('ethers');
+const { selectSchema, promptNFTMetadata, validateSchema } = require('./helpers.js');
 
 const { loadDeploymentInfo } = require('./deploy');
 
@@ -77,19 +78,21 @@ class Minty {
 
     // TODO
     // add docstring comments
-    async createNFT(options, skipMint=false) {
-
-        // TODO
-        // update to upload multiple content sources found in options
-        let {content} = options.image;
-        if (content) return await this.createNFTFromAssetData(content, options); // redirect to 
-        
-
-
-
-
-        const metadata = await this.makeNFTMetadata(content, options);
+    async createNFT(options) {
         console.debug("creating NFT")
+        const schema = await selectSchema(options.schema);
+        let metadata = await promptNFTMetadata(schema, options);
+        const assets = {},
+              assetURIs = [];
+        if (Array.isArray(options.assets) && options.assets.length > 0)
+            for (const [key, filePath] in options.assets) {
+                const {assetCID, assetURI} = await this.uploadAssetData(filePath);
+                assetURIs.push(assetURI);
+                assets[key].cid = assetCID;
+                assets[key].uri = assetURI;
+            }
+        metadata = await this.makeNFTMetadata(assets, options, metadata);
+        validateSchema(metadata, schema);
         // add the metadata to IPFS
         const { cid: metadataCid } = await this.ipfs.add({ path: `/nfts/metadata/${metadata.name}.json`, content: JSON.stringify(metadata)}, ipfsAddOptions);
         const metadataURI = ensureIpfsUriPrefix(metadataCid) + `/metadata/${metadata.name}.json`;
@@ -99,7 +102,7 @@ class Minty {
             ownerAddress = await this.defaultOwnerAddress();
         }
         let tokenId = null;
-        if (!skipMint) {
+        if (isNaN(options.skipMint) && !options.skipMint) {
             // mint a new token referencing the metadata URI
             tokenId = await this.mint(ownerAddress, metadataURI);
         }
@@ -108,9 +111,9 @@ class Minty {
             tokenId,
             ownerAddress,
             metadata,
-            assetURI: null,
+            assetsURIs: assetURIs,
             metadataURI,
-            assetGatewayURL: null,
+            assetsGatewayURLs: assetURIs.map(a => makeGatewayURL(a)),
             metadataGatewayURL: makeGatewayURL(metadataURI),
         };
     }
@@ -137,48 +140,37 @@ class Minty {
      * 
      * @returns {Promise<CreateNFTResult>}
      */
-    async createNFTFromAssetData(content, options) {
-        console.debug("creating NFT from asset data")
-        // add the asset to IPFS
-        const filePath = options.path || 'asset.bin';
-        const basename =  path.basename(filePath);
+    // async createNFTFromAssetData(asset, content, options) {
+    //     console.debug("creating NFT from asset data")
 
-        // When you add an object to IPFS with a directory prefix in its path,
-        // IPFS will create a directory structure for you. This is nice, because
-        // it gives us URIs with descriptive filenames in them e.g.
-        // 'ipfs://QmaNZ2FCgvBPqnxtkbToVVbK2Nes6xk5K4Ns6BsmkPucAM/cat-pic.png' instead of
-        // 'ipfs://QmaNZ2FCgvBPqnxtkbToVVbK2Nes6xk5K4Ns6BsmkPucAM'
-        const ipfsPath = '/nfts/assets/' + basename;
-        const { cid: assetCid } = await this.ipfs.add({ path: ipfsPath, content }, ipfsAddOptions);
+    //     const {assetCid, assetURI} = await uploadAssetData(asset, content)
+        
+    //     const metadata = await this.makeNFTMetadata(asset, assetURI, options);
 
-        // make the NFT metadata JSON
-        const assetURI = ensureIpfsUriPrefix(assetCid) + '/' + basename;
-        const metadata = await this.makeNFTMetadata(assetURI, options);
+    //     // add the metadata to IPFS
+    //     const { cid: metadataCid } = await this.ipfs.add({ path: `/nfts/metadata/${metadata.name}.json`, content: JSON.stringify(metadata)}, ipfsAddOptions);
+    //     const metadataURI = ensureIpfsUriPrefix(metadataCid) + `/metadata/${metadata.name}.json`;
 
-        // add the metadata to IPFS
-        const { cid: metadataCid } = await this.ipfs.add({ path: `/nfts/metadata/${metadata.name}.json`, content: JSON.stringify(metadata)}, ipfsAddOptions);
-        const metadataURI = ensureIpfsUriPrefix(metadataCid) + `/metadata/${metadata.name}.json`;
+    //     // get the address of the token owner from options, or use the default signing address if no owner is given
+    //     let ownerAddress = options.owner;
+    //     if (!ownerAddress) {
+    //         ownerAddress = await this.defaultOwnerAddress();
+    //     }
 
-        // get the address of the token owner from options, or use the default signing address if no owner is given
-        let ownerAddress = options.owner;
-        if (!ownerAddress) {
-            ownerAddress = await this.defaultOwnerAddress();
-        }
+    //     // mint a new token referencing the metadata URI
+    //     const tokenId = await this.mint(ownerAddress, metadataURI);
 
-        // mint a new token referencing the metadata URI
-        const tokenId = await this.mint(ownerAddress, metadataURI);
-
-        // format and return the results
-        return {
-            tokenId,
-            ownerAddress,
-            metadata,
-            assetURI,
-            metadataURI,
-            assetGatewayURL: makeGatewayURL(assetURI),
-            metadataGatewayURL: makeGatewayURL(metadataURI),
-        };
-    }
+    //     // format and return the results
+    //     return {
+    //         tokenId,
+    //         ownerAddress,
+    //         metadata,
+    //         assetURI,
+    //         metadataURI,
+    //         assetGatewayURL: makeGatewayURL(assetURI),
+    //         metadataGatewayURL: makeGatewayURL(metadataURI),
+    //     };
+    // }
 
     /**
      * Create a new NFT from an asset file at the given path.
@@ -192,10 +184,10 @@ class Minty {
      * 
      * @returns {Promise<CreateNFTResult>}
      */
-    async createNFTFromAssetFile(filename, options) {
-        const content = await fs.readFile(filename);
-        return this.createNFTFromAssetData(content, {...options, path: filename});
-    }
+    // async createNFTFromAssetFile(filename, options) {
+    //     const content = await fs.readFile(filename);
+    //     return this.createNFTFromAssetData(content, {...options, path: filename});
+    // }
 
     /**
      * Helper to construct metadata JSON for 
@@ -205,18 +197,41 @@ class Minty {
      * @param {?string} description - optional description to store in NFT metadata
      * @returns {object} - NFT metadata object
      */
-    async makeNFTMetadata(assetURI, options) {
-        // const {name, description} = options;
+    async makeNFTMetadata(assets, options, metadata={}) {
+        metadata.name = options.name;
+        metadata.description = options.description;
         // assetURI = ensureIpfsUriPrefix(assetURI);
-        if (options.hasOwnProperty("image") && options.image.length > 0 && assetURI) {
-            options.image = ensureIpfsUriPrefix(assetURI);
-        }
-        return options;
+        for (const [asset, values] of assets)
+            metadata[asset] = ensureIpfsUriPrefix(values.uri);
+        return metadata;
         // return {
-        //     name,
-        //     description,
-        //     image: assetURI
+            // name,
+            // description,
+            // image: assetURI
         // };
+    }
+
+    async uploadAssetData(filePath, folderName="assets") {
+        // add the asset to IPFS
+        // const filePath = options.path || 'asset.bin';
+        const basename =  path.basename(filePath);
+        const content = await fs.readFile(filePath);
+        // When you add an object to IPFS with a directory prefix in its path,
+        // IPFS will create a directory structure for you. This is nice, because
+        // it gives us URIs with descriptive filenames in them e.g.
+        // 'ipfs://QmaNZ2FCgvBPqnxtkbToVVbK2Nes6xk5K4Ns6BsmkPucAM/cat-pic.png' instead of
+        // 'ipfs://QmaNZ2FCgvBPqnxtkbToVVbK2Nes6xk5K4Ns6BsmkPucAM'
+        const ipfsPath = `/nfts/${folderName}/${basename}`;
+        const { cid: assetCid } = await this.ipfs.add({ path: ipfsPath, content }, ipfsAddOptions);
+        // make the NFT metadata JSON
+        const assetURI = ensureIpfsUriPrefix(assetCid) + '/' + basename;
+        return {
+            assetCid, assetURI, makeGatewayURL(assetURI), 
+        };
+        return {
+            assetCid, assetURI,
+            assetGatewayURL: makeGatewayURL(assetURI)
+        };
     }
 
     //////////////////////////////////////////////

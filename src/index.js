@@ -24,6 +24,9 @@ const colorizeOptions = {
     }
 };
 
+// ---- helpers
+const { alignOutput } = require('./helpers.js');
+
 async function main() {
 
     var program;
@@ -58,16 +61,6 @@ async function main() {
           .description('CLI to some JavaScript NFT utilities')
           .version('1.0.1');
       }
-
-    // commands
-    if (!_commandExists("mint"))
-        program.command('add <schema>')
-            .description('add an NFT schema to IPFS as an available template')
-            .option('-s, --schema <name>', 'The name of the schema template to mint')
-            .option('-i, --image <path>', 'The path to the image asset')
-            .option('-n, --name <name>', 'The name of the token')
-            .option('-d, --description <desc>', 'A text description of the token')
-            .action(addNFT)
 
     if (!_commandExists("mint"))
         program.command('mint <schema>')
@@ -121,31 +114,8 @@ async function main() {
 
 // ---- command action functions
 
-async function addNFT(options) {
-    const minty = await MakeMinty(options.contract);
-    let {schema} = options;
-    if (!schema) schema = await selectSchema();
-    options = await promptNFTMetadata(schema, options);
-    validateSchema(options, schema);
-    const nft = await minty.createNFT(options, true);
-    console.log('🌿 Added a new NFT template: ');
-    alignOutput(
-        ['Contract Name:', chalk.green(minty.name)],
-        ['Contract Address:', chalk.yellow(minty.contract.address)],
-        ['Token ID:', chalk.green(nft.tokenId)],
-        ['Metadata Address:', chalk.blue(nft.metadataURI)],
-        ['Metadata Gateway URL:', chalk.blue(nft.metadataGatewayURL)],
-        ['Asset Address:', chalk.blue(nft.assetURI)],
-        ['Asset Gateway URL:', chalk.blue(nft.assetGatewayURL)]);
-    console.log(colorize(JSON.stringify(nft.metadata), colorizeOptions));
-}
-
 async function createNFT(options) {
     const minty = await MakeMinty(options.contract);
-    let {schema} = options;
-    if (!schema) schema = await selectSchema();
-    options = await promptNFTMetadata(schema, options);
-    validateSchema(options, schema);
     const nft = await minty.createNFT(options);
     console.log('🌿 Minted a new NFT: ');
     const output = [
@@ -155,10 +125,11 @@ async function createNFT(options) {
         ['Metadata Address:', chalk.blue(nft.metadataURI)],
         ['Metadata Gateway URL:', chalk.blue(nft.metadataGatewayURL)],
     ];
-    if (nft.assetURI) {
-        output.push(['Asset Address:', chalk.blue(nft.assetURI)]);
-        output.push(['Asset Gateway URL:', chalk.blue(nft.assetGatewayURL)]);
-    }
+    if (nft.assetURIs.length > 0 && nft.assetsGatewayURLs.length > 0 )
+        for (let i=0;i<nft.assetsURIs.length;i++) {
+            output.push(['Asset Address:', chalk.blue(nft.assetsURIs[i])]);
+            output.push(['Asset Gateway URL:', chalk.blue(nft.assetsGatewayURLs[i])]);
+        }
     alignOutput(output);
     console.log('NFT Metadata:');
     console.log(colorize(JSON.stringify(nft.metadata), colorizeOptions));
@@ -180,8 +151,13 @@ async function getNFT(tokenId, options) {
     }
     output.push(['Metadata Address:', chalk.blue(nft.metadataURI)]);
     output.push(['Metadata Gateway URL:', chalk.blue(nft.metadataGatewayURL)]);
-    output.push(['Asset Address:', chalk.blue(nft.assetURI)]);
-    output.push(['Asset Gateway URL:', chalk.blue(nft.assetGatewayURL)]);
+    // output.push(['Asset Address:', chalk.blue(nft.assetsURIs)]);
+    // output.push(['Asset Gateway URL:', chalk.blue(nft.assetsGatewayURLs)]);
+    if (nft.assetURIs.length > 0 && nft.assetsGatewayURLs.length > 0 )
+        for (let i=0;i<nft.assetsURIs.length;i++) {
+            output.push(['Asset Address:', chalk.blue(nft.assetsURIs[i])]);
+            output.push(['Asset Gateway URL:', chalk.blue(nft.assetsGatewayURLs[i])]);
+        }
     alignOutput(output);
     console.log('NFT Metadata:');
     console.log(colorize(JSON.stringify(nft.metadata), colorizeOptions));
@@ -205,169 +181,6 @@ async function deploy(options) {
     // await saveDeploymentInfo(info, filename);
     await saveDeploymentInfo(info);
 }
-
-// ---- helpers
-
-async function selectSchema() {
-    const SCHEMA_PATH = "./schemes";
-    // get list of template files from available files in available /schema directories
-    const templates = [];
-    const localPath = path.join(__dirname, "../", SCHEMA_PATH), // path local to this script
-          addonPath = path.join(process.env.PWD, SCHEMA_PATH);// path to where the cwd is
-    const schemas = [];
-    if (await fileExists(localPath)) schemas.push(localPath);
-    if (addonPath != localPath && await fileExists(addonPath)) schemas.push(addonPath);
-    let i = 0,
-        defaultIndex = 0;
-    for (const schemaPath of schemas)
-        fs.readdirSync(schemaPath).forEach(file => {
-            let filename = file.replace(".json","");
-            templates.indexOf(filename) === -1 ? templates.push(filename) : console.debug(`duplicate template found: ${filename}`)
-            // set simple.json to default template
-            if (filename === "simple") defaultIndex = i;
-            i++;
-        });
-    templates.push("blank");
-    // prompt for templates
-    const question = {
-        'type': "rawlist",
-        'name': "question",
-        'message': "Select an NFT template:",
-        'default': defaultIndex,
-        'choices': templates
-    }
-    const template = (await inquirer.prompt(question))["question"];
-    if (template === "blank") return {};
-    return JSON.parse(fs.readFileSync(`${SCHEMA_PATH}/${template}.json`));
-}
-
-async function promptAdditionalProperties(nft) {
-    let addPrompt = {
-        'type': "confirm",
-        'name': "answer",
-        'message': "Add additional properties?",
-        'default': false
-    }
-    let answer = (await inquirer.prompt(addPrompt))["answer"];
-    while (answer) {
-        console.debug("adding additional properties");
-        const keyPrompt = {
-            'type': "input",
-            'name': "key",
-            'message': "Enter property key:"
-        }
-        const valuePrompt = {
-            'type': "input",
-            'name': "value",
-            'message': "Enter property value:"
-        }
-        nft[(await inquirer.prompt(keyPrompt))["key"]] = (await inquirer.prompt(valuePrompt))["value"];
-        answer = (await inquirer.prompt(addPrompt))["answer"];
-    }
-}
-
-let defaultAttributes = false;
-async function promptAdditionalAttributes(nft) {
-    let addPrompt = {
-        'type': "confirm",
-        'name': "answer",
-        'message': "Add additional attributes?",
-        'default': defaultAttributes
-    }
-    let answer = (await inquirer.prompt(addPrompt))["answer"];
-    while (answer) {
-        if (!nft.hasOwnProperty("attributes"))
-            nft.attributes = [];
-        console.debug("adding additional attributes");
-        const attribute = {};
-        let addingToAttribute = true;
-        while (addingToAttribute) {
-            const keyPrompt = {
-                'type': "input",
-                'name': "key",
-                'message': "Enter attribute key (blank to end):"
-            }
-            const valuePrompt = {
-                'type': "input",
-                'name': "value",
-                'message': "Enter attribute value:"
-            }
-            let key = (await inquirer.prompt(keyPrompt))["key"];
-            if (key.length === 0)
-                addingToAttribute = false;            
-            else 
-                attribute[key] = (await inquirer.prompt(valuePrompt))["value"];
-        }
-        if (Object.keys(attribute).length > 0)
-            nft.attributes.push(attribute);
-        addPrompt.default = false;
-        answer = (await inquirer.prompt(addPrompt))["answer"];
-    }
-}
-
-async function promptNFTMetadata(schema, options) {
-    const nft = {},
-          questions = [];
-    // TODO
-    // possibly add type from schema into message for entering inputs
-    if (schema.hasOwnProperty("properties"))
-        for (const [key, value] of Object.entries(schema.properties))
-            questions.push({
-                'type': 'input',
-                'name': key,
-                'message': `${value["description"]}: ${key} =`
-            });
-    // prompt for missing details if not provided as cli args
-    const answers = await promptForMissing(options, questions);    
-    // prompt to add additional properties & attributes
-    await promptAdditionalProperties(nft);
-    if (schema.hasOwnProperty("attributes") || Object.keys(schema).length == 0) // or if schema is 'blank'
-        await promptAdditionalAttributes(nft);
-    return {...answers, ...nft};
-}
-
-function validateSchema(nft, schema) {
-    console.debug("validating nft schema...");
-    // replace empty values with null for flagging validation
-    for (const [key, value] of Object.entries(nft))
-        if (value === "") nft[key] = null;
-    const validate = ajv.compile(schema);
-    const valid = validate(nft);
-    if (!valid) {
-        console.error(validate.errors);
-        throw "Error: unable to validate data";
-    }
-}
-
-async function promptForMissing(cliOptions, prompts) {
-    const questions = []
-    for (const prompt of prompts) {
-        // prompt.name = name;
-        prompt.when = (answers) => {
-            if (prompt.name == "attributes" && !defaultAttributes) {
-                defaultAttributes = true;
-                return false;
-            }
-            if (cliOptions[prompt.name]) {
-                answers[prompt.name] = cliOptions[prompt.name]
-                return false
-            }
-            return true
-        }
-        questions.push(prompt);
-    }
-    return inquirer.prompt(questions);
-}
-
-function alignOutput(labelValuePairs) {
-    const maxLabelLength = labelValuePairs
-      .map(([l, _]) => l.length)
-      .reduce((len, max) => len > max ? len : max);
-    for (const [label, value] of labelValuePairs) {
-        console.log(label.padEnd(maxLabelLength+1), value);
-    }
-}
-
 
 // ---- main entry point when running as a script
 

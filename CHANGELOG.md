@@ -26,14 +26,25 @@
 	**1.1.0 : 6/17/2022**
 	- finished implementing json schemas to validate metadata --> validateSchema in index.js
 	- finished implementing all of the schema parser via cli for creating nft metadata
+	**1.1.1 : 6/21/2022**
+	- moved helper code around for easier addon experience
+	- updated minty for uploading multiple assets references at once along with image; image, placeholder, image_data, etc
 
 ------------------------------------------------------------------------
 
-- update / add docstring comments
+- test new multiple asset upload process
+
 
 # TODO
 
-- update minty for uploading multiple assets references at once along with image; image, placeholder, image_data, etc
+- add Drizzle front end for basic web interface
+npm install --save @drizzle/store
+
+
+
+
+
+- update / add docstring comments
 
 - add method for addons to be able to add prompts to the mint process / detect metadata schemas
 
@@ -47,8 +58,5 @@
 
 - create process for minty being ran on mainnets and with live wallets
 - add method to connect to ipfs without starting local ipfs daemon
-
-- add Drizzle front end for basic web interface
-npm install --save @drizzle/store
 
 - add ability to mint from schemas found already uploaded on IPFS
