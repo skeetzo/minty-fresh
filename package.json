@@ -2,15 +2,18 @@
   "name": "minty-fresh",
   "version": "1.0.7",
   "description": "",
-  "main": "src/minty.js",
+  "main": "cli/minty.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "bin": {
-    "minty": "src/index.js"
+    "minty": "cli/index.js"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "nft",
+    "cli"
+  ],
+  "author": "Skeetzo",
   "license": "ISC",
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "^2.0.1",
@@ -35,5 +38,6 @@
     "it-all": "^1.0.5",
     "json-colorizer": "^2.2.2",
     "multiaddr": "^8.1.2"
-  }
+  },
+  "repository": "git@github.com:skeetzo/minty"
 }

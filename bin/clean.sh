@@ -1,2 +1,2 @@
 #!/usr/bin/env bash
-rm *-deployment.json
+rm *-deployment.json artifacts cache

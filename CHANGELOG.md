@@ -29,20 +29,17 @@
 	**1.1.1 : 6/21/2022**
 	- moved helper code around for easier addon experience
 	- updated minty for uploading multiple assets references at once along with image; image, placeholder, image_data, etc
+**1.2.0 : 6/27/2022**
+	- added truffle-config.js to more easily implement drizzle; may remove hardhat in future
+	- added Drizzle front end for basic web interface
 
 ------------------------------------------------------------------------
 
 - test new multiple asset upload process
+- continue updating drizzle react layout
 
 
 # TODO
-
-- add Drizzle front end for basic web interface
-npm install --save @drizzle/store
-
-
-
-
 
 - update / add docstring comments
 
@@ -60,3 +57,16 @@ npm install --save @drizzle/store
 - add method to connect to ipfs without starting local ipfs daemon
 
 - add ability to mint from schemas found already uploaded on IPFS
+
+
+# Links
+
+https://github.com/trufflesuite/drizzle
+https://trufflesuite.com/docs/drizzle/react/react-integration/
+https://trufflesuite.com/guides/getting-started-with-drizzle-and-react/#install-drizzle
+https://blog.logrocket.com/using-drizzle-react-write-dapp-frontends/
+https://reactjs.org/docs/introducing-jsx.html
+
+# Dev
+
+npm install --save @drizzle/store
