@@ -32,14 +32,17 @@
 **1.2.0 : 6/27/2022**
 	- added truffle-config.js to more easily implement drizzle; may remove hardhat in future
 	- added Drizzle front end for basic web interface
+	**1.2.1 : 6/28/2022**
+	- continued updating drizzle react layout
 
 ------------------------------------------------------------------------
 
 - test new multiple asset upload process
-- continue updating drizzle react layout
 
 
 # TODO
+
+- update drizzle-react ui to autopopulate with necessary contract code  
 
 - update / add docstring comments
 
