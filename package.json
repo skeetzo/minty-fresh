@@ -1,6 +1,6 @@
 {
   "name": "minty-fresh",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "description": "",
   "main": "cli/minty.js",
   "scripts": {
@@ -37,7 +37,8 @@
     "ipfs-http-client": "^49.0.4",
     "it-all": "^1.0.5",
     "json-colorizer": "^2.2.2",
-    "multiaddr": "^8.1.2"
+    "multiaddr": "^8.1.2",
+    "node-fetch": "^3.2.9"
   },
   "repository": "git@github.com:skeetzo/minty"
 }

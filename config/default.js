@@ -1,6 +1,22 @@
 const config = {
 
-    assetTypes: ["image"],
+    // these should be fetched from truffle-config
+    buildPath: "../app/src/contracts/",
+    contractPath: "../contracts/",
+
+    // contract addresses
+    contracts : {
+        // Minty: {
+            // address: '',
+            // networks: {
+                // development: {
+                    // network_id: "*"
+                // }
+            // }
+        // }
+    },
+
+    assetTypes: ['image'],
 
     // The pinningService config tells minty what remote pinning service to use for pinning the IPFS data for a token.
     // The values are read in from environment variables, to discourage checking credentials into source control.
@@ -11,10 +27,6 @@ const config = {
         endpoint: '$$PINNING_SERVICE_ENDPOINT',
         key: '$$PINNING_SERVICE_KEY'
     },
-
-    // When the Minty smart contract is deployed, the contract address and other details will be written to this file.
-    // Commands that interact with the smart contract (minting, etc), will load the file to connect to the deployed contract.
-    // deploymentConfigFile: 'minty-deployment.json',
 
     // If you're running IPFS on a non-default port, update this URL. If you're using the IPFS defaults, you should be all set.
     ipfsApiUrl: 'http://localhost:5001',

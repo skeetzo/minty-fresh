@@ -1,6 +1,22 @@
 
 const SCHEMA_PATH = "./schemas";
 
+// TODO
+// add interaction to fetch stored schemas from IPFS
+
+async function selectSchemaIPFS() {
+    // select schema from IPFS
+    // possibly in a folder of .json schemas
+}
+
+async function fetchSchema(cid) {
+    // fetch schema json file from IPFS
+}
+
+async function fetchIPFSSchema() {
+    // fetch schema json folder from IPFS
+}
+
 async function selectSchema(defaultTemplate=null) {
     function _parseTemplate(t) {return JSON.parse(fs.readFileSync(`${SCHEMA_PATH}/${t}.json`))}
     // get list of template files from available files in available /schema directories
@@ -158,6 +174,5 @@ module.exports = {
     promptAdditionalAttributes,
     promptNFTMetadata,
     validateSchema,
-    promptForMissing,
-    alignOutput
+    promptForMissing
 }

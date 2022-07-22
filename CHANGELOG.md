@@ -29,7 +29,7 @@
 	**1.1.1 : 6/21/2022**
 	- moved helper code around for easier addon experience
 	- updated minty for uploading multiple assets references at once along with image; image, placeholder, image_data, etc
-**1.2.0 : 6/27/2022**
+	**1.2.0 : 6/27/2022**
 	- added truffle-config.js to more easily implement drizzle; may remove hardhat in future
 	- added Drizzle front end for basic web interface
 	**1.2.1 : 6/28/2022**
@@ -37,7 +37,11 @@
 	**1.2.2 : 7/21/2022**
 	- removed hardhat references in place of direct ethers implementation
 	- updated dynamic / multichain|network contract interaction in Minty init phase; requires testing 
-
+**1.2.3 : 7/22/2022**
+	- updated Minty arg + config flow
+	- added option for providing contract address instead of contract name
+	- updated process to fetch contracts from local project spaces
+	- added 'network' option for interacting with different networks
 
 ------------------------------------------------------------------------
 
@@ -46,28 +50,19 @@
 
 # TODO
 
-- test new changes to interacting with a contract on a network
-
-
-- update drizzle-react ui to autopopulate with necessary contract code  
-
-- update / add docstring comments
-
 - add method for addons to be able to add prompts to the mint process / detect metadata schemas
 
-- add option for providing contract address instead of contract name
--- contract address should retrieve contract name from existing deployment on blockchain
-- update minty addon process to use contracts from local project spaces
-
-- add 'live' option for allowing transactions on mainnets
-- add method for interacting with wallets
--- add most of the above to the config
-
-- create process for minty being ran on mainnets and with live wallets
-- add method to connect to ipfs without starting local ipfs daemon
-
+- debug connection to network
+- test new changes to interacting with a contract on a network
 - add ability to mint from schemas found already uploaded on IPFS
 
+- finish drizzle ui
+- update drizzle-react ui to autopopulate with necessary contract code  
+
+- add method for interacting with wallets; possibly on remote nodes
+
+- finalize & test process for minty being ran on mainnets and with live wallets
+- update / add docstring comments
 
 # Links
 
@@ -79,4 +74,5 @@ https://reactjs.org/docs/introducing-jsx.html
 
 # Dev
 
+npm link
 npm install --save @drizzle/store

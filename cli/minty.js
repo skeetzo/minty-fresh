@@ -1,4 +1,5 @@
-const fs = require('fs/promises');
+// const fs = require('fs/promises');
+const fs = require('fs')
 const path = require('path');
 
 const CID = require('cids');
@@ -9,7 +10,7 @@ const uint8ArrayToString = require('uint8arrays/to-string').toString;
 const ethers = require('ethers');
 const { BigNumber } = require('ethers');
 const { selectSchema, promptNFTMetadata, validateSchema } = require('./helpers.js');
-const { fetch } = require('node-fetch');
+const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
 const solc = require('solc');
 
 // The getconfig package loads configuration from files located in the the `config` directory.
@@ -29,8 +30,8 @@ const ERC721URIStorage_QUERY_ERROR = "ERC721URIStorage: URI query for nonexisten
  * Construct and asynchronously initialize a new Minty instance.
  * @returns {Promise<Minty>} a new instance of Minty, ready to mint NFTs.
  */
- async function MakeMinty(contract, address=null, network=null) {
-    const m = new Minty(contract, address, network);
+ async function MakeMinty(opts) {
+    const m = new Minty(opts);
     await m.init();
     return m;
 }
@@ -44,13 +45,37 @@ const ERC721URIStorage_QUERY_ERROR = "ERC721URIStorage: URI query for nonexisten
  * To make one, use the async {@link MakeMinty} function.
  */
 class Minty {
-    constructor(_name="Minty", _address=null, _network=null) {
-        this.address = _address;
-        this.name = _name;
-        this.network = _network;
+    constructor(opts) {
+
+        // the name of the smart contract
+        this.name = opts.contract || null;
+        this.symbol = opts.symbol || null;
+        this.token = opts.name || null;
+        this.address = opts.address || null;
+        // can get address from name if available in config
+        if (!isNaN(this.name) && !isNaN(config.contracts[this.name]) && config.contracts[this.name].hasOwnProperty("address"))
+            this.address = config.contracts[this.name].address;
+        
+        // the url of the provider to connect to
+        this.host = opts.host || "http://127.0.0.1:8545";
+        // the name of the network to connect to
+        this.network = opts.network || config.network || null;
+        // the network_id matching in truffle-config.js
+        this.chainId = opts.chainId || null;
+        // can get network data and network_id if name & network exists in config
+        if (!isNaN(this.name) && !isNaN(config.contracts[this.name]) && config.contracts[this.name].hasOwnProperty("networks") &&
+            config.contracts[name].networks[this.network].hasOwnProperty("network_id"))
+            this.chainId = config.contracts[name].networks[this.chainId];
+        if (!isNaN(this.name) && !isNaN(config.contracts[this.name]) && config.contracts[this.name].hasOwnProperty("networks") &&
+            config.contracts[this.name].networks[this.network].hasOwnProperty("host"))
+            this.host = config.contracts[this.name].networks[this.host];
+
         this.abi = null;
+        // ipfs client
         this.ipfs = null;
+        // ethers contract object
         this.contract = null;
+
         this._initialized = false;
     }
 
@@ -59,47 +84,74 @@ class Minty {
             return;
         }
 
-        //- determine the source of deployment and destination of interaction
-        //- connect to contract for this.contract
-
-        let address = this.address || config.contracts[this.name].address;
-        let network = this.network || config.contracts[this.name].network;
         let bytecode, contractJSON = {'networks':[]};
 
-        if (await fileExists(`../build/${this.name}.json`)) {
-            contractJSON = require(`../build/${this.name}.json`);
+        ///////////////
+        // Fetch ABI //
+        ///////////////
+
+        // check for migrations file
+        if (fileExists(path.join(__dirname, config.buildPath, `${this.name}.json`))) {
+            contractJSON = require(path.join(__dirname, config.buildPath, `${this.name}.json`));
             this.abi = contractJSON.abi;
             bytecode = contractJSON.bytecode;
         }
-        else if (await fileExists(`../contracts/${this.name}.sol`)) {
-            // Compile the source code
-            const input = fs.readFileSync(`../contracts/${this.name}.sol`);
+        // check for local smart contract file
+        else if (fileExists(path.join(__dirname, config.contractPath, `${this.name}.sol`))) {
+            const input = fs.readFileSync(path.join(__dirname, config.contractPath, `${this.name}.sol`));
             const output = solc.compile(input.toString(), 1);
             bytecode = output.contracts[this.name].bytecode;
             this.abi = JSON.parse(output.contracts[this.name].interface);
         }
+        // 
+        else if (this.address && this.network.name) {
 
-        const provider = new ethers.providers.StaticJsonRpcProvider(network);
+        }
+
+        if (!this.abi) throw "unable to find ABI for contract!";
+
+        /////////////
+        // Network //
+        /////////////
+
+        const provider = new ethers.providers.StaticJsonRpcProvider(this.host);
         const signer = provider.getSigner();            
-        network = await provider.getNetwork();
-        console.debug(`Network found:\n${network}`)
+        const network = await provider.getNetwork();
+        console.debug(`Network connected: ${JSON.stringify(network)}`)
         const networkId = network.chainId;
         // get the deployed contract's address on current network
         console.debug(`Available Networks: ${networkId} <-- current`)
         console.debug(contractJSON.networks)
-        // check if contract has been deployed, if not then deploy
-        if (!isNaN(contractJSON.networks[networkId].address))
+        // check if contract has been deployed on network, if not then deploy
+        if (!isNaN(contractJSON.networks[networkId]) && contractJSON.networks[networkId].hasOwnProperty("address"))
             this.address = contractJSON.networks[networkId].address;
         else {
-            console.log(`Deploying ${this.name} to ${getNetworkName(this.network)}`)
-            const factory = new ethers.ContractFactory(this.abi, bytecode, signer)
-            const contract = await factory.deploy(this.name, this.symbol);
-            address = contract.address;
-            await contract.deployTransaction.wait();
+            try {
+                console.log(`Deploying ${this.name} to ${this.network}`);
+                // const iface = new ethers.utils.Interface(this.abi);
+                const factory = new ethers.ContractFactory(this.abi, bytecode, signer);
+                const contract = await factory.deploy(this.token, this.symbol);
+                this.address = contract.address;
+                await contract.deployTransaction.wait();
+            }
+            catch (err) {
+                console.error(err);
+            }
         }
+
+        if (!this.address || !this.abi) throw "unable to connect to contract!";
+
+        ////////////////////
+        // Smart Contract //
+        ////////////////////
+
         this.contract = await ethers.Contract(this.address, this.abi, signer);
 
-        // create a local IPFS node
+        //////////
+        // IPFS //
+        //////////
+
+        // creates a local IPFS node
         this.ipfs = ipfsClient(config.ipfsApiUrl);
 
         this._initialized = true;
@@ -164,9 +216,9 @@ class Minty {
             ownerAddress,
             metadata,
             metadataURI,
-            metadataGatewayURL: makeGatewayURL(metadataURI)
+            metadataGatewayURL: makeGatewayURL(metadataURI),
             assetURIs: assetURIs,
-            assetsGatewayURLs: assetURIs.map(a => makeGatewayURL(a)),
+            assetsGatewayURLs: assetURIs.map(a => makeGatewayURL(a))
         };
     }
 
@@ -582,12 +634,18 @@ function extractCID(cidOrURI) {
 }
 
 async function fileExists(path) {
-    try {
-        await fs.access(path, F_OK);
-        return true;
-    } catch (e) {
-        return false;
-    }
+    // try {
+        return fs.access(path, fs.F_OK, (err) => {
+            if (err) {
+                console.log(e);
+                return false;
+            }
+            return true;
+        });
+    // } catch (e) {
+        // console.log(e)
+        // return false;
+    // }
 }
 
 async function fetchABI(address, network="mainnet", blockchain="ethereum") {
@@ -606,6 +664,10 @@ function getNetworkName(network) {
     // check config file for network w/ url that matches
     // return the labeled name of the network
     return "development";
+}
+
+function getNetworkURL(networkName) {
+
 }
 
 //////////////////////////////////////////////
