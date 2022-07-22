@@ -19,7 +19,6 @@ fi
 echo "Running IPFS and development blockchain"
 run_eth_cmd="npx ganache-cli"
 run_ipfs_cmd="npx go-ipfs daemon"
+run_migrate_cmd="npx truffle migrate"
 
-bin/migrate.sh &
-
-npx concurrently -n eth,ipfs -c yellow,blue "$run_eth_cmd" "$run_ipfs_cmd"
+npx concurrently -n eth,ipfs,ganache -c yellow,blue,cyan "$run_eth_cmd" "$run_ipfs_cmd" "$run_migrate_cmd"

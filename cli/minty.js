@@ -6,10 +6,11 @@ const ipfsClient = require('ipfs-http-client');
 const all = require('it-all');
 const uint8ArrayConcat = require('uint8arrays/concat').concat;
 const uint8ArrayToString = require('uint8arrays/to-string').toString;
+const ethers = require('ethers');
 const { BigNumber } = require('ethers');
 const { selectSchema, promptNFTMetadata, validateSchema } = require('./helpers.js');
-
-const { loadDeploymentInfo } = require('./deploy');
+const { fetch } = require('node-fetch');
+const solc = require('solc');
 
 // The getconfig package loads configuration from files located in the the `config` directory.
 // See https://www.npmjs.com/package/getconfig for info on how to override the default config for
@@ -28,8 +29,8 @@ const ERC721URIStorage_QUERY_ERROR = "ERC721URIStorage: URI query for nonexisten
  * Construct and asynchronously initialize a new Minty instance.
  * @returns {Promise<Minty>} a new instance of Minty, ready to mint NFTs.
  */
- async function MakeMinty(contract) {
-    const m = new Minty(contract);
+ async function MakeMinty(contract, address=null, network=null) {
+    const m = new Minty(contract, address, network);
     await m.init();
     return m;
 }
@@ -43,11 +44,13 @@ const ERC721URIStorage_QUERY_ERROR = "ERC721URIStorage: URI query for nonexisten
  * To make one, use the async {@link MakeMinty} function.
  */
 class Minty {
-    constructor(_name="Minty") {
+    constructor(_name="Minty", _address=null, _network=null) {
+        this.address = _address;
         this.name = _name;
+        this.network = _network;
+        this.abi = null;
         this.ipfs = null;
         this.contract = null;
-        this.deployInfo = null;
         this._initialized = false;
     }
 
@@ -55,16 +58,46 @@ class Minty {
         if (this._initialized) {
             return;
         }
-        this.hardhat = require('hardhat');
 
-        // The Minty object expects that the contract has already been deployed, with
-        // details written to a deployment info file. The default location is `./minty-deployment.json`,
-        // in the config.
-        this.deployInfo = await loadDeploymentInfo(this.name);
+        //- determine the source of deployment and destination of interaction
+        //- connect to contract for this.contract
 
-        // connect to the smart contract using the address and ABI from the deploy info
-        const {abi, address} = this.deployInfo.contract;
-        this.contract = await this.hardhat.ethers.getContractAt(abi, address);
+        let address = this.address || config.contracts[this.name].address;
+        let network = this.network || config.contracts[this.name].network;
+        let bytecode, contractJSON = {'networks':[]};
+
+        if (await fileExists(`../build/${this.name}.json`)) {
+            contractJSON = require(`../build/${this.name}.json`);
+            this.abi = contractJSON.abi;
+            bytecode = contractJSON.bytecode;
+        }
+        else if (await fileExists(`../contracts/${this.name}.sol`)) {
+            // Compile the source code
+            const input = fs.readFileSync(`../contracts/${this.name}.sol`);
+            const output = solc.compile(input.toString(), 1);
+            bytecode = output.contracts[this.name].bytecode;
+            this.abi = JSON.parse(output.contracts[this.name].interface);
+        }
+
+        const provider = new ethers.providers.StaticJsonRpcProvider(network);
+        const signer = provider.getSigner();            
+        network = await provider.getNetwork();
+        console.debug(`Network found:\n${network}`)
+        const networkId = network.chainId;
+        // get the deployed contract's address on current network
+        console.debug(`Available Networks: ${networkId} <-- current`)
+        console.debug(contractJSON.networks)
+        // check if contract has been deployed, if not then deploy
+        if (!isNaN(contractJSON.networks[networkId].address))
+            this.address = contractJSON.networks[networkId].address;
+        else {
+            console.log(`Deploying ${this.name} to ${getNetworkName(this.network)}`)
+            const factory = new ethers.ContractFactory(this.abi, bytecode, signer)
+            const contract = await factory.deploy(this.name, this.symbol);
+            address = contract.address;
+            await contract.deployTransaction.wait();
+        }
+        this.contract = await ethers.Contract(this.address, this.abi, signer);
 
         // create a local IPFS node
         this.ipfs = ipfsClient(config.ipfsApiUrl);
@@ -76,53 +109,11 @@ class Minty {
     // ------ NFT Creation
     //////////////////////////////////////////////
 
-    // TODO
-    // add docstring comments
-    async createNFT(options) {
-        console.debug("creating NFT")
-        const schema = await selectSchema(options.schema);
-        let metadata = await promptNFTMetadata(schema, options);
-        const assets = {},
-              assetURIs = [];
-        if (Array.isArray(options.assets) && options.assets.length > 0)
-            for (const [key, filePath] in options.assets) {
-                const {assetCID, assetURI} = await this.uploadAssetData(filePath);
-                assetURIs.push(assetURI);
-                assets[key].cid = assetCID;
-                assets[key].uri = assetURI;
-            }
-        metadata = await this.makeNFTMetadata(assets, options, metadata);
-        validateSchema(metadata, schema);
-        // add the metadata to IPFS
-        const { cid: metadataCid } = await this.ipfs.add({ path: `/nfts/metadata/${metadata.name}.json`, content: JSON.stringify(metadata)}, ipfsAddOptions);
-        const metadataURI = ensureIpfsUriPrefix(metadataCid) + `/metadata/${metadata.name}.json`;
-        // get the address of the token owner from options, or use the default signing address if no owner is given
-        let ownerAddress = options.owner;
-        if (!ownerAddress) {
-            ownerAddress = await this.defaultOwnerAddress();
-        }
-        let tokenId = null;
-        if (isNaN(options.skipMint) && !options.skipMint) {
-            // mint a new token referencing the metadata URI
-            tokenId = await this.mint(ownerAddress, metadataURI);
-        }
-        // format and return the results
-        return {
-            tokenId,
-            ownerAddress,
-            metadata,
-            assetsURIs: assetURIs,
-            metadataURI,
-            assetsGatewayURLs: assetURIs.map(a => makeGatewayURL(a)),
-            metadataGatewayURL: makeGatewayURL(metadataURI),
-        };
-    }
-
     /**
      * Create a new NFT from the given asset data.
      * 
-     * @param {Buffer|Uint8Array} content - a Buffer or UInt8Array of data (e.g. for an image)
      * @param {object} options
+     * @param {Buffer|Uint8Array} assets - an array of Buffers or UInt8Arrays of data (e.g. for an image)
      * @param {?string} path - optional file path to set when storing the data on IPFS
      * @param {?string} name - optional name to set in NFT metadata
      * @param {?string} description - optional description to store in NFT metadata
@@ -140,54 +131,44 @@ class Minty {
      * 
      * @returns {Promise<CreateNFTResult>}
      */
-    // async createNFTFromAssetData(asset, content, options) {
-    //     console.debug("creating NFT from asset data")
-
-    //     const {assetCid, assetURI} = await uploadAssetData(asset, content)
-        
-    //     const metadata = await this.makeNFTMetadata(asset, assetURI, options);
-
-    //     // add the metadata to IPFS
-    //     const { cid: metadataCid } = await this.ipfs.add({ path: `/nfts/metadata/${metadata.name}.json`, content: JSON.stringify(metadata)}, ipfsAddOptions);
-    //     const metadataURI = ensureIpfsUriPrefix(metadataCid) + `/metadata/${metadata.name}.json`;
-
-    //     // get the address of the token owner from options, or use the default signing address if no owner is given
-    //     let ownerAddress = options.owner;
-    //     if (!ownerAddress) {
-    //         ownerAddress = await this.defaultOwnerAddress();
-    //     }
-
-    //     // mint a new token referencing the metadata URI
-    //     const tokenId = await this.mint(ownerAddress, metadataURI);
-
-    //     // format and return the results
-    //     return {
-    //         tokenId,
-    //         ownerAddress,
-    //         metadata,
-    //         assetURI,
-    //         metadataURI,
-    //         assetGatewayURL: makeGatewayURL(assetURI),
-    //         metadataGatewayURL: makeGatewayURL(metadataURI),
-    //     };
-    // }
-
-    /**
-     * Create a new NFT from an asset file at the given path.
-     * 
-     * @param {string} filename - the path to an image file or other asset to use
-     * @param {object} options
-     * @param {?string} name - optional name to set in NFT metadata
-     * @param {?string} description - optional description to store in NFT metadata
-     * @param {?string} owner - optional ethereum address that should own the new NFT. 
-     * If missing, the default signing address will be used.
-     * 
-     * @returns {Promise<CreateNFTResult>}
-     */
-    // async createNFTFromAssetFile(filename, options) {
-    //     const content = await fs.readFile(filename);
-    //     return this.createNFTFromAssetData(content, {...options, path: filename});
-    // }
+    async createNFT(options) {
+        console.debug("creating NFT")
+        const schema = await selectSchema(options.schema);
+        let metadata = await promptNFTMetadata(schema, options);
+        const assets = {};
+        if (Array.isArray(options.assets) && options.assets.length > 0)
+            for (const [key, filePath] in options.assets) {
+                const {assetCID, assetURI} = await this.uploadAssetData(filePath, options);
+                assets[key].cid = assetCID;
+                assets[key].uri = assetURI;
+            }
+        metadata = await this.makeNFTMetadata(assets, options, metadata);
+        const assetURIs = metadata.assetURIs;
+        delete metadata.assetURIs;
+        validateSchema(metadata, schema);
+        // add the metadata to IPFS
+        const { cid: metadataCid } = await this.ipfs.add({ path: `/${options.contract}/nfts/metadata/${metadata.name}.json`, content: JSON.stringify(metadata)}, ipfsAddOptions);
+        const metadataURI = ensureIpfsUriPrefix(metadataCid) + `/${options.contract}/metadata/${metadata.name}.json`;
+        // get the address of the token owner from options, or use the default signing address if no owner is given
+        let ownerAddress = options.owner;
+        if (!ownerAddress) {
+            ownerAddress = await this.defaultOwnerAddress();
+        }
+        let tokenId = null;
+        if (isNaN(options.skipMint) && !options.skipMint) {
+            // mint a new token referencing the metadata URI
+            tokenId = await this.mint(ownerAddress, metadataURI);
+        }
+        return {
+            tokenId,
+            ownerAddress,
+            metadata,
+            metadataURI,
+            metadataGatewayURL: makeGatewayURL(metadataURI)
+            assetURIs: assetURIs,
+            assetsGatewayURLs: assetURIs.map(a => makeGatewayURL(a)),
+        };
+    }
 
     /**
      * Helper to construct metadata JSON for 
@@ -198,20 +179,18 @@ class Minty {
      * @returns {object} - NFT metadata object
      */
     async makeNFTMetadata(assets, options, metadata={}) {
-        metadata.name = options.name;
-        metadata.description = options.description;
-        // assetURI = ensureIpfsUriPrefix(assetURI);
-        for (const [asset, values] of assets)
-            metadata[asset] = ensureIpfsUriPrefix(values.uri);
+        const assetURIs = [];
+        metadata.name = options.name; // args overwrites
+        metadata.description = options.description; // args overwrites
+        for (const [key, values] of assets) {
+            metadata[key] = ensureIpfsUriPrefix(values.uri);
+            assetURIs.push(metadata[key]);
+        }
+        metadata.assetURIs = assetURIs;
         return metadata;
-        // return {
-            // name,
-            // description,
-            // image: assetURI
-        // };
     }
 
-    async uploadAssetData(filePath, folderName="assets") {
+    async uploadAssetData(filePath, options, folderName="assets") {
         // add the asset to IPFS
         // const filePath = options.path || 'asset.bin';
         const basename =  path.basename(filePath);
@@ -221,7 +200,7 @@ class Minty {
         // it gives us URIs with descriptive filenames in them e.g.
         // 'ipfs://QmaNZ2FCgvBPqnxtkbToVVbK2Nes6xk5K4Ns6BsmkPucAM/cat-pic.png' instead of
         // 'ipfs://QmaNZ2FCgvBPqnxtkbToVVbK2Nes6xk5K4Ns6BsmkPucAM'
-        const ipfsPath = `/nfts/${folderName}/${basename}`;
+        const ipfsPath = `${options.contract}/nfts/${folderName}/${basename}`;
         const { cid: assetCid } = await this.ipfs.add({ path: ipfsPath, content }, ipfsAddOptions);
         // make the NFT metadata JSON
         const assetURI = ensureIpfsUriPrefix(assetCid) + '/' + basename;
@@ -268,17 +247,18 @@ class Minty {
         const {metadata, metadataURI} = await this.getNFTMetadata(tokenId);
         const ownerAddress = await this.getTokenOwner(tokenId);
         const metadataGatewayURL = makeGatewayURL(metadataURI);
-        const nft = {tokenId, metadata, metadataURI, metadataGatewayURL, ownerAddress};
-
         const {fetchAsset, fetchCreationInfo} = (opts || {})
-        if (metadata.image) {
-            nft.assetURI = metadata.image;
-            nft.assetGatewayURL = makeGatewayURL(metadata.image);
-            if (fetchAsset) {
-                nft.assetDataBase64 = await this.getIPFSBase64(metadata.image);
+        const assets = [];
+        for (const [key, value] of metadata)
+            if (config.assetTypes.includes(key)) {
+                const asset = {
+                    assetURI: value,
+                    assetGatewayURL: makeGatewayURL(value)
+                };
+                if (fetchAsset) asset.base64 = await this.getIPFSBase64(value);
+                assets.push(asset);
             }
-        }
-
+        const nft = {tokenId, metadata, metadataURI, metadataGatewayURL, ownerAddress, assets};
         if (fetchCreationInfo) {
             nft.creationInfo = await this.getCreationInfo(tokenId);
         }
@@ -360,7 +340,7 @@ class Minty {
      * @returns {Promise<string>} - the default signing address that should own new tokens, if no owner was specified.
      */
     async defaultOwnerAddress() {
-        const signers = await this.hardhat.ethers.getSigners();
+        const signers = await ethers.getSigners();
         return signers[0].address;
     }
 
@@ -601,11 +581,37 @@ function extractCID(cidOrURI) {
     return new CID(cidString);
 }
 
+async function fileExists(path) {
+    try {
+        await fs.access(path, F_OK);
+        return true;
+    } catch (e) {
+        return false;
+    }
+}
+
+async function fetchABI(address, network="mainnet", blockchain="ethereum") {
+    if (blockchain == "ethereum") {
+        const response = await fetch(`https://api.etherscan.io/api?module=contract&action=getabi&address=${address}`);
+        const data = await response.json();
+        return JSON.parse(data.result);
+    }
+    console.error("Unable to find ABI!");
+    return {};   
+}
+
+// translate network url to legible name
+function getNetworkName(network) {
+    // TODO
+    // check config file for network w/ url that matches
+    // return the labeled name of the network
+    return "development";
+}
 
 //////////////////////////////////////////////
 // -------- Exports
 //////////////////////////////////////////////
 
 module.exports = {
-    MakeMinty,
+    MakeMinty
 }

@@ -34,13 +34,20 @@
 	- added Drizzle front end for basic web interface
 	**1.2.1 : 6/28/2022**
 	- continued updating drizzle react layout
+	**1.2.2 : 7/21/2022**
+	- removed hardhat references in place of direct ethers implementation
+	- updated dynamic / multichain|network contract interaction in Minty init phase; requires testing 
+
 
 ------------------------------------------------------------------------
 
 - test new multiple asset upload process
-
+- write tests for each cli process
 
 # TODO
+
+- test new changes to interacting with a contract on a network
+
 
 - update drizzle-react ui to autopopulate with necessary contract code  
 

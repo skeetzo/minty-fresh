@@ -150,14 +150,7 @@ async function promptForMissing(cliOptions, prompts) {
     return inquirer.prompt(questions);
 }
 
-function alignOutput(labelValuePairs) {
-    const maxLabelLength = labelValuePairs
-      .map(([l, _]) => l.length)
-      .reduce((len, max) => len > max ? len : max);
-    for (const [label, value] of labelValuePairs) {
-        console.log(label.padEnd(maxLabelLength+1), value);
-    }
-}
+
 
 module.exports = {
     selectSchema,

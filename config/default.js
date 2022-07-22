@@ -1,5 +1,7 @@
 const config = {
 
+    assetTypes: ["image"],
+
     // The pinningService config tells minty what remote pinning service to use for pinning the IPFS data for a token.
     // The values are read in from environment variables, to discourage checking credentials into source control.
     // You can make things easy by creating a .env file with your environment variable definitions. See the example files

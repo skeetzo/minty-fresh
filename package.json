@@ -1,6 +1,6 @@
 {
   "name": "minty-fresh",
-  "version": "1.0.7",
+  "version": "1.2.2",
   "description": "",
   "main": "cli/minty.js",
   "scripts": {

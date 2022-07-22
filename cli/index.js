@@ -3,7 +3,7 @@
 // This file contains the main entry point for the command line `minty` app, and the command line option parsing code.
 // See minty.js for the core functionality.
 
-const fs_ = require('fs/promises');
+// const fs_ = require('fs/promises');
 const fs = require('fs');
 const path = require('path');
 const { Command } = require('commander');
@@ -12,7 +12,6 @@ const chalk = require('chalk');
 const colorize = require('json-colorizer');
 const config = require('getconfig');
 const { MakeMinty } = require('./minty');
-const { deployContract, fileExists, saveDeploymentInfo } = require('./deploy');
 const Ajv = require("ajv");
 const ajv = new Ajv(); // options can be passed, e.g. {allErrors: true}
 
@@ -23,9 +22,6 @@ const colorizeOptions = {
         STRING_LITERAL: 'green'
     }
 };
-
-// ---- helpers
-const { alignOutput } = require('./helpers.js');
 
 async function main() {
 
@@ -59,12 +55,12 @@ async function main() {
         program = new Command();
         program.name('Minty Fresh')
           .description('CLI to some JavaScript NFT utilities')
-          .version('1.0.1');
+          .version('1.2.2', '-v', '--version', 'Output the current version');
       }
 
     if (!_commandExists("mint"))
         program.command('mint <schema>')
-            .description('mint a new NFT from an existing schema template')
+            .description('Mint a new NFT from an existing schema template')
             .option('-s, --schema <name>', 'The name of the schema template to mint')
             .option('-i, --image <path>', 'The path to the image asset')
             .option('-c, --contract <name>', 'The name of the contract', 'Minty')
@@ -77,14 +73,15 @@ async function main() {
 
     if (!_commandExists("show"))
         program.command('show <token-id>')
-            .description('get info about an NFT using its token ID')
+            .description('Get info about an NFT using its token ID')
             .option('-c, --contract <name>', 'The name of the contract', 'Minty')
-            .option('-c, --creation-info', 'include the creator address and block number the NFT was minted')
+            .option('-fA, --fetch-assets', 'Asset data will be fetched from IPFS')
+            .option('-cI, --creation-info', 'Include the creator address and block number the NFT was minted')
             .action(getNFT);
 
     if (!_commandExists("transfer"))
         program.command('transfer <token-id> <to-address>')
-            .description('transfer an NFT to a new owner')
+            .description('Transfer an NFT to a new owner')
             .option('-c, --contract <name>', 'The name of the contract', 'Minty')
             .action(transferNFT);
 
@@ -93,15 +90,6 @@ async function main() {
             .description('"pin" the data for an NFT to a remote IPFS Pinning Service')
             .option('-c, --contract <name>', 'The name of the contract', 'Minty')
             .action(pinNFTData);
-
-    if (!_commandExists("deploy"))
-        program.command('deploy')
-            .description('deploy an instance of the Minty NFT contract')
-            // .option('-o, --output <deploy-file-path>', 'Path to write deployment info to', config.deploymentConfigFile || 'minty-deployment.json')
-            .option('-c, --contract <name>', 'The name of the contract', 'Minty')
-            .option('-n, --name <name>', 'The name of the token', 'Julep')
-            .option('-s, --symbol <symbol>', 'A short symbol for the tokens', 'JLP')
-            .action(deploy);
 
     // The hardhat and getconfig modules both expect to be running from the root directory of the project,
     // so we change the current directory to the parent dir of this script file to make things work
@@ -125,20 +113,19 @@ async function createNFT(options) {
         ['Metadata Address:', chalk.blue(nft.metadataURI)],
         ['Metadata Gateway URL:', chalk.blue(nft.metadataGatewayURL)],
     ];
-    if (nft.assetURIs.length > 0 && nft.assetsGatewayURLs.length > 0 )
-        for (let i=0;i<nft.assetsURIs.length;i++) {
-            output.push(['Asset Address:', chalk.blue(nft.assetsURIs[i])]);
-            output.push(['Asset Gateway URL:', chalk.blue(nft.assetsGatewayURLs[i])]);
-        }
+    for (let i=0;i<nft.assetsURIs.length;i++) {
+        output.push(['Asset Address:', chalk.blue(nft.assetsURIs[i])]);
+        output.push(['Asset Gateway URL:', chalk.blue(nft.assetsGatewayURLs[i])]);
+    }
     alignOutput(output);
     console.log('NFT Metadata:');
     console.log(colorize(JSON.stringify(nft.metadata), colorizeOptions));
 }
 
 async function getNFT(tokenId, options) {
-    const { creationInfo: fetchCreationInfo } = options;
+    const { creationInfo: fetchCreationInfo, fetchAssets: fetchAssetData } = options;
     const minty = await MakeMinty(options.contract);
-    const nft = await minty.getNFT(tokenId, {fetchCreationInfo});
+    const nft = await minty.getNFT(tokenId, {fetchAssetData, fetchCreationInfo});
     const output = [
         ['Contract Name:', chalk.green(minty.name)],
         ['Contract Address:', chalk.yellow(minty.contract.address)],
@@ -151,8 +138,6 @@ async function getNFT(tokenId, options) {
     }
     output.push(['Metadata Address:', chalk.blue(nft.metadataURI)]);
     output.push(['Metadata Gateway URL:', chalk.blue(nft.metadataGatewayURL)]);
-    // output.push(['Asset Address:', chalk.blue(nft.assetsURIs)]);
-    // output.push(['Asset Gateway URL:', chalk.blue(nft.assetsGatewayURLs)]);
     if (nft.assetURIs.length > 0 && nft.assetsGatewayURLs.length > 0 )
         for (let i=0;i<nft.assetsURIs.length;i++) {
             output.push(['Asset Address:', chalk.blue(nft.assetsURIs[i])]);
@@ -175,11 +160,24 @@ async function pinNFTData(tokenId, options) {
     console.log(`🌿 Pinned all data for token id ${chalk.green(tokenId)}`);
 }
 
-async function deploy(options) {
-    // const filename = options.output;
-    const info = await deployContract(options.name, options.symbol, options.contract);
-    // await saveDeploymentInfo(info, filename);
-    await saveDeploymentInfo(info);
+// ---- helpers
+
+function alignOutput(labelValuePairs) {
+    const maxLabelLength = labelValuePairs
+      .map(([l, _]) => l.length)
+      .reduce((len, max) => len > max ? len : max);
+    for (const [label, value] of labelValuePairs) {
+        console.log(label.padEnd(maxLabelLength+1), value);
+    }
+}
+
+async function fileExists(path) {
+    try {
+        await fs.access(path, F_OK);
+        return true;
+    } catch (e) {
+        return false;
+    }
 }
 
 // ---- main entry point when running as a script
