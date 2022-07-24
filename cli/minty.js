@@ -105,7 +105,7 @@ class Minty {
         }
         // 
         else if (this.address && this.network.name) {
-
+            // get abi from etherscan, etc
         }
 
         if (!this.abi) throw "unable to find ABI for contract!";

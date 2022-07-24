@@ -3,8 +3,8 @@
 // This file contains the main entry point for the command line `minty` app, and the command line option parsing code.
 // See minty.js for the core functionality.
 
-// const fs_ = require('fs/promises');
-const fs = require('fs');
+const fs = require('fs/promises');
+// const fs = require('fs');
 const path = require('path');
 const { Command } = require('commander');
 const inquirer = require('inquirer');
@@ -28,14 +28,14 @@ async function main() {
     var program;
 
     // get .env of current dir so command must be ran at project root to use corresponding addon
-    var exists = await fileExists('./.env');
+    var exists = fileExists('./.env');
     if (exists) {
         console.debug("minty addon .env found");
         const dotenv = require('dotenv').config({ path: './.env' });
-        exists = await fileExists(path.resolve(".", dotenv.parsed.MINTY_ADDON));
+        exists = fileExists(path.join(process.cwd(), dotenv.parsed.MINTY_ADDON));
         if (exists) {
             console.debug("minty addon found");
-            program = await require(path.resolve(".", dotenv.parsed.MINTY_ADDON))();
+            program = await require(path.join(process.cwd(), dotenv.parsed.MINTY_ADDON))();
         }
         else {
             console.error("minty addon missing");
@@ -56,6 +56,12 @@ async function main() {
         program.name('Minty Fresh')
           .description('CLI to some JavaScript NFT utilities')
           .version('1.2.2', '-v', '--version', 'Output the current version');
+
+        // The hardhat and getconfig modules both expect to be running from the root directory of the project,
+        // so we change the current directory to the parent dir of this script file to make things work
+        // even if you call minty from elsewhere
+        const rootDir = path.join(__dirname, '..');
+        process.chdir(rootDir);
     }
 
     if (!_commandExists("mint"))
@@ -101,12 +107,6 @@ async function main() {
             .option('-a, --network <name>', 'The name of the network to connect to', 'development')
             .option('-cI, --chainId <number>', 'The network id', '*')
         .action(pinNFTData);
-
-    // The hardhat and getconfig modules both expect to be running from the root directory of the project,
-    // so we change the current directory to the parent dir of this script file to make things work
-    // even if you call minty from elsewhere
-    const rootDir = path.join(__dirname, '..');
-    process.chdir(rootDir);
 
     await program.parseAsync(process.argv);
 }
@@ -182,13 +182,20 @@ function alignOutput(labelValuePairs) {
     }
 }
 
-async function fileExists(path) {
-    try {
-        await fs.access(path, F_OK);
+function fileExists(path) {
+    // try {
+    //     await fs.access(path, fs.F_OK);
+    //     return true;
+    // } catch (e) {
+    //     return false;
+    // }
+    return fs.access(path, fs.F_OK, (err) => {
+        if (err) {
+            console.log(e);
+            return false;
+        }
         return true;
-    } catch (e) {
-        return false;
-    }
+    });
 }
 
 // ---- main entry point when running as a script
