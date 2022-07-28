@@ -9,9 +9,11 @@ const uint8ArrayConcat = require('uint8arrays/concat').concat;
 const uint8ArrayToString = require('uint8arrays/to-string').toString;
 const ethers = require('ethers');
 const { BigNumber } = require('ethers');
-const { selectSchema, promptNFTMetadata, validateSchema } = require('./helpers.js');
+const { selectSchema, promptNFTMetadata, validateSchema } = require('./schema.js');
 const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
 const solc = require('solc');
+
+const { fileExists } = require('./helpers.js');
 
 // The getconfig package loads configuration from files located in the the `config` directory.
 // See https://www.npmjs.com/package/getconfig for info on how to override the default config for
@@ -183,9 +185,9 @@ class Minty {
      * 
      * @returns {Promise<CreateNFTResult>}
      */
-    async createNFT(options) {
+    async createNFT(options, _schema="default") {
         console.debug("creating NFT")
-        const schema = await selectSchema(options.schema);
+        const schema = await selectSchema(_schema);
         let metadata = await promptNFTMetadata(schema, options);
         const assets = {};
         if (Array.isArray(options.assets) && options.assets.length > 0)
@@ -194,7 +196,7 @@ class Minty {
                 assets[key].cid = assetCID;
                 assets[key].uri = assetURI;
             }
-        metadata = await this.makeNFTMetadata(assets, options, metadata);
+        metadata = await this.makeMetadata(assets, options, metadata);
         const assetURIs = metadata.assetURIs;
         delete metadata.assetURIs;
         validateSchema(metadata, schema);
@@ -224,13 +226,13 @@ class Minty {
 
     /**
      * Helper to construct metadata JSON for 
-     * @param {string} assetCid - IPFS URI for the NFT asset
+     * @param {string} assets - object containing possible NFT asset datas
      * @param {object} options
-     * @param {?string} name - optional name to set in NFT metadata
-     * @param {?string} description - optional description to store in NFT metadata
-     * @returns {object} - NFT metadata object
+     * @param {?string} name - optional name to set in NFT metadata (standard)
+     * @param {?string} description - optional description to store in NFT metadata (standard)
+     * @returns {object} - metadata object
      */
-    async makeNFTMetadata(assets, options, metadata={}) {
+    async makeMetadata(assets, options, metadata={}) {
         const assetURIs = [];
         metadata.name = options.name; // args overwrites
         metadata.description = options.description; // args overwrites
@@ -296,7 +298,7 @@ class Minty {
      * @returns {Promise<NFTInfo>}
      */
     async getNFT(tokenId, opts) {
-        const {metadata, metadataURI} = await this.getNFTMetadata(tokenId);
+        const {metadata, metadataURI} = await this.getMetadata(tokenId);
         const ownerAddress = await this.getTokenOwner(tokenId);
         const metadataGatewayURL = makeGatewayURL(metadataURI);
         const {fetchAsset, fetchCreationInfo} = (opts || {})
@@ -324,7 +326,7 @@ class Minty {
      * @returns {Promise<{metadata: object, metadataURI: string}>} - resolves to an object containing the metadata and
      * metadata URI. Fails if the token does not exist, or if fetching the data fails.
      */
-    async getNFTMetadata(tokenId) {
+    async getMetadata(tokenId) {
         try {
             const metadataURI = await this.contract.tokenURI(tokenId);
             const metadata = await this.getIPFSJSON(metadataURI);
@@ -349,22 +351,46 @@ class Minty {
      * @returns {Promise<string>} - the ID of the new token
      */
     async mint(ownerAddress, metadataURI) {
-        // the smart contract adds an ipfs:// prefix to all URIs, so make sure it doesn't get added twice
-        metadataURI = stripIpfsUriPrefix(metadataURI);
-
+        // the smart contract might add an ipfs:// prefix to all URIs, so make sure it doesn't get added twice
+        const metadataURI = stripIpfsUriPrefix(metadataURI);
+        // "dynamic" mint functionality
+        const mintFunction = config.mintFunction || "mint";
+        if (!this.contract.hasOwnProperty(mintFunction)) throw "minting contract is missing a declared mint function";
         // Calculate gas limit for more complicated contract transactions
-        const gasLimit = await this.contract.estimateGas.mintToken(ownerAddress, metadataURI);
-
-        // Call the mint method to issue a new token to the given address
-        // This returns a transaction object, but the transaction hasn't been confirmed
-        // yet, so it doesn't have our token id.
+        const gasLimit = await this.contract.estimateGas[mintFunction](ownerAddress, metadataURI);
         // - BUG: for some reason contract.mint won't work? so always use mintToken? as method name?
-        const tx = await this.contract.mintToken(ownerAddress, metadataURI, {'gasLimit':gasLimit});
-
-        // The OpenZeppelin base ERC721 contract emits a Transfer event when a token is issued.
-        // tx.wait() will wait until a block containing our transaction has been mined and confirmed.
-        // The transaction receipt contains events emitted while processing the transaction.
+        const tx = await this.contract[mintFunction](ownerAddress, metadataURI, {'gasLimit':gasLimit});
         const receipt = await tx.wait();
+        this.parseEvents(receipt);
+    }
+
+    async mintBatch(ownerAddresses, metadataURIs) {
+        if (ownerAddresses.length!=metadataURIs) throw "minting lengths mismatch";
+        const mintFunction = config.mintBatchFunction || "mint";
+        if (!this.contract.hasOwnProperty(mintFunction)) throw "minting contract is missing a declared mint function";
+        for (let i=0;i<metadataURIs.length;i++)
+            metadataURIs[i] = stripIpfsUriPrefix(metadataURIs[i]);
+        const gasLimit = await this.contract.estimateGas[mintFunction](ownerAddresses, metadataURIs);
+        const tx = await this.contract[mintFunction](ownerAddresses, metadataURIs, {'gasLimit':gasLimit});
+        const receipt = await tx.wait();
+        this.parseEvents(receipt);
+    }
+
+
+    function parseEvents() {
+
+
+        // if minty contract is an ERC1155, the event is: TransferBatch
+        // if minty contract is an ERC721 that handles batch minting via single mint: multiple Transfer events
+
+batch:
+TransferSingle
+TransferBatch
+
+
+        // if minty contract is an ERC721 or ERC20, the event is: Transfer
+        // if minty contract is an ERC1155, the event is: TransferSingle
+
         for (const event of receipt.events) {
             if (event.event !== 'Transfer') {
                 console.log('ignoring unknown event type ', event.event);
@@ -375,6 +401,11 @@ class Minty {
 
         throw new Error('unable to get token id');
     }
+
+
+
+
+
 
     async transferToken(tokenId, toAddress) {
         const fromAddress = await this.getTokenOwner(tokenId);
@@ -493,7 +524,7 @@ class Minty {
      * Fails if no token with the given id exists, or if pinning fails.
      */
     async pinTokenData(tokenId) {
-        const {metadata, metadataURI} = await this.getNFTMetadata(tokenId);
+        const {metadata, metadataURI} = await this.getMetadata(tokenId);
         const {image: assetURI} = metadata;
         
         console.log(`Pinning asset data (${assetURI}) for token id ${tokenId}....`);
@@ -595,6 +626,8 @@ class Minty {
  * @returns the input string with the `ipfs://` prefix stripped off
  */
  function stripIpfsUriPrefix(cidOrURI) {
+    // TODO
+    // possibly add a check here for whether or not to strip
     if (cidOrURI.startsWith('ipfs://')) {
         return cidOrURI.slice('ipfs://'.length);
     }
@@ -633,21 +666,6 @@ function extractCID(cidOrURI) {
     return new CID(cidString);
 }
 
-async function fileExists(path) {
-    // try {
-        return fs.access(path, fs.F_OK, (err) => {
-            if (err) {
-                console.log(e);
-                return false;
-            }
-            return true;
-        });
-    // } catch (e) {
-        // console.log(e)
-        // return false;
-    // }
-}
-
 async function fetchABI(address, network="mainnet", blockchain="ethereum") {
     if (blockchain == "ethereum") {
         const response = await fetch(`https://api.etherscan.io/api?module=contract&action=getabi&address=${address}`);
@@ -675,5 +693,6 @@ function getNetworkURL(networkName) {
 //////////////////////////////////////////////
 
 module.exports = {
-    MakeMinty
+    MakeMinty,
+    Minty
 }

@@ -1,13 +1,18 @@
 {
   "name": "minty-fresh",
-  "version": "1.2.3",
+  "version": "1.2.4",
   "description": "",
-  "main": "cli/minty.js",
+  "main": "client/src/minty.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "bin": {
-    "minty": "cli/index.js"
+    "minty": "./index.js"
+  },
+  "exports": {
+    ".": "./index.js",
+    "./helpers.js": "client/src/helpers.js",
+    "./schemas.js": "client/src/schemas.js"
   },
   "keywords": [
     "nft",
@@ -16,12 +21,9 @@
   "author": "Skeetzo",
   "license": "ISC",
   "devDependencies": {
-    "@nomiclabs/hardhat-ethers": "^2.0.1",
-    "@nomiclabs/hardhat-waffle": "^2.0.1",
     "chai": "^4.3.3",
     "ethereum-waffle": "^3.3.0",
     "ethers": "^5.0.31",
-    "hardhat": "^2.1.1"
   },
   "dependencies": {
     "@openzeppelin/contracts": "^4.5.0",

@@ -1,5 +1,7 @@
+const fs = require('fs');
+// const fs = require('fs/promises');
 
-const SCHEMA_PATH = "./schemas";
+const SCHEMA_PATH = "./config/schemas";
 
 // TODO
 // add interaction to fetch stored schemas from IPFS
@@ -165,8 +167,6 @@ async function promptForMissing(cliOptions, prompts) {
     }
     return inquirer.prompt(questions);
 }
-
-
 
 module.exports = {
     selectSchema,

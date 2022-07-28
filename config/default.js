@@ -18,6 +18,14 @@ const config = {
 
     assetTypes: ['image'],
 
+    // the .env variable to use to reference the path for a minty "addon"
+    mintyAddonPath: null,
+
+
+            // - BUG: for some reason contract.mint won't work? so always use mintToken? as method name?
+    mintFunction: "mintToken", 
+    mintBatchFunction: "mintTokenBatch", 
+
     // The pinningService config tells minty what remote pinning service to use for pinning the IPFS data for a token.
     // The values are read in from environment variables, to discourage checking credentials into source control.
     // You can make things easy by creating a .env file with your environment variable definitions. See the example files

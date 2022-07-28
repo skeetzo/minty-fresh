@@ -1,55 +1,33 @@
 #!/usr/bin/env node
-
-// This file contains the main entry point for the command line `minty` app, and the command line option parsing code.
-// See minty.js for the core functionality.
-
-const fs = require('fs/promises');
-// const fs = require('fs');
-const path = require('path');
-const { Command } = require('commander');
-const inquirer = require('inquirer');
-const chalk = require('chalk');
-const colorize = require('json-colorizer');
 const config = require('getconfig');
-const { MakeMinty } = require('./minty');
+
 const Ajv = require("ajv");
 const ajv = new Ajv(); // options can be passed, e.g. {allErrors: true}
+const chalk = require('chalk');
+const colorize = require('json-colorizer');
+const { Command } = require('commander');
+const fs = require('fs/promises');
+const inquirer = require('inquirer');
+const { MakeMinty } = require('./minty');
+const path = require('path');
 
-const colorizeOptions = {
-    pretty: true,
-    colors: {
-        STRING_KEY: 'blue.bold',
-        STRING_LITERAL: 'green'
-    }
-};
+const { alignOutput, colorizeOptions, fileExists } = require('./helpers.js');
+
+// the .env variable to use to reference the path for a minty "addon"
+const MINTY_ADDON_KEY = config.mintyAddonPath || "MINTY_ADDON";
 
 async function main() {
 
-    var program;
+    let program;
 
     // get .env of current dir so command must be ran at project root to use corresponding addon
-    var exists = fileExists('./.env');
-    if (exists) {
-        console.debug("minty addon .env found");
+    if (fileExists('./.env')) {
         const dotenv = require('dotenv').config({ path: './.env' });
-        exists = fileExists(path.join(process.cwd(), dotenv.parsed.MINTY_ADDON));
-        if (exists) {
-            console.debug("minty addon found");
-            program = await require(path.join(process.cwd(), dotenv.parsed.MINTY_ADDON))();
-        }
-        else {
-            console.error("minty addon missing");
-            process.exit(0);
-        }
+        if (fileExists(path.join(process.cwd(), dotenv.parsed[MINTY_ADDON_KEY]))) {
+            program = await require(path.join(process.cwd(), dotenv.parsed[MINTY_ADDON_KEY]))();        
     }
     else
         console.debug("minty addon .env not found");
-
-    function _commandExists(cmd) {
-        if (isNaN(program.commands.filter(obj => {return obj._name === cmd.toString()})))
-            return true;
-        return false;
-    }
 
     if (!program) {
         program = new Command();
@@ -64,6 +42,12 @@ async function main() {
         process.chdir(rootDir);
     }
 
+    // returns true|false depending on if the cmd string exists
+    function _commandExists(cmd) {if (isNaN(program.commands.filter(obj => {return obj._name === cmd.toString()}))) return true;return false;}
+
+    // TODO
+    // figure out an easier way to add all the repeated blockchain/network options
+
     if (!_commandExists("mint"))
         program.command('mint')
             .description('Mint a new NFT from an existing schema template')
@@ -73,10 +57,10 @@ async function main() {
             .option('-d, --description <desc>', 'A text description of the token')
             .option('-o, --owner <address>', 'The ethereum address that should own the token' +
                 'If not provided, defaults to the first signing address.')
-            .option('-c, --contract <name>', 'The name of the contract', 'Minty')
-            .option('-a, --address <address>', 'The address of a deployed contract')
-            .option('-a, --network <name>', 'The name of the network to connect to', 'development')
-            .option('-cI, --chainId <number>', 'The network id', '1337')
+            .option('-cN, --contract <name>', 'The name of the contract', CONTRACT_NAME)
+            .option('-cA, --contract-address <address>', 'The address of a deployed contract')
+            .option('-n, --network <name>', 'The name of the network to connect to', 'development')
+            .option('-cId, --chainId <number>', 'The network id', '1337')
         .action(createNFT);
 
     if (!_commandExists("show"))
@@ -84,28 +68,28 @@ async function main() {
             .description('Get info about an NFT using its token ID')
             .option('-fA, --fetch-assets', 'Asset data will be fetched from IPFS')
             .option('-cI, --creation-info', 'Include the creator address and block number the NFT was minted')
-            .option('-c, --contract <name>', 'The name of the contract', 'Minty')
-            .option('-a, --address <address>', 'The address of a deployed contract')
-            .option('-a, --network <name>', 'The name of the network to connect to', 'development')
-            .option('-cI, --chainId <number>', 'The network id', '*')
+            .option('-cN, --contract <name>', 'The name of the contract', CONTRACT_NAME)
+            .option('-cA, --contract-address <address>', 'The address of a deployed contract')
+            .option('-n, --network <name>', 'The name of the network to connect to', 'development')
+            .option('-cId, --chainId <number>', 'The network id', '*')
         .action(getNFT);
 
     if (!_commandExists("transfer"))
         program.command('transfer <token-id> <to-address>')
             .description('Transfer an NFT to a new owner')
-            .option('-c, --contract <name>', 'The name of the contract', 'Minty')
-            .option('-a, --address <address>', 'The address of a deployed contract')
-            .option('-a, --network <name>', 'The name of the network to connect to', 'development')
-            .option('-cI, --chainId <number>', 'The network id', '*')
+            .option('-cN, --contract <name>', 'The name of the contract', CONTRACT_NAME)
+            .option('-cA, --contract-address <address>', 'The address of a deployed contract')
+            .option('-n, --network <name>', 'The name of the network to connect to', 'development')
+            .option('-cId, --chainId <number>', 'The network id', '*')
         .action(transferNFT);
 
     if (!_commandExists("pin"))
         program.command('pin <token-id>')
             .description('"pin" the data for an NFT to a remote IPFS Pinning Service')
-            .option('-c, --contract <name>', 'The name of the contract', 'Minty')
-            .option('-a, --address <address>', 'The address of a deployed contract')
-            .option('-a, --network <name>', 'The name of the network to connect to', 'development')
-            .option('-cI, --chainId <number>', 'The network id', '*')
+            .option('-cN, --contract <name>', 'The name of the contract', CONTRACT_NAME)
+            .option('-cA, --contract-address <address>', 'The address of a deployed contract')
+            .option('-n, --network <name>', 'The name of the network to connect to', 'development')
+            .option('-cId, --chainId <number>', 'The network id', '*')
         .action(pinNFTData);
 
     await program.parseAsync(process.argv);
@@ -115,7 +99,7 @@ async function main() {
 
 async function createNFT(options) {
     const minty = await MakeMinty(options);
-    const nft = await minty.createNFT(options);
+    const nft = await minty.createNFT(options, options.schema);
     console.log('🌿 Minted a new NFT: ');
     const output = [
         ['Contract Name:', chalk.green(minty.name)],
@@ -169,33 +153,6 @@ async function pinNFTData(tokenId, options) {
     const minty = await MakeMinty(options);
     const {assetURI, metadataURI} = await minty.pinTokenData(tokenId);
     console.log(`🌿 Pinned all data for token id ${chalk.green(tokenId)}`);
-}
-
-// ---- helpers
-
-function alignOutput(labelValuePairs) {
-    const maxLabelLength = labelValuePairs
-      .map(([l, _]) => l.length)
-      .reduce((len, max) => len > max ? len : max);
-    for (const [label, value] of labelValuePairs) {
-        console.log(label.padEnd(maxLabelLength+1), value);
-    }
-}
-
-function fileExists(path) {
-    // try {
-    //     await fs.access(path, fs.F_OK);
-    //     return true;
-    // } catch (e) {
-    //     return false;
-    // }
-    return fs.access(path, fs.F_OK, (err) => {
-        if (err) {
-            console.log(e);
-            return false;
-        }
-        return true;
-    });
 }
 
 // ---- main entry point when running as a script
