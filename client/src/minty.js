@@ -163,6 +163,18 @@ class Minty {
     // ------ NFT Creation
     //////////////////////////////////////////////
 
+    // create blank metadata object
+    // should be overriden by inheriting contracts
+    async createMetadata(options, schema) {
+        // TODO
+        // create empty object better oriented around schema provided
+
+        return {
+            name : options.name,
+            description : options.description
+        };
+    }
+
     /**
      * Create a new NFT from the given asset data.
      * 
@@ -186,9 +198,11 @@ class Minty {
      * @returns {Promise<CreateNFTResult>}
      */
     async createNFT(options, _schema="default") {
-        console.debug("creating NFT")
         const schema = await selectSchema(_schema);
-        let metadata = await promptNFTMetadata(schema, options);
+        // determine metadata base
+        let metadata;
+        if (options.prompt) return await promptNFTMetadata(schema, options);
+        else metadata = await this.createMetadata(options, schema);
         const assets = {};
         if (Array.isArray(options.assets) && options.assets.length > 0)
             for (const [key, filePath] in options.assets) {
@@ -196,18 +210,14 @@ class Minty {
                 assets[key].cid = assetCID;
                 assets[key].uri = assetURI;
             }
-        metadata = await this.makeMetadata(assets, options, metadata);
-        const assetURIs = metadata.assetURIs;
-        delete metadata.assetURIs;
+        const assetURIs = await this.assignMetadataAssets(assets, options, metadata);
         validateSchema(metadata, schema);
         // add the metadata to IPFS
-        const { cid: metadataCid } = await this.ipfs.add({ path: `/${options.contract}/nfts/metadata/${metadata.name}.json`, content: JSON.stringify(metadata)}, ipfsAddOptions);
-        const metadataURI = ensureIpfsUriPrefix(metadataCid) + `/${options.contract}/metadata/${metadata.name}.json`;
+        const { cid: metadataCid } = await this.ipfs.add({ path: `/${this.name}/nfts/metadata/${metadata.name}.json`, content: JSON.stringify(metadata)}, ipfsAddOptions);
+        const metadataURI = ensureIpfsUriPrefix(metadataCid) + `/${this.name}/metadata/${metadata.name}.json`;
         // get the address of the token owner from options, or use the default signing address if no owner is given
-        let ownerAddress = options.owner;
-        if (!ownerAddress) {
-            ownerAddress = await this.defaultOwnerAddress();
-        }
+        let ownerAddress = options.to || options.owner || options.recipient;
+        if (!ownerAddress) ownerAddress = await this.defaultOwnerAddress();
         let tokenId = null;
         if (isNaN(options.skipMint) && !options.skipMint) {
             // mint a new token referencing the metadata URI
@@ -232,16 +242,13 @@ class Minty {
      * @param {?string} description - optional description to store in NFT metadata (standard)
      * @returns {object} - metadata object
      */
-    async makeMetadata(assets, options, metadata={}) {
+    async assignMetadataAssets(assets, options, metadata={}) {
         const assetURIs = [];
-        metadata.name = options.name; // args overwrites
-        metadata.description = options.description; // args overwrites
         for (const [key, values] of assets) {
             metadata[key] = ensureIpfsUriPrefix(values.uri);
             assetURIs.push(metadata[key]);
         }
-        metadata.assetURIs = assetURIs;
-        return metadata;
+        return assetURIs;
     }
 
     async uploadAssetData(filePath, options, folderName="assets") {
@@ -363,6 +370,8 @@ class Minty {
         const receipt = await tx.wait();
         this.parseEvents(receipt);
     }
+
+    possibly combine the mint and mint batch based on argument lengths, etc?
 
     async mintBatch(ownerAddresses, metadataURIs) {
         if (ownerAddresses.length!=metadataURIs) throw "minting lengths mismatch";
