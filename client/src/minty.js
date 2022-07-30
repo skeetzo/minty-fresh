@@ -165,10 +165,9 @@ class Minty {
 
     // create blank metadata object
     // should be overriden by inheriting contracts
-    async createMetadata(options, schema) {
+    createMetadata(options, schema) {
         // TODO
         // create empty object better oriented around schema provided
-
         return {
             name : options.name,
             description : options.description
@@ -197,82 +196,32 @@ class Minty {
      * 
      * @returns {Promise<CreateNFTResult>}
      */
-    async createNFT(options, _schema="default") {
-        const schema = await selectSchema(_schema);
-        // determine metadata base
-        let metadata;
-        if (options.prompt) return await promptNFTMetadata(schema, options);
-        else metadata = await this.createMetadata(options, schema);
-        const assets = {};
-        if (Array.isArray(options.assets) && options.assets.length > 0)
-            for (const [key, filePath] in options.assets) {
-                const {assetCID, assetURI} = await this.uploadAssetData(filePath, options);
-                assets[key].cid = assetCID;
-                assets[key].uri = assetURI;
-            }
-        const assetURIs = await this.assignMetadataAssets(assets, options, metadata);
-        validateSchema(metadata, schema);
-        // add the metadata to IPFS
-        const { cid: metadataCid } = await this.ipfs.add({ path: `/${this.name}/nfts/metadata/${metadata.name}.json`, content: JSON.stringify(metadata)}, ipfsAddOptions);
-        const metadataURI = ensureIpfsUriPrefix(metadataCid) + `/${this.name}/metadata/${metadata.name}.json`;
+    async createNFT(options, schema=null) {
+        const nft = new NFT(this.name, this.createMetadata(options), schema);
+        await nft.prepare(options);
+        nft.validate();
+        const { metadataCid, metadataURI } = await nft.upload();
         // get the address of the token owner from options, or use the default signing address if no owner is given
-        let ownerAddress = options.to || options.owner || options.recipient;
-        if (!ownerAddress) ownerAddress = await this.defaultOwnerAddress();
-        let tokenId = null;
-        if (isNaN(options.skipMint) && !options.skipMint) {
-            // mint a new token referencing the metadata URI
-            tokenId = await this.mint(ownerAddress, metadataURI);
-        }
-        return {
-            tokenId,
-            ownerAddress,
-            metadata,
-            metadataURI,
-            metadataGatewayURL: makeGatewayURL(metadataURI),
-            assetURIs: assetURIs,
-            assetsGatewayURLs: assetURIs.map(a => makeGatewayURL(a))
-        };
-    }
-
-    /**
-     * Helper to construct metadata JSON for 
-     * @param {string} assets - object containing possible NFT asset datas
-     * @param {object} options
-     * @param {?string} name - optional name to set in NFT metadata (standard)
-     * @param {?string} description - optional description to store in NFT metadata (standard)
-     * @returns {object} - metadata object
-     */
-    async assignMetadataAssets(assets, options, metadata={}) {
-        const assetURIs = [];
-        for (const [key, values] of assets) {
-            metadata[key] = ensureIpfsUriPrefix(values.uri);
-            assetURIs.push(metadata[key]);
-        }
-        return assetURIs;
-    }
-
-    async uploadAssetData(filePath, options, folderName="assets") {
-        // add the asset to IPFS
-        // const filePath = options.path || 'asset.bin';
-        const basename =  path.basename(filePath);
-        const content = await fs.readFile(filePath);
-        // When you add an object to IPFS with a directory prefix in its path,
-        // IPFS will create a directory structure for you. This is nice, because
-        // it gives us URIs with descriptive filenames in them e.g.
-        // 'ipfs://QmaNZ2FCgvBPqnxtkbToVVbK2Nes6xk5K4Ns6BsmkPucAM/cat-pic.png' instead of
-        // 'ipfs://QmaNZ2FCgvBPqnxtkbToVVbK2Nes6xk5K4Ns6BsmkPucAM'
-        const ipfsPath = `${options.contract}/nfts/${folderName}/${basename}`;
-        const { cid: assetCid } = await this.ipfs.add({ path: ipfsPath, content }, ipfsAddOptions);
-        // make the NFT metadata JSON
-        const assetURI = ensureIpfsUriPrefix(assetCid) + '/' + basename;
-        return {
-            assetCid, assetURI, assetGatewayURL: makeGatewayURL(assetURI)
-        };
+        const to = await this.defaultRecipientAddress() || await this.defaultOwnerAddress();
+        if (!options.skipMint) await this.mint(to, metadataURI);
+        return nft;
         // return {
-        //     assetCid, assetURI,
-        //     assetGatewayURL: makeGatewayURL(assetURI)
+        //     tokenId,
+        //     ownerAddress,
+        //     metadata,
+        //     metadataURI,
+        //     metadataGatewayURL: makeGatewayURL(metadataURI),
+        //     assetURIs: assetURIs,
+        //     assetsGatewayURLs: assetURIs.map(a => makeGatewayURL(a))
         // };
     }
+
+    async createNFTs(options, schema) {
+        
+    }
+
+    // updates an ipns nft's metadata
+    async updateNFT(options, nft) {}
 
     //////////////////////////////////////////////
     // -------- NFT Retreival
@@ -428,6 +377,24 @@ TransferBatch
         await tx.wait();
     }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     /**
      * @returns {Promise<string>} - the default signing address that should own new tokens, if no owner was specified.
      */
@@ -435,6 +402,13 @@ TransferBatch
         const signers = await ethers.getSigners();
         return signers[0].address;
     }
+
+    async defaultRecipientAddress() {
+        return null;
+    }
+
+
+
 
     /**
      * Get the address that owns the given token id.
@@ -471,54 +445,6 @@ TransferBatch
             blockNumber,
             creatorAddress,
         };
-    }
-
-    //////////////////////////////////////////////
-    // --------- IPFS helpers
-    //////////////////////////////////////////////
-
-    /**
-     * Get the full contents of the IPFS object identified by the given CID or URI.
-     * 
-     * @param {string} cidOrURI - IPFS CID string or `ipfs://<cid>` style URI
-     * @returns {Promise<Uint8Array>} - contents of the IPFS object
-     */
-    async getIPFS(cidOrURI) {
-        const cid = stripIpfsUriPrefix(cidOrURI);
-        return uint8ArrayConcat(await all(this.ipfs.cat(cid)));
-    }
-
-    /**
-     * Get the contents of the IPFS object identified by the given CID or URI, and return it as a string.
-     * 
-     * @param {string} cidOrURI - IPFS CID string or `ipfs://<cid>` style URI
-     * @returns {Promise<string>} - the contents of the IPFS object as a string
-     */
-    async getIPFSString(cidOrURI) {
-        const bytes = await this.getIPFS(cidOrURI);
-        return uint8ArrayToString(bytes);
-    }
-
-    /**
-     * Get the full contents of the IPFS object identified by the given CID or URI, and return it as a base64 encoded string.
-     * 
-     * @param {string} cidOrURI - IPFS CID string or `ipfs://<cid>` style URI
-     * @returns {Promise<string>} - contents of the IPFS object, encoded to base64
-     */
-    async getIPFSBase64(cidOrURI) {
-        const bytes = await this.getIPFS(cidOrURI);
-        return uint8ArrayToString(bytes, 'base64');
-    }
-
-    /**
-     * Get the contents of the IPFS object identified by the given CID or URI, and parse it as JSON, returning the parsed object.
-     *  
-     * @param {string} cidOrURI - IPFS CID string or `ipfs://<cid>` style URI
-     * @returns {Promise<string>} - contents of the IPFS object, as a javascript object (or array, etc depending on what was stored). Fails if the content isn't valid JSON.
-     */
-    async getIPFSJSON(cidOrURI) {
-        const str = await this.getIPFSString(cidOrURI);
-        return JSON.parse(str);
     }
 
     //////////////////////////////////////////////
@@ -568,7 +494,6 @@ TransferBatch
         // and fetch the data using Bitswap, IPFS's transfer protocol.
         await this.ipfs.pin.remote.add(cid, { service: config.pinningService.name });
     }
-
 
     /**
      * Check if a cid is already pinned.
@@ -626,76 +551,25 @@ TransferBatch
     }
 }
 
-//////////////////////////////////////////////
-// -------- URI helpers
-//////////////////////////////////////////////
+// async function fetchABI(address, network="mainnet", blockchain="ethereum") {
+//     if (blockchain == "ethereum") {
+//         const response = await fetch(`https://api.etherscan.io/api?module=contract&action=getabi&address=${address}`);
+//         const data = await response.json();
+//         return JSON.parse(data.result);
+//     }
+//     console.error("Unable to find ABI!");
+//     return {};   
+// }
 
-/**
- * @param {string} cidOrURI either a CID string, or a URI string of the form `ipfs://${cid}`
- * @returns the input string with the `ipfs://` prefix stripped off
- */
- function stripIpfsUriPrefix(cidOrURI) {
-    // TODO
-    // possibly add a check here for whether or not to strip
-    if (cidOrURI.startsWith('ipfs://')) {
-        return cidOrURI.slice('ipfs://'.length);
-    }
-    return cidOrURI;
-}
+// // translate network url to legible name
+// function getNetworkName(network) {
+//     // TODO
+//     // check config file for network w/ url that matches
+//     // return the labeled name of the network
+//     return "development";
+// }
 
-function ensureIpfsUriPrefix(cidOrURI) {
-    let uri = cidOrURI.toString()
-    if (!uri.startsWith('ipfs://')) {
-        uri = 'ipfs://' + cidOrURI;
-    }
-    // Avoid the Nyan Cat bug (https://github.com/ipfs/go-ipfs/pull/7930)
-    if (uri.startsWith('ipfs://ipfs/')) {
-      uri = uri.replace('ipfs://ipfs/', 'ipfs://');
-    }
-    return uri;
-}
-
-/**
- * Return an HTTP gateway URL for the given IPFS object.
- * @param {string} ipfsURI - an ipfs:// uri or CID string
- * @returns - an HTTP url to view the IPFS object on the configured gateway.
- */
-function makeGatewayURL(ipfsURI) {
-    return config.ipfsGatewayUrl + '/' + stripIpfsUriPrefix(ipfsURI);
-}
-
-/**
- * 
- * @param {string} cidOrURI - an ipfs:// URI or CID string
- * @returns {CID} a CID for the root of the IPFS path
- */
-function extractCID(cidOrURI) {
-    // remove the ipfs:// prefix, split on '/' and return first path component (root CID)
-    const cidString = stripIpfsUriPrefix(cidOrURI).split('/')[0];
-    return new CID(cidString);
-}
-
-async function fetchABI(address, network="mainnet", blockchain="ethereum") {
-    if (blockchain == "ethereum") {
-        const response = await fetch(`https://api.etherscan.io/api?module=contract&action=getabi&address=${address}`);
-        const data = await response.json();
-        return JSON.parse(data.result);
-    }
-    console.error("Unable to find ABI!");
-    return {};   
-}
-
-// translate network url to legible name
-function getNetworkName(network) {
-    // TODO
-    // check config file for network w/ url that matches
-    // return the labeled name of the network
-    return "development";
-}
-
-function getNetworkURL(networkName) {
-
-}
+// function getNetworkURL(networkName) {}
 
 //////////////////////////////////////////////
 // -------- Exports

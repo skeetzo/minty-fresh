@@ -42,12 +42,15 @@
 	- added option for providing contract address instead of contract name
 	- updated process to fetch contracts from local project spaces
 	- added 'network' option for interacting with different networks
-**1.2.4 : 7/28/2022**
+	**1.2.4 : 7/28/2022**
 	- update method names in minty object to remove unnecessary nft wordings
 	- reorged files again for react-client simplicity
 	- added submodule export for helpers.js
 	- added method for addons to be able to add prompts to the mint process / detect metadata schemas by adding submodule export
 	- added dynamic minting functionality -> config.mintFunction, config.mintBatchFunction
+	**1.2.5 : 7/29/2022**
+	- split ipfs / nft utility further from main minty class
+	- more inheritence setups for addons
 
 ------------------------------------------------------------------------
 

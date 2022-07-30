@@ -36,6 +36,14 @@ function fileExists(path) {
     });
 }
 
+function parseRecipient(value) {
+         // get the address of the token owner from options, or use the default signing address if no owner is given
+        // let ownerAddress = options.to || options.owner || options.recipient;
+        // if (!ownerAddress) ownerAddress = await this.defaultOwnerAddress();
+        
+}
+
+
 // ensure value is an 0x address
 function parseAddress(value) {
     if (!ethers.utils.isAddress(value))

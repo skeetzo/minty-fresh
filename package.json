@@ -1,6 +1,6 @@
 {
   "name": "minty-fresh",
-  "version": "1.2.4",
+  "version": "1.2.5",
   "description": "",
   "main": "client/src/minty.js",
   "scripts": {
@@ -11,6 +11,7 @@
   },
   "exports": {
     ".": "./index.js",
+    "./actions.js": "client/src/actions.js",
     "./helpers.js": "client/src/helpers.js",
     "./schemas.js": "client/src/schemas.js"
   },

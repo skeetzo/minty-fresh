@@ -1,8 +1,5 @@
 #!/usr/bin/env node
 const config = require('getconfig');
-
-const Ajv = require("ajv");
-const ajv = new Ajv(); // options can be passed, e.g. {allErrors: true}
 const chalk = require('chalk');
 const colorize = require('json-colorizer');
 const { Command } = require('commander');
@@ -11,6 +8,7 @@ const inquirer = require('inquirer');
 const { MakeMinty } = require('./minty');
 const path = require('path');
 
+const { createNFT, createNFTs, getNFT, transferNFT, pinNFTData } = require('./actions.js');
 const { alignOutput, colorizeOptions, fileExists } = require('./helpers.js');
 
 // the .env variable to use to reference the path for a minty "addon"
@@ -95,69 +93,6 @@ async function main() {
     await program.parseAsync(process.argv);
 }
 
-// ---- command action functions
-
-async function createNFT(options) {
-    const minty = await MakeMinty(options);
-    const nft = await minty.createNFT(options, options.schema);
-    console.log('🌿 Minted a new NFT: ');
-    const output = [
-        ['Contract Name:', chalk.green(minty.name)],
-        ['Contract Address:', chalk.yellow(minty.contract.address)],
-        ['Token ID:', chalk.green(nft.tokenId)],
-        ['Metadata Address:', chalk.blue(nft.metadataURI)],
-        ['Metadata Gateway URL:', chalk.blue(nft.metadataGatewayURL)],
-    ];
-    for (let i=0;i<nft.assetsURIs.length;i++) {
-        output.push(['Asset Address:', chalk.blue(nft.assetsURIs[i])]);
-        output.push(['Asset Gateway URL:', chalk.blue(nft.assetsGatewayURLs[i])]);
-    }
-    alignOutput(output);
-    console.log('NFT Metadata:');
-    console.log(colorize(JSON.stringify(nft.metadata), colorizeOptions));
-}
-
-async function getNFT(tokenId, options) {
-    const { creationInfo: fetchCreationInfo, fetchAssets: fetchAssetData } = options;
-    const minty = await MakeMinty(options);
-    const nft = await minty.getNFT(tokenId, {fetchAssetData, fetchCreationInfo});
-    const output = [
-        ['Contract Name:', chalk.green(minty.name)],
-        ['Contract Address:', chalk.yellow(minty.contract.address)],
-        ['Token ID:', chalk.green(nft.tokenId)],
-        ['Owner Address:', chalk.yellow(nft.ownerAddress)],
-    ];
-    if (nft.creationInfo) {
-        output.push(['Creator Address:', chalk.yellow(nft.creationInfo.creatorAddress)]);
-        output.push(['Block Number:', nft.creationInfo.blockNumber]);
-    }
-    output.push(['Metadata Address:', chalk.blue(nft.metadataURI)]);
-    output.push(['Metadata Gateway URL:', chalk.blue(nft.metadataGatewayURL)]);
-    if (nft.assetURIs.length > 0 && nft.assetsGatewayURLs.length > 0 )
-        for (let i=0;i<nft.assetsURIs.length;i++) {
-            output.push(['Asset Address:', chalk.blue(nft.assetsURIs[i])]);
-            output.push(['Asset Gateway URL:', chalk.blue(nft.assetsGatewayURLs[i])]);
-        }
-    alignOutput(output);
-    console.log('NFT Metadata:');
-    console.log(colorize(JSON.stringify(nft.metadata), colorizeOptions));
-}
-
-async function transferNFT(tokenId, toAddress, options) {
-    const minty = await MakeMinty(options);
-    await minty.transferToken(tokenId, toAddress);
-    console.log(`🌿 Transferred token ${chalk.green(tokenId)} to ${chalk.yellow(toAddress)}`);
-}
-
-async function pinNFTData(tokenId, options) {
-    const minty = await MakeMinty(options);
-    const {assetURI, metadataURI} = await minty.pinTokenData(tokenId);
-    console.log(`🌿 Pinned all data for token id ${chalk.green(tokenId)}`);
-}
-
-// ---- main entry point when running as a script
-
-// make sure we catch all errors
 main().then(() => {
     process.exit(0);
 }).catch(err => {
