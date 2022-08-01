@@ -5,11 +5,11 @@ const colorize = require('json-colorizer');
 const { Command } = require('commander');
 const fs = require('fs/promises');
 const inquirer = require('inquirer');
-const { MakeMinty } = require('./minty');
+const { MakeMinty } = require('./classes/minty');
 const path = require('path');
 
-const { createNFT, createNFTs, getNFT, transferNFT, pinNFTData } = require('./actions.js');
-const { alignOutput, colorizeOptions, fileExists } = require('./helpers.js');
+const { createNFT, createNFTs, getNFT, transferNFT, pinNFTData } = require('./utils/actions.js');
+const { alignOutput, colorizeOptions, fileExists } = require('./utils/helpers.js');
 
 // the .env variable to use to reference the path for a minty "addon"
 const MINTY_ADDON_KEY = config.mintyAddonPath || "MINTY_ADDON";

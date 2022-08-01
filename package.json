@@ -1,19 +1,19 @@
 {
   "name": "minty-fresh",
-  "version": "1.2.5",
+  "version": "1.2.6",
   "description": "",
-  "main": "client/src/minty.js",
+  "main": "src/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "bin": {
-    "minty": "./index.js"
+    "minty": "src/index.js"
   },
   "exports": {
     ".": "./index.js",
-    "./actions.js": "client/src/actions.js",
-    "./helpers.js": "client/src/helpers.js",
-    "./schemas.js": "client/src/schemas.js"
+    "./actions.js": "src/utils/actions.js",
+    "./helpers.js": "src/utils/helpers.js",
+    "./schemas.js": "src/utils/schemas.js"
   },
   "keywords": [
     "nft",

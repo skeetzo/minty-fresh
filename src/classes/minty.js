@@ -3,17 +3,17 @@ const fs = require('fs')
 const path = require('path');
 
 const CID = require('cids');
-const ipfsClient = require('ipfs-http-client');
 const all = require('it-all');
 const uint8ArrayConcat = require('uint8arrays/concat').concat;
 const uint8ArrayToString = require('uint8arrays/to-string').toString;
 const ethers = require('ethers');
 const { BigNumber } = require('ethers');
-const { selectSchema, promptNFTMetadata, validateSchema } = require('./schema.js');
+const { selectSchema, promptNFTMetadata, validateSchema } = require('../utils/prompt.js');
 const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
 const solc = require('solc');
 
-const { fileExists } = require('./helpers.js');
+const { fileExists } = require('../utils/helpers.js');
+const { IPFS } = require('./ipfs.js');
 
 // The getconfig package loads configuration from files located in the the `config` directory.
 // See https://www.npmjs.com/package/getconfig for info on how to override the default config for
@@ -154,7 +154,7 @@ class Minty {
         //////////
 
         // creates a local IPFS node
-        this.ipfs = ipfsClient(config.ipfsApiUrl);
+        this.ipfs = new IPFS();
 
         this._initialized = true;
     }
@@ -223,9 +223,58 @@ class Minty {
     // updates an ipns nft's metadata
     async updateNFT(options, nft) {}
 
+
+
+
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+
+
+
     //////////////////////////////////////////////
     // -------- NFT Retreival
     //////////////////////////////////////////////
+
+    // retrieves [key, value] pairs from provided {} metadata
+    async getAssetsFromMetadata(metadata) {}
+
+
+
+
+
+    
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+    /**
+     * Fetch the NFT metadata for a given token id.
+     * 
+     * @param tokenId - the id of an existing token
+     * @returns {Promise<{metadata: object, metadataURI: string}>} - resolves to an object containing the metadata and
+     * metadata URI. Fails if the token does not exist, or if fetching the data fails.
+     */
+    async getMetadata(tokenId) {
+        try {
+            const metadataURI = await this.contract.tokenURI(tokenId);
+            const metadata = await this.ipfs.getIPFSJSON(metadataURI);
+            return {metadata, metadataURI};
+        }
+        catch (err) {
+            if (err.hasOwnProperty("reason") && err.reason === ERC721URIStorage_QUERY_ERROR)
+                throw "Token id does not exist!";
+        }
+    }
 
     /**
      * Get information about an existing token. 
@@ -265,7 +314,7 @@ class Minty {
                     assetURI: value,
                     assetGatewayURL: makeGatewayURL(value)
                 };
-                if (fetchAsset) asset.base64 = await this.getIPFSBase64(value);
+                if (fetchAsset) asset.base64 = await this.ipfs.getIPFSBase64(value);
                 assets.push(asset);
             }
         const nft = {tokenId, metadata, metadataURI, metadataGatewayURL, ownerAddress, assets};
@@ -273,26 +322,6 @@ class Minty {
             nft.creationInfo = await this.getCreationInfo(tokenId);
         }
         return nft;
-    }
-
-    /**
-     * Fetch the NFT metadata for a given token id.
-     * 
-     * @param tokenId - the id of an existing token
-     * @returns {Promise<{metadata: object, metadataURI: string}>} - resolves to an object containing the metadata and
-     * metadata URI. Fails if the token does not exist, or if fetching the data fails.
-     */
-    async getMetadata(tokenId) {
-        try {
-            const metadataURI = await this.contract.tokenURI(tokenId);
-            const metadata = await this.getIPFSJSON(metadataURI);
-
-            return {metadata, metadataURI};
-        }
-        catch (err) {
-            if (err.hasOwnProperty("reason") && err.reason === ERC721URIStorage_QUERY_ERROR)
-                throw "Token id does not exist!";
-        }
     }
 
     //////////////////////////////////////////////
@@ -308,7 +337,7 @@ class Minty {
      */
     async mint(ownerAddress, metadataURI) {
         // the smart contract might add an ipfs:// prefix to all URIs, so make sure it doesn't get added twice
-        const metadataURI = stripIpfsUriPrefix(metadataURI);
+        const metadataURI = IPFS.stripIpfsUriPrefix(metadataURI);
         // "dynamic" mint functionality
         const mintFunction = config.mintFunction || "mint";
         if (!this.contract.hasOwnProperty(mintFunction)) throw "minting contract is missing a declared mint function";
@@ -327,7 +356,7 @@ class Minty {
         const mintFunction = config.mintBatchFunction || "mint";
         if (!this.contract.hasOwnProperty(mintFunction)) throw "minting contract is missing a declared mint function";
         for (let i=0;i<metadataURIs.length;i++)
-            metadataURIs[i] = stripIpfsUriPrefix(metadataURIs[i]);
+            metadataURIs[i] = IPFS.stripIpfsUriPrefix(metadataURIs[i]);
         const gasLimit = await this.contract.estimateGas[mintFunction](ownerAddresses, metadataURIs);
         const tx = await this.contract[mintFunction](ownerAddresses, metadataURIs, {'gasLimit':gasLimit});
         const receipt = await tx.wait();
@@ -379,7 +408,10 @@ TransferBatch
 
 
 
-
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 
@@ -410,6 +442,19 @@ TransferBatch
 
 
 
+
+
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+
+
+
     /**
      * Get the address that owns the given token id.
      * 
@@ -432,12 +477,7 @@ TransferBatch
      * @returns {Promise<NFTCreationInfo>}
      */
     async getCreationInfo(tokenId) {
-        const filter = await this.contract.filters.Transfer(
-            null,
-            null,
-            BigNumber.from(tokenId)
-        );
-
+        const filter = await this.contract.filters.Transfer(null, null, BigNumber.from(tokenId));
         const logs = await this.contract.queryFilter(filter);
         const blockNumber = logs[0].blockNumber;
         const creatorAddress = logs[0].args.to;
@@ -460,15 +500,16 @@ TransferBatch
      */
     async pinTokenData(tokenId) {
         const {metadata, metadataURI} = await this.getMetadata(tokenId);
-        const {image: assetURI} = metadata;
-        
-        console.log(`Pinning asset data (${assetURI}) for token id ${tokenId}....`);
-        await this.pin(assetURI);
-
+        const assets = await this.getAssetsFromMetadata(metadata);
+        const assetURIs = [];
+        for (const [key, value] of assets) {
+            console.log(`Pinning asset data (${key}) for token id ${tokenId}....`);
+            await this.pin(value);
+            assetURIs.push(value);
+        }
         console.log(`Pinning metadata (${metadataURI}) for token id ${tokenId}...`);
         await this.pin(metadataURI);
-
-        return {assetURI, metadataURI};
+        return {assetURIs, metadataURI};
     }
 
     /**
@@ -478,21 +519,7 @@ TransferBatch
      * @returns {Promise<void>}
      */
     async pin(cidOrURI) {
-        const cid = extractCID(cidOrURI);
-
-        // Make sure IPFS is set up to use our preferred pinning service.
-        await this._configurePinningService();
-
-        // Check if we've already pinned this CID to avoid a "duplicate pin" error.
-        const pinned = await this.isPinned(cid);
-        if (pinned) {
-            return;
-        }
-
-        // Ask the remote service to pin the content.
-        // Behind the scenes, this will cause the pinning service to connect to our local IPFS node
-        // and fetch the data using Bitswap, IPFS's transfer protocol.
-        await this.ipfs.pin.remote.add(cid, { service: config.pinningService.name });
+        await this.ipfs.pin(cidOrURI);
     }
 
     /**
@@ -502,54 +529,45 @@ TransferBatch
      * @returns {Promise<boolean>} - true if the pinning service has already pinned the given cid
      */
     async isPinned(cid) {
-        if (typeof cid === 'string') {
-            cid = new CID(cid);
-        }
-
-        const opts = {
-            service: config.pinningService.name,
-            cid: [cid], // ls expects an array of cids
-        };
-        for await (const result of this.ipfs.pin.remote.ls(opts)) {
-            return true;
-        }
-        return false;
+        return await this.ipfs.isPinned(cid);
     }
 
-    /**
-     * Configure IPFS to use the remote pinning service from our config.
-     * 
-     * @private
-     */
-    async _configurePinningService() {
-        if (!config.pinningService) {
-            throw new Error(`No pinningService set up in minty config. Unable to pin.`);
-        }
-
-        // check if the service has already been added to js-ipfs
-        for (const svc of await this.ipfs.pin.remote.service.ls()) {
-            if (svc.service === config.pinningService.name) {
-                // service is already configured, no need to do anything
-                return;
-            }
-        }
-
-        // add the service to IPFS
-        const { name, endpoint, key } = config.pinningService
-        if (!name) {
-            throw new Error('No name configured for pinning service');
-        }
-        if (!endpoint) {
-            throw new Error(`No endpoint configured for pinning service ${name}`);
-        }
-        if (!key) {
-            throw new Error(`No key configured for pinning service ${name}.` +
-              `If the config references an environment variable, e.g. '$$PINATA_API_TOKEN', ` + 
-              `make sure that the variable is defined.`);
-        }
-        await this.ipfs.pin.remote.service.add(name, { endpoint, key });
-    }
 }
+
+//////////////////////////////////////////////
+// -------- Exports
+//////////////////////////////////////////////
+
+module.exports = {
+    MakeMinty,
+    Minty
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // async function fetchABI(address, network="mainnet", blockchain="ethereum") {
 //     if (blockchain == "ethereum") {
@@ -570,12 +588,3 @@ TransferBatch
 // }
 
 // function getNetworkURL(networkName) {}
-
-//////////////////////////////////////////////
-// -------- Exports
-//////////////////////////////////////////////
-
-module.exports = {
-    MakeMinty,
-    Minty
-}

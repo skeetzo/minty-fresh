@@ -6,7 +6,9 @@ const fs = require('fs');
 
 const { promptSchema, promptAdditionalProperties, promptAdditionalAttributes, promptForMissing } = require('./prompt.js');
 
-const SCHEMA_PATH = "./config/schemas";
+// TODO
+// or update to a method that fetches the project root better
+const SCHEMA_PATH = "../../config/schemas";
 
 // ipfs.add parameters for more deterministic CIDs
 const ipfsAddOptions = {
@@ -22,6 +24,7 @@ class NFT {
         this.contract = opts.contract || null; // contract name
         this.metadata = opts.metadata || {};
         this.schema = opts.schema || "default";
+        this.tokenId = opts.tokenId || null;
 
         this._initialized = false;
     }
@@ -35,6 +38,10 @@ class NFT {
         this.metadata = await this.createMetadata();
 
     }
+
+    // TODO
+    // create NFT from metadata {} object possibly with schema name
+    fromMetadata(metadata, options) {}
 
     // TODO
     async createMetadata(schema, options) {

@@ -1,3 +1,4 @@
+const ipfsClient = require('ipfs-http-client');
 
 // ipfs.add parameters for more deterministic CIDs
 
@@ -9,7 +10,7 @@ class IPFS {
     }
 
     constructor(client) {
-        this.client = client || null;
+        this.client = client || ipfsClient(config.ipfsApiUrl);
     }
 
     /**
@@ -54,6 +55,81 @@ class IPFS {
     async getIPFSJSON(cidOrURI) {
         const str = await this.getIPFSString(cidOrURI);
         return JSON.parse(str);
+    }
+
+    /**
+     * Request that the remote pinning service pin the given CID or ipfs URI.
+     * 
+     * @param {string} cidOrURI - a CID or ipfs:// URI
+     * @returns {Promise<void>}
+     */
+    async pin(cid) {
+        const cid = extractCID(cidOrURI);
+        // Make sure IPFS is set up to use our preferred pinning service.
+        await this._configurePinningService();
+        // Check if we've already pinned this CID to avoid a "duplicate pin" error.
+        const pinned = await this.isPinned(cid);
+        if (pinned) {
+            return;
+        }
+        // Ask the remote service to pin the content.
+        // Behind the scenes, this will cause the pinning service to connect to our local IPFS node
+        // and fetch the data using Bitswap, IPFS's transfer protocol.
+        await this.client.pin.remote.add(cid, { service: config.pinningService.name });
+    }
+
+    /**
+     * Check if a cid is already pinned.
+     * 
+     * @param {string|CID} cid 
+     * @returns {Promise<boolean>} - true if the pinning service has already pinned the given cid
+     */
+    async isPinned(cid) {
+        if (typeof cid === 'string') {
+            cid = new CID(cid);
+        }
+        const opts = {
+            service: config.pinningService.name,
+            cid: [cid], // ls expects an array of cids
+        };
+        for await (const result of this.client.pin.remote.ls(opts)) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Configure IPFS to use the remote pinning service from our config.
+     * 
+     * @private
+     */
+    async _configurePinningService() {
+        if (!config.pinningService) {
+            throw new Error(`No pinningService set up in minty config. Unable to pin.`);
+        }
+
+        // check if the service has already been added to js-ipfs
+        for (const svc of await this.client.pin.remote.service.ls()) {
+            if (svc.service === config.pinningService.name) {
+                // service is already configured, no need to do anything
+                return;
+            }
+        }
+
+        // add the service to IPFS
+        const { name, endpoint, key } = config.pinningService
+        if (!name) {
+            throw new Error('No name configured for pinning service');
+        }
+        if (!endpoint) {
+            throw new Error(`No endpoint configured for pinning service ${name}`);
+        }
+        if (!key) {
+            throw new Error(`No key configured for pinning service ${name}.` +
+              `If the config references an environment variable, e.g. '$$PINATA_API_TOKEN', ` + 
+              `make sure that the variable is defined.`);
+        }
+        await this.client.pin.remote.service.add(name, { endpoint, key });
     }
 
     //////////////////////////////////////////////

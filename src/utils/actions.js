@@ -2,9 +2,9 @@
 const chalk = require('chalk');
 const colorize = require('json-colorizer');
 
-const { MakeMinty } = require('./minty');
+const { MakeMinty } = require('../classes/minty');
 
-const { alignOutput, colorizeOptions } = require('./helpers.js');
+const { alignOutput, colorizeOptions } = require('../utils/helpers.js');
 
 // ---- command action functions
 
@@ -104,7 +104,7 @@ async function transferNFT(tokenId, toAddress, options) {
 
 async function pinNFTData(tokenId, options) {
     const minty = await MakeMinty(options);
-    const {assetURI, metadataURI} = await minty.pinTokenData(tokenId);
+    const {assetURIs, metadataURI} = await minty.pinTokenData(tokenId);
     console.log(`🌿 Pinned all data for token id ${chalk.green(tokenId)}`);
 }
 
