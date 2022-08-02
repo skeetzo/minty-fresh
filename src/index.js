@@ -12,21 +12,18 @@ const { createNFT, createNFTs, getNFT, transferNFT, pinNFTData } = require('./ut
 const { alignOutput, colorizeOptions, fileExists } = require('./utils/helpers.js');
 
 // the .env variable to use to reference the path for a minty "addon"
-const MINTY_ADDON_KEY = config.mintyAddonPath || "MINTY_ADDON";
+const MINTY_ADDON_KEY = config.mintyAddonKey || "MINTY_ADDON";
 process.env.cli = true;
 
 async function main() {
 
     let program;
-
     // get .env of current dir so command must be ran at project root to use corresponding addon
     if (fileExists('./.env')) {
         const dotenv = require('dotenv').config({ path: './.env' });
-        if (fileExists(path.join(process.cwd(), dotenv.parsed[MINTY_ADDON_KEY]))) {
-            program = await require(path.join(process.cwd(), dotenv.parsed[MINTY_ADDON_KEY]))();        
+        if (dotenv.parsed[MINTY_ADDON_KEY] && fileExists(path.join(process.cwd(), dotenv.parsed[MINTY_ADDON_KEY])))
+            program = (await require(path.join(process.cwd(), dotenv.parsed[MINTY_ADDON_KEY])))();
     }
-    else
-        console.debug("minty addon .env not found");
 
     if (!program) {
         program = new Command();
@@ -56,7 +53,7 @@ async function main() {
             .option('-d, --description <desc>', 'A text description of the token')
             .option('-o, --owner <address>', 'The ethereum address that should own the token' +
                 'If not provided, defaults to the first signing address.')
-            .option('-cN, --contract <name>', 'The name of the contract', CONTRACT_NAME)
+            .option('-cN, --contract <name>', 'The name of the contract', config.defaultContract)
             .option('-cA, --contract-address <address>', 'The address of a deployed contract')
             .option('-n, --network <name>', 'The name of the network to connect to', 'development')
             .option('-cId, --chainId <number>', 'The network id', '1337')
@@ -67,7 +64,7 @@ async function main() {
             .description('Get info about an NFT using its token ID')
             .option('-fA, --fetch-assets', 'Asset data will be fetched from IPFS')
             .option('-cI, --creation-info', 'Include the creator address and block number the NFT was minted')
-            .option('-cN, --contract <name>', 'The name of the contract', CONTRACT_NAME)
+            .option('-cN, --contract <name>', 'The name of the contract', config.defaultContract)
             .option('-cA, --contract-address <address>', 'The address of a deployed contract')
             .option('-n, --network <name>', 'The name of the network to connect to', 'development')
             .option('-cId, --chainId <number>', 'The network id', '*')
@@ -76,7 +73,7 @@ async function main() {
     if (!_commandExists("transfer"))
         program.command('transfer <token-id> <to-address>')
             .description('Transfer an NFT to a new owner')
-            .option('-cN, --contract <name>', 'The name of the contract', CONTRACT_NAME)
+            .option('-cN, --contract <name>', 'The name of the contract', config.defaultContract)
             .option('-cA, --contract-address <address>', 'The address of a deployed contract')
             .option('-n, --network <name>', 'The name of the network to connect to', 'development')
             .option('-cId, --chainId <number>', 'The network id', '*')
@@ -85,7 +82,7 @@ async function main() {
     if (!_commandExists("pin"))
         program.command('pin <token-id>')
             .description('"pin" the data for an NFT to a remote IPFS Pinning Service')
-            .option('-cN, --contract <name>', 'The name of the contract', CONTRACT_NAME)
+            .option('-cN, --contract <name>', 'The name of the contract', config.defaultContract)
             .option('-cA, --contract-address <address>', 'The address of a deployed contract')
             .option('-n, --network <name>', 'The name of the network to connect to', 'development')
             .option('-cId, --chainId <number>', 'The network id', '*')

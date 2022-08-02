@@ -295,7 +295,7 @@ class Minty {
      */
     async mint(ownerAddress, metadataURI) {
         // the smart contract might add an ipfs:// prefix to all URIs, so make sure it doesn't get added twice
-        const metadataURI = this.ipfs.stripIpfsUriPrefix(metadataURI);
+        metadataURI = this.ipfs.stripIpfsUriPrefix(metadataURI);
         // "dynamic" mint functionality
         const mintFunction = config.mintFunction || "mint";
         if (!this.contract.hasOwnProperty(mintFunction)) throw "minting contract is missing a declared mint function";

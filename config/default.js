@@ -1,5 +1,7 @@
 const config = {
 
+    defaultContract : "Minty",
+
     // these should be fetched from truffle-config
     buildPath: "../app/src/contracts/",
     contractPath: "../contracts/",
@@ -19,7 +21,7 @@ const config = {
     assetTypes: ['image'],
 
     // the .env variable to use to reference the path for a minty "addon"
-    mintyAddonPath: null,
+    mintyAddonKey: "MINTY_ADDON",
 
 
             // - BUG: for some reason contract.mint won't work? so always use mintToken? as method name?
