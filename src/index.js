@@ -5,7 +5,6 @@ const colorize = require('json-colorizer');
 const { Command } = require('commander');
 const fs = require('fs/promises');
 const inquirer = require('inquirer');
-const { MakeMinty } = require('./classes/minty');
 const path = require('path');
 
 const { createNFT, createNFTs, getNFT, transferNFT, pinNFTData } = require('./utils/actions.js');

@@ -56,8 +56,11 @@
 	- more functions fleshed out in nft.js
 **1.2.7 : 8/2/2022**
 	- more patchwork updates
+	- added skeleton for minty tests; chai notes
 
 ------------------------------------------------------------------------
+
+- finish tests for test_minty.js
 
 - finish all the updates to get minty.js, nft.js and ipfs.js working
 - finish nft.js: metadata creation, schema loads from ipfs, upload function
