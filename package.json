@@ -24,7 +24,7 @@
   "devDependencies": {
     "chai": "^4.3.3",
     "ethereum-waffle": "^3.3.0",
-    "ethers": "^5.0.31",
+    "ethers": "^5.0.31"
   },
   "dependencies": {
     "@openzeppelin/contracts": "^4.5.0",
@@ -40,6 +40,7 @@
     "ipfs-http-client": "^49.0.4",
     "it-all": "^1.0.5",
     "json-colorizer": "^2.2.2",
+    "json-schema-defaults": "^0.4.0",
     "multiaddr": "^8.1.2",
     "node-fetch": "^3.2.9"
   },

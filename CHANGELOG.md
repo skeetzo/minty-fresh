@@ -48,12 +48,14 @@
 	- added submodule export for helpers.js
 	- added method for addons to be able to add prompts to the mint process / detect metadata schemas by adding submodule export
 	- added dynamic minting functionality -> config.mintFunction, config.mintBatchFunction
-**1.2.5 : 7/29/2022**
+	**1.2.5 : 7/29/2022**
 	- split ipfs / nft utility further from main minty class
 	- more inheritence setups for addons
-**1.2.6 : 8/1/2022**
+	**1.2.6 : 8/1/2022**
 	- minor reorg updates to keep up with LoveBoat / Bacchus
 	- more functions fleshed out in nft.js
+**1.2.7 : 8/2/2022**
+	- more patchwork updates
 
 ------------------------------------------------------------------------
 

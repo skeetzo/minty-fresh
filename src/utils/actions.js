@@ -104,7 +104,7 @@ async function transferNFT(tokenId, toAddress, options) {
 
 async function pinNFTData(tokenId, options) {
     const minty = await MakeMinty(options);
-    const {assetURIs, metadataURI} = await minty.pinTokenData(tokenId);
+    const {assetURIs, metadataURI} = await minty.pin(tokenId);
     console.log(`🌿 Pinned all data for token id ${chalk.green(tokenId)}`);
 }
 

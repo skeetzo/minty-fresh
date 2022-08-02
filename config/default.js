@@ -41,6 +41,13 @@ const config = {
 
     // If you're running the local IPFS gateway on a non-default port, or if you want to use a public gatway when displaying IPFS gateway urls, edit this.
     ipfsGatewayUrl: 'http://localhost:8080/ipfs',
+
+    // key, value pairs of schemas w/ their IPFS schema .json
+    schemasIPFS: {
+
+    },
+
+    SCHEMA_PATH: "../../config/schemas"
 }
 
 module.exports = config

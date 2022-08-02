@@ -2,14 +2,10 @@
 const fs = require('fs')
 const path = require('path');
 
-const CID = require('cids');
-const all = require('it-all');
-const uint8ArrayConcat = require('uint8arrays/concat').concat;
-const uint8ArrayToString = require('uint8arrays/to-string').toString;
 const ethers = require('ethers');
 const { BigNumber } = require('ethers');
 const { selectSchema, promptNFTMetadata, validateSchema } = require('../utils/prompt.js');
-const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
+// const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
 const solc = require('solc');
 
 const { fileExists } = require('../utils/helpers.js');
@@ -189,9 +185,7 @@ class Minty {
     // make sure this works
     // finish return value of cli output
     async createNFT(options) {
-        const nft = new NFT(options);
-        await nft.init();
-        const metadata = NFT.validate(nft.metadata, nft.schema);
+        const nft = new NFT({...options, ...this});
         const { metadataCid, metadataURI } = await nft.upload();
         // get the address of the token owner from options, or use the default signing address if no owner is given
         const to = await this.defaultRecipientAddress() || await this.defaultOwnerAddress();
@@ -310,11 +304,11 @@ class Minty {
         // - BUG: for some reason contract.mint won't work? so always use mintToken? as method name?
         const tx = await this.contract[mintFunction](ownerAddress, metadataURI, {'gasLimit':gasLimit});
         const receipt = await tx.wait();
-        this.parseEvents(receipt);
+        parseEvents(receipt);
     }
 
-    possibly combine the mint and mint batch based on argument lengths, etc?
-
+    // TODO
+    // double check
     async mintBatch(ownerAddresses, metadataURIs) {
         if (ownerAddresses.length!=metadataURIs) throw "minting lengths mismatch";
         const mintFunction = config.mintBatchFunction || "mint";
@@ -324,35 +318,12 @@ class Minty {
         const gasLimit = await this.contract.estimateGas[mintFunction](ownerAddresses, metadataURIs);
         const tx = await this.contract[mintFunction](ownerAddresses, metadataURIs, {'gasLimit':gasLimit});
         const receipt = await tx.wait();
-        this.parseEvents(receipt);
-    }
-
-
-    parseEvents(receipt) {
-
-        // if minty contract is an ERC1155, the event is: TransferBatch
-        // if minty contract is an ERC721 that handles batch minting via single mint: multiple Transfer events
-
-        // batch:
-        // TransferSingle
-        // TransferBatch
-
-        // if minty contract is an ERC721 or ERC20, the event is: Transfer
-        // if minty contract is an ERC1155, the event is: TransferSingle
-
-        for (const event of receipt.events) {
-            if (event.event !== 'Transfer') {
-                console.log('ignoring unknown event type ', event.event);
-                continue;
-            }
-            return event.args.tokenId.toString();
-        }
-
-        throw new Error('unable to get token id');
+        parseEvents(receipt);
     }
 
     // TODO
     // add missing docs for this
+    // also finish
     async transferToken(tokenId, toAddress) {
         const fromAddress = await this.getTokenOwner(tokenId);
 
@@ -382,15 +353,6 @@ class Minty {
 
 
 
-
-
-
-
-
-
-
-
-
     /**
      * @returns {Promise<string>} - the default signing address that should own new tokens, if no owner was specified.
      */
@@ -399,6 +361,8 @@ class Minty {
         return signers[0].address;
     }
 
+    // TODO
+    // add another check here
     async defaultRecipientAddress() {
         return null;
     }
@@ -462,111 +426,11 @@ class Minty {
      * @returns {Promise<{assetURI: string, metadataURI: string}>} - the IPFS asset and metadata uris that were pinned.
      * Fails if no token with the given id exists, or if pinning fails.
      */
-    async pinTokenData(tokenId) {
+    async pin(tokenId) {
         const {metadata, metadataURI} = await this.getMetadata(tokenId);
-        const assets = await this.getAssetsFromMetadata(metadata);
-        const assetURIs = [];
-        for (const [key, value] of assets) {
-            console.log(`Pinning asset data (${key}) for token id ${tokenId}....`);
-            await this.pin(value);
-            assetURIs.push(value);
-        }
-        console.log(`Pinning metadata (${metadataURI}) for token id ${tokenId}...`);
-        await this.pin(metadataURI);
-        return {assetURIs, metadataURI};
-    }
-
-    /**
-     * Request that the remote pinning service pin the given CID or ipfs URI.
-     * 
-     * @param {string} cidOrURI - a CID or ipfs:// URI
-     * @returns {Promise<void>}
-     */
-    async pin(cidOrURI) {
-        await this.ipfs.pin(cidOrURI);
-    }
-
-    /**
-     * Check if a cid is already pinned.
-     * 
-     * @param {string|CID} cid 
-     * @returns {Promise<boolean>} - true if the pinning service has already pinned the given cid
-     */
-    async isPinned(cid) {
-        return await this.ipfs.isPinned(cid);
-    }
-
-
-
-
-
-
-
-
-
-    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-
-    // TODO
-    // retrieves [key, value] pairs from provided {} metadata
-    async getAssetsFromMetadata(metadata) {}
-
-
-
-
-
-    // TODO
-    // finish this
-    // upload the metadata itself
-        // does not upload assets
-    async upload(options) {
-
-        await this.uploadAssets();
-        await this.uploadMetadata();
-        
-        return {};
-    }
-
-    async uploadMetadata() {
-        // add the metadata to IPFS
-        const { cid: metadataCid } = await this.ipfs.add({ path: `/${this.contract}/nfts/metadata/${this.metadata.name}.json`, content: JSON.stringify(this.metadata)}, IPFS.ipfsAddOptions);
-        const metadataURI = IPFS.ensureIpfsUriPrefix(metadataCid) + `/${this.contract}/metadata/${this.metadata.name}.json`;
-        return { metadataCid, metadataURI };
-    }
-
-    // upload all associated assets
-    async uploadAsset(filePath, folderName="assets") {
-        // add the asset to IPFS
-        // const filePath = options.path || 'asset.bin';
-        const basename =  path.basename(filePath);
-        const content = await fs.readFile(filePath);
-        // When you add an object to IPFS with a directory prefix in its path,
-        // IPFS will create a directory structure for you. This is nice, because
-        // it gives us URIs with descriptive filenames in them e.g.
-        // 'ipfs://QmaNZ2FCgvBPqnxtkbToVVbK2Nes6xk5K4Ns6BsmkPucAM/cat-pic.png' instead of
-        // 'ipfs://QmaNZ2FCgvBPqnxtkbToVVbK2Nes6xk5K4Ns6BsmkPucAM'
-        const ipfsPath = `${this.contract}/nfts/${folderName}/${basename}`;
-        const { cid: assetCid } = await IPFS.add({ path: ipfsPath, content }, IPFS.ipfsAddOptions);
-        // make the NFT metadata JSON
-        const assetURI = IPFS.ensureIpfsUriPrefix(assetCid) + '/' + basename;
-        return {
-            assetCid, assetURI, assetGatewayURL: IPFS.makeGatewayURL(assetURI)
-        };
-    }
-
-    // asset objects as key pairs: 'image':'imagePath'
-    async uploadAssets(assetObjects={}) {
-        const assets = {};
-        for (const [key, filePath] in assetObjects) {
-            const {assetCID, assetURI} = await this.uploadAsset(filePath, `assets/${key}`);
-            assets[key].cid = assetCID;
-            assets[key].uri = IPFS.ensureIpfsUriPrefix(assetURI);
-        }
-        this.assets = { ...this.assets, assets };
+        const nft = await this.getNFT(tokenId);
+        console.log(`Pinning metadata for token id ${tokenId}`);
+        return await nft.pin();
     }
 
 }
@@ -594,7 +458,28 @@ module.exports = {
 
 
 
+function parseEvents(receipt) {
 
+    // if minty contract is an ERC1155, the event is: TransferBatch
+    // if minty contract is an ERC721 that handles batch minting via single mint: multiple Transfer events
+
+    // batch:
+    // TransferSingle
+    // TransferBatch
+
+    // if minty contract is an ERC721 or ERC20, the event is: Transfer
+    // if minty contract is an ERC1155, the event is: TransferSingle
+
+    for (const event of receipt.events) {
+        if (event.event !== 'Transfer') {
+            console.log('ignoring unknown event type ', event.event);
+            continue;
+        }
+        return event.args.tokenId.toString();
+    }
+
+    throw new Error('unable to get token id');
+}
 
 
 

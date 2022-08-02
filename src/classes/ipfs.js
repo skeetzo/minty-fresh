@@ -1,4 +1,9 @@
 const ipfsClient = require('ipfs-http-client');
+const CID = require('cids');
+const all = require('it-all');
+
+const uint8ArrayConcat = require('uint8arrays/concat').concat;
+const uint8ArrayToString = require('uint8arrays/to-string').toString;
 
 // ipfs.add parameters for more deterministic CIDs
 
@@ -21,7 +26,7 @@ class IPFS {
      * @returns {Promise<Uint8Array>} - contents of the IPFS object
      */
     async getIPFS(cidOrURI) {
-        const cid = stripIpfsUriPrefix(cidOrURI);
+        const cid = IPFS.stripIpfsUriPrefix(cidOrURI);
         return uint8ArrayConcat(await all(this.client.cat(cid)));
     }
 
@@ -58,21 +63,23 @@ class IPFS {
         return JSON.parse(str);
     }
 
+    //////////////////////////////////////////////
+    // -------- Pinning to remote services
+    //////////////////////////////////////////////
+
     /**
      * Request that the remote pinning service pin the given CID or ipfs URI.
      * 
      * @param {string} cidOrURI - a CID or ipfs:// URI
      * @returns {Promise<void>}
      */
-    async pin(cid) {
-        const cid = extractCID(cidOrURI);
+    async pin(cidOrURI) {
+        const cid = IPFS.extractCID(cidOrURI);
         // Make sure IPFS is set up to use our preferred pinning service.
         await this._configurePinningService();
         // Check if we've already pinned this CID to avoid a "duplicate pin" error.
         const pinned = await this.isPinned(cid);
-        if (pinned) {
-            return;
-        }
+        if (pinned) return;
         // Ask the remote service to pin the content.
         // Behind the scenes, this will cause the pinning service to connect to our local IPFS node
         // and fetch the data using Bitswap, IPFS's transfer protocol.
@@ -168,7 +175,7 @@ class IPFS {
      * @returns - an HTTP url to view the IPFS object on the configured gateway.
      */
     static makeGatewayURL(ipfsURI) {
-        return config.ipfsGatewayUrl + '/' + stripIpfsUriPrefix(ipfsURI);
+        return config.ipfsGatewayUrl + '/' + IPFS.stripIpfsUriPrefix(ipfsURI);
     }
 
     /**
@@ -178,7 +185,7 @@ class IPFS {
      */
     static extractCID(cidOrURI) {
         // remove the ipfs:// prefix, split on '/' and return first path component (root CID)
-        const cidString = stripIpfsUriPrefix(cidOrURI).split('/')[0];
+        const cidString = IPFS.stripIpfsUriPrefix(cidOrURI).split('/')[0];
         return new CID(cidString);
     }
 
