@@ -53,10 +53,12 @@
 	- more inheritence setups for addons
 **1.2.6 : 8/1/2022**
 	- minor reorg updates to keep up with LoveBoat / Bacchus
+	- more functions fleshed out in nft.js
 
 ------------------------------------------------------------------------
 
 - finish all the updates to get minty.js, nft.js and ipfs.js working
+- finish nft.js: metadata creation, schema loads from ipfs, upload function
 
 # TODO
 

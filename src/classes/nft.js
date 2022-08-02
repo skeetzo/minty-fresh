@@ -16,6 +16,9 @@ const ipfsAddOptions = {
   hashAlg: 'sha2-256'
 };
 
+const ERC20_interfaceId = "0x36372b07",
+      ERC721_interfaceId = "0x80ac58cd";
+
 class NFT {
 
     constructor(opts) {
@@ -26,6 +29,12 @@ class NFT {
         this.schema = opts.schema || "default";
         this.tokenId = opts.tokenId || null;
 
+        this.metadataCid = opts.cid || null;
+        this.metadataURI = opts.uri || null;
+
+        // is there a need for tracking ERC token standard? perhaps check at function call when doing specific checks?
+        this.standard = opts.standard || 0;
+
         this._initialized = false;
     }
 
@@ -33,29 +42,38 @@ class NFT {
         if (this._initialized) {
             return;
         }
+    
+        if (process.env.cli)
+            this.schemaJSON = await promptSchema(this.schema);
+        else if (this.schema.includes("ipfs"))
+            this.schemaJSON = await IPFS.loadSchema(this.schema);
+        else
+            this.schemaJSON = await NFT.loadSchema(this.schema);
 
-        this.schema = await this.createSchema();
-        this.metadata = await this.createMetadata();
+        this.metadata = await NFT.fromSchema(this.schemaJSON);
 
+        this._initialized = true;
     }
+
+    // TODO
+    // act as enum?
+    // or interface with contract.methods.supportsInterface or whatever the function is
+    static getStandard() {}
 
     // TODO
     // create NFT from metadata {} object possibly with schema name
-    fromMetadata(metadata, options) {}
+    static fromMetadata(metadata, options={}) {return {}}
 
     // TODO
-    async createMetadata(schema, options) {
-        return {}
-    }
+    // return object from schema
+    static fromSchema(schema, options={}) {return {}}
 
-    async createSchema() {
-        if (process.env.PROMPT) return await promptSchema();
-        else if (this.schema.includes("ipfs")) return this.loadSchema();
-        else return this.loadSchema();
-    }
+    // TODO
+    // load schema from ipfs
+    async loadSchemaIPFS(cidOrURI) {}
 
     // locally from files
-    loadSchema() {
+    static loadSchema(schema) {
         function _parseTemplate(t) {return JSON.parse(fs.readFileSync(`${SCHEMA_PATH}/${t}.json`))}
         // get list of template files from available files in available /schema directories
         const templates = [];
@@ -69,7 +87,7 @@ class NFT {
         let defaultIndex = 0;
         for (let i=0;i<files.length;i++) {
             const filename = files[i].replace(".json","");
-            if (filename === this.schema) return _parseTemplate(filename);
+            if (filename === schema) return _parseTemplate(filename);
             templates.indexOf(filename) === -1 ? templates.push(filename) : console.debug(`duplicate template found: ${filename}`)
             // set simple.json to default template
             if (filename === "simple") defaultIndex = i;
@@ -78,15 +96,11 @@ class NFT {
     }
 
     // TODO
-    // from IPFS
-    async fetchSchema() {}
-
-    // TODO
     // possibly add type from schema into message for entering inputs
     async promptMetadata(options) {
         const schema = await selectSchema(options.schema);
         // determine metadata base
-        const metadata = await this.createMetadata(options.schema, options);
+        const metadata = await NFT.fromSchema(options.schema, options);
         const questions = [];
         if (schema.hasOwnProperty("properties"))
             for (const [key, value] of Object.entries(schema.properties))
@@ -107,80 +121,19 @@ class NFT {
         }
     }
 
-    // upload the metadata itself
-        // does not upload assets
-    async upload(options) {
-
-        if (this.assets)
-            await this.uploadAssets();
-
-
-    }
-
-    async uploadMetadata() {
-        // add the metadata to IPFS
-        const { cid: metadataCid } = await IPFS.add({ path: `/${this.contract}/nfts/metadata/${this.metadata.name}.json`, content: JSON.stringify(this.metadata)}, IPFS.ipfsAddOptions);
-        const metadataURI = IPFS.ensureIpfsUriPrefix(metadataCid) + `/${this.contract}/metadata/${this.metadata.name}.json`;
-        return { metadataCid, metadataURI };
-    }
-
-    // upload all associated assets
-    async uploadAsset(filePath, folderName="assets") {
-        // add the asset to IPFS
-        // const filePath = options.path || 'asset.bin';
-        const basename =  path.basename(filePath);
-        const content = await fs.readFile(filePath);
-        // When you add an object to IPFS with a directory prefix in its path,
-        // IPFS will create a directory structure for you. This is nice, because
-        // it gives us URIs with descriptive filenames in them e.g.
-        // 'ipfs://QmaNZ2FCgvBPqnxtkbToVVbK2Nes6xk5K4Ns6BsmkPucAM/cat-pic.png' instead of
-        // 'ipfs://QmaNZ2FCgvBPqnxtkbToVVbK2Nes6xk5K4Ns6BsmkPucAM'
-        const ipfsPath = `${this.contract}/nfts/${folderName}/${basename}`;
-        const { cid: assetCid } = await IPFS.add({ path: ipfsPath, content }, IPFS.ipfsAddOptions);
-        // make the NFT metadata JSON
-        const assetURI = IPFS.ensureIpfsUriPrefix(assetCid) + '/' + basename;
-        return {
-            assetCid, assetURI, assetGatewayURL: IPFS.makeGatewayURL(assetURI)
-        };
-    }
-
-    // asset objects as key pairs: 'image':'imagePath'
-    async uploadAssets(assetObjects={}) {
-        const assets = {};
-        for (const [key, filePath] in assetObjects) {
-            const {assetCID, assetURI} = await this.uploadAsset(filePath, `assets/${key}`);
-            assets[key].cid = assetCID;
-            assets[key].uri = IPFS.ensureIpfsUriPrefix(assetURI);
-        }
-        this.assets = { ...this.assets, assets };
-    }
-
     // validate according to its schema
-    validate() {
+    static validate(metadata, schema) {
         // replace empty values with null for flagging validation
-        for (const [key, value] of Object.entries(this.metadata))
-            if (value === "") this.metadata[key] = null;
-        const validate = ajv.compile(this.schema);
-        const valid = validate(this.metadata);
+        for (const [key, value] of Object.entries(metadata))
+            if (value === "") metadata[key] = null;
+        const validate = ajv.compile(schema);
+        const valid = validate(metadata);
         if (!valid) {
             console.error(validate.errors);
             throw "Error: unable to validate data";
         }
-        return this.metadata;
+        return metadata;
     }
-
-
-
-
-        // TODO
-    // add interaction to fetch stored schemas from IPFS
-    // select schema from IPFS
-    // possibly in a folder of .json schemas
-    async selectSchemaFromIPFS() {}
-    // fetch schema json file from IPFS
-    async fetchSchema(cid) {}
-
-    async fetchMetadata(cid) {}
 
 }
 
@@ -192,15 +145,15 @@ module.exports = NFT;
 
 
 
-    if (templates.length==1) return _parseTemplate(templates[0]);
-    // prompt for templates
-    const question = {
-        'type': "rawlist",
-        'name': "question",
-        'message': "Select an NFT template:",
-        'default': defaultIndex,
-        'choices': templates
-    }
-    const template = (await inquirer.prompt(question))["question"];
-    return _parseTemplate(template);
-}
+//     if (templates.length==1) return _parseTemplate(templates[0]);
+//     // prompt for templates
+//     const question = {
+//         'type': "rawlist",
+//         'name': "question",
+//         'message': "Select an NFT template:",
+//         'default': defaultIndex,
+//         'choices': templates
+//     }
+//     const template = (await inquirer.prompt(question))["question"];
+//     return _parseTemplate(template);
+// }

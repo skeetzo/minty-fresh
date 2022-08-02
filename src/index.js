@@ -13,6 +13,7 @@ const { alignOutput, colorizeOptions, fileExists } = require('./utils/helpers.js
 
 // the .env variable to use to reference the path for a minty "addon"
 const MINTY_ADDON_KEY = config.mintyAddonPath || "MINTY_ADDON";
+process.env.cli = true;
 
 async function main() {
 

@@ -9,8 +9,9 @@ class IPFS {
       hashAlg: 'sha2-256'
     }
 
-    constructor(client) {
-        this.client = client || ipfsClient(config.ipfsApiUrl);
+    constructor(client, opts) {
+        this.client = client || opts.ipfsApiUrl || ipfsClient(config.ipfsApiUrl);
+        this.prefix = "ipfs" || opts.prefix;
     }
 
     /**
@@ -143,20 +144,20 @@ class IPFS {
     static stripIpfsUriPrefix(cidOrURI) {
         // TODO
         // possibly add a check here for whether or not to strip
-        if (cidOrURI.startsWith('ipfs://')) {
-            return cidOrURI.slice('ipfs://'.length);
+        if (cidOrURI.startsWith(`ipfs://`)) {
+            return cidOrURI.slice(`ipfs://`.length);
         }
         return cidOrURI;
     }
 
     static ensureIpfsUriPrefix(cidOrURI) {
         let uri = cidOrURI.toString()
-        if (!uri.startsWith('ipfs://')) {
-            uri = 'ipfs://' + cidOrURI;
+        if (!uri.startsWith(`ipfs://`)) {
+            uri = `ipfs://` + cidOrURI;
         }
         // Avoid the Nyan Cat bug (https://github.com/ipfs/go-ipfs/pull/7930)
-        if (uri.startsWith('ipfs://ipfs/')) {
-          uri = uri.replace('ipfs://ipfs/', 'ipfs://');
+        if (uri.startsWith(`ipfs://ipfs/`)) {
+          uri = uri.replace(`ipfs://ipfs/`, `ipfs://`);
         }
         return uri;
     }

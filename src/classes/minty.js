@@ -163,17 +163,6 @@ class Minty {
     // ------ NFT Creation
     //////////////////////////////////////////////
 
-    // create blank metadata object
-    // should be overriden by inheriting contracts
-    createMetadata(options, schema) {
-        // TODO
-        // create empty object better oriented around schema provided
-        return {
-            name : options.name,
-            description : options.description
-        };
-    }
-
     /**
      * Create a new NFT from the given asset data.
      * 
@@ -196,10 +185,13 @@ class Minty {
      * 
      * @returns {Promise<CreateNFTResult>}
      */
-    async createNFT(options, schema=null) {
-        const nft = new NFT(this.name, this.createMetadata(options), schema);
-        await nft.prepare(options);
-        nft.validate();
+    // TODO
+    // make sure this works
+    // finish return value of cli output
+    async createNFT(options) {
+        const nft = new NFT(options);
+        await nft.init();
+        const metadata = NFT.validate(nft.metadata, nft.schema);
         const { metadataCid, metadataURI } = await nft.upload();
         // get the address of the token owner from options, or use the default signing address if no owner is given
         const to = await this.defaultRecipientAddress() || await this.defaultOwnerAddress();
@@ -216,45 +208,17 @@ class Minty {
         // };
     }
 
-    async createNFTs(options, schema) {
-        
-    }
+    // TODO
+    // probably mostly same as above or uses above
+    async createNFTs(options, schema) {}
 
+    // TODO
     // updates an ipns nft's metadata
-    async updateNFT(options, nft) {}
-
-
-
-
-    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-
-
-
-
+    async updateNFT(nft, options) {}
 
     //////////////////////////////////////////////
     // -------- NFT Retreival
     //////////////////////////////////////////////
-
-    // retrieves [key, value] pairs from provided {} metadata
-    async getAssetsFromMetadata(metadata) {}
-
-
-
-
-
-    
-    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
 
 
     /**
@@ -337,7 +301,7 @@ class Minty {
      */
     async mint(ownerAddress, metadataURI) {
         // the smart contract might add an ipfs:// prefix to all URIs, so make sure it doesn't get added twice
-        const metadataURI = IPFS.stripIpfsUriPrefix(metadataURI);
+        const metadataURI = this.ipfs.stripIpfsUriPrefix(metadataURI);
         // "dynamic" mint functionality
         const mintFunction = config.mintFunction || "mint";
         if (!this.contract.hasOwnProperty(mintFunction)) throw "minting contract is missing a declared mint function";
@@ -356,7 +320,7 @@ class Minty {
         const mintFunction = config.mintBatchFunction || "mint";
         if (!this.contract.hasOwnProperty(mintFunction)) throw "minting contract is missing a declared mint function";
         for (let i=0;i<metadataURIs.length;i++)
-            metadataURIs[i] = IPFS.stripIpfsUriPrefix(metadataURIs[i]);
+            metadataURIs[i] = this.ipfs.stripIpfsUriPrefix(metadataURIs[i]);
         const gasLimit = await this.contract.estimateGas[mintFunction](ownerAddresses, metadataURIs);
         const tx = await this.contract[mintFunction](ownerAddresses, metadataURIs, {'gasLimit':gasLimit});
         const receipt = await tx.wait();
@@ -364,16 +328,14 @@ class Minty {
     }
 
 
-    function parseEvents() {
-
+    parseEvents(receipt) {
 
         // if minty contract is an ERC1155, the event is: TransferBatch
         // if minty contract is an ERC721 that handles batch minting via single mint: multiple Transfer events
 
-batch:
-TransferSingle
-TransferBatch
-
+        // batch:
+        // TransferSingle
+        // TransferBatch
 
         // if minty contract is an ERC721 or ERC20, the event is: Transfer
         // if minty contract is an ERC1155, the event is: TransferSingle
@@ -389,18 +351,20 @@ TransferBatch
         throw new Error('unable to get token id');
     }
 
-
-
-
-
-
+    // TODO
+    // add missing docs for this
     async transferToken(tokenId, toAddress) {
         const fromAddress = await this.getTokenOwner(tokenId);
+
+        // TODO
+        // gonna need to update how this references the base transfer function when using multiple token standards
 
         // because the base ERC721 contract has two overloaded versions of the safeTranferFrom function,
         // we need to refer to it by its fully qualified name.
         const tranferFn = this.contract['safeTransferFrom(address,address,uint256)'];
         const tx = await tranferFn(fromAddress, toAddress, tokenId);
+
+
 
         // wait for the transaction to be finalized
         await tx.wait();
@@ -530,6 +494,79 @@ TransferBatch
      */
     async isPinned(cid) {
         return await this.ipfs.isPinned(cid);
+    }
+
+
+
+
+
+
+
+
+
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+    // TODO
+    // retrieves [key, value] pairs from provided {} metadata
+    async getAssetsFromMetadata(metadata) {}
+
+
+
+
+
+    // TODO
+    // finish this
+    // upload the metadata itself
+        // does not upload assets
+    async upload(options) {
+
+        await this.uploadAssets();
+        await this.uploadMetadata();
+        
+        return {};
+    }
+
+    async uploadMetadata() {
+        // add the metadata to IPFS
+        const { cid: metadataCid } = await this.ipfs.add({ path: `/${this.contract}/nfts/metadata/${this.metadata.name}.json`, content: JSON.stringify(this.metadata)}, IPFS.ipfsAddOptions);
+        const metadataURI = IPFS.ensureIpfsUriPrefix(metadataCid) + `/${this.contract}/metadata/${this.metadata.name}.json`;
+        return { metadataCid, metadataURI };
+    }
+
+    // upload all associated assets
+    async uploadAsset(filePath, folderName="assets") {
+        // add the asset to IPFS
+        // const filePath = options.path || 'asset.bin';
+        const basename =  path.basename(filePath);
+        const content = await fs.readFile(filePath);
+        // When you add an object to IPFS with a directory prefix in its path,
+        // IPFS will create a directory structure for you. This is nice, because
+        // it gives us URIs with descriptive filenames in them e.g.
+        // 'ipfs://QmaNZ2FCgvBPqnxtkbToVVbK2Nes6xk5K4Ns6BsmkPucAM/cat-pic.png' instead of
+        // 'ipfs://QmaNZ2FCgvBPqnxtkbToVVbK2Nes6xk5K4Ns6BsmkPucAM'
+        const ipfsPath = `${this.contract}/nfts/${folderName}/${basename}`;
+        const { cid: assetCid } = await IPFS.add({ path: ipfsPath, content }, IPFS.ipfsAddOptions);
+        // make the NFT metadata JSON
+        const assetURI = IPFS.ensureIpfsUriPrefix(assetCid) + '/' + basename;
+        return {
+            assetCid, assetURI, assetGatewayURL: IPFS.makeGatewayURL(assetURI)
+        };
+    }
+
+    // asset objects as key pairs: 'image':'imagePath'
+    async uploadAssets(assetObjects={}) {
+        const assets = {};
+        for (const [key, filePath] in assetObjects) {
+            const {assetCID, assetURI} = await this.uploadAsset(filePath, `assets/${key}`);
+            assets[key].cid = assetCID;
+            assets[key].uri = IPFS.ensureIpfsUriPrefix(assetURI);
+        }
+        this.assets = { ...this.assets, assets };
     }
 
 }
