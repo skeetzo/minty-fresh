@@ -189,6 +189,11 @@ class IPFS {
         return new CID(cidString);
     }
 
+    static validateCIDString(possibleCIDString) {
+        const cid = new CID(possibleCIDString);
+        return CID.isCID(cid);
+    }
+
 }
 
 module.exports = IPFS;

@@ -4,14 +4,13 @@ const ajv = new Ajv(); // options can be passed, e.g. {allErrors: true}
 const config = require('getconfig');
 const fs = require('fs');
 // const fs = require('fs/promises');
-
 const JSONschemaDefaults = require('json-schema-defaults');
 
-const { promptSchema, promptAdditionalProperties, promptAdditionalAttributes, promptForMissing } = require('./prompt.js');
+const { promptSchema } = require('./prompt.js');
 const { IPFS } = require('./ipfs.js');
 
-const ERC20_interfaceId = "0x36372b07",
-      ERC721_interfaceId = "0x80ac58cd";
+// const ERC20_interfaceId = "0x36372b07",
+      // ERC721_interfaceId = "0x80ac58cd";
 
 class NFT {
 
@@ -19,13 +18,13 @@ class NFT {
 
         this.ipfs = opts.ipfs || null;
         this.contract = opts.contract || null;
-        this.assets = opts.assets || config.default_assetObjects || {};
+        this.assets = opts.assets ||  {};
         this.metadata = opts.metadata || {};
         this.schema = opts.schema || "default";
         this.tokenId = opts.tokenId || null;
 
-        this.metadataCid = opts.cid || null;
-        this.metadataURI = opts.uri || null;
+        this.metadataCID = opts.metadataCID || null;
+        this.metadataURI = opts.metadataURI || null;
 
         // is there a need for tracking ERC token standard? perhaps check at function call when doing specific checks?
         this.standard = opts.standard || 0;
@@ -49,6 +48,10 @@ class NFT {
 
         this._initialized = true;
     }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     // TODO
     // act as enum?
@@ -108,33 +111,22 @@ class NFT {
         return _parseTemplate(templates[defaultIndex]);
     }
 
-    // TODO
-    // possibly add type from schema into message for entering inputs
-    async promptMetadata(options) {
-        const schema = await selectSchema(options.schema);
-        // determine metadata base
-        const metadata = await NFT.fromSchema(options.schema, options);
-        const questions = [];
-        if (schema.hasOwnProperty("properties"))
-            for (const [key, value] of Object.entries(schema.properties))
-                questions.push({
-                    'type': 'input',
-                    'name': key,
-                    'message': `${value["description"]}: ${key} =`
-                });
-        // prompt for missing details if not provided as cli args
-        await promptForMissing(options, questions);    
-        // prompt to add additional properties & attributes
-        await promptAdditionalProperties(metadata);
-        if (schema.hasOwnProperty("attributes") || Object.keys(schema).length == 0) // or if schema is 'blank'
-            await promptAdditionalAttributes(metadata);
-        return {
-            schema: schema,
-            metadata: metadata
-        }
-    }
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    //////////////////////////////////////////
+    // retrieves [key, value] pairs from {} metadata matched to known schemas or default
+    getAssets() {
+        if (Object.keys(this.assets).length > 0) return this.assets;
+        const assets = {},
+              assetTypes = config.assetTypes || {};
+        for (const key in assetTypes)
+            for (const [_key, value] of this.metadata)
+                if (key == _key)
+                    assets[key] = value;
+        this.assets = assets;
+        return assets;
+    }
 
     /**
      * Pins all IPFS data associated with the given tokend id to the remote pinning service.
@@ -144,45 +136,38 @@ class NFT {
      * Fails if no token with the given id exists, or if pinning fails.
      */
     async pin() {
+        if (!this.tokenId) throw "missing token id";
         if (!this.metadataURI) await this.upload();
         const assetURIs = [];
+        // pin each asset first
         for (const [key, value] of this.assets) {
-            console.log(`Pinning asset data (${key}) for token id ${tokenId}....`);
+            console.log(`Pinning asset data (${key}) for token id ${this.tokenId}....`);
             await this.ipfs.pin(this.metadata[key]);
             assetURIs.push(this.metadata[key]);
         }
-        console.log(`Pinning metadata (${this.metadataURI}) for token id ${tokenId}...`);
+        console.log(`Pinning metadata (${this.metadataURI}) for token id ${this.tokenId}...`);
         await this.ipfs.pin(this.metadataURI);
         return {assetURIs, this.metadataURI};
     }
 
-    // TODO
-    // retrieves [key, value] pairs from {} metadata
-    getAssets() {}
+    // is this even possible?
+    async unpin() {}
 
-    // TODO
-    // finish / check process
     async upload() {
         if (!this._initialized) await this.init();
         this.validate();
         await this.uploadAssets();
-        const { metadataCid, metadataURI }  = await this.uploadMetadata();
-        this.metadataCid = metadataCid;
-        this.metadataURI = metadataURI;
-        return {
-            metadataCid,
-            metadataURI
-        };
+        await this.uploadMetadata();
     }
 
     async uploadMetadata() {
         // add the metadata to IPFS
-        const { cid: metadataCid } = await this.ipfs.add({ path: `/${this.contract}/nfts/metadata/${this.metadata.name}.json`, content: JSON.stringify(this.metadata)}, IPFS.ipfsAddOptions);
-        const metadataURI = IPFS.ensureIpfsUriPrefix(metadataCid) + `/${this.contract}/metadata/${this.metadata.name}.json`;
-        return { metadataCid, metadataURI };
+        const { cid: metadataCID } = await this.ipfs.add({ path: `/${this.contract}/nfts/metadata/${this.metadata.name}.json`, content: JSON.stringify(this.metadata)}, IPFS.ipfsAddOptions);
+        this.metadataCID = metadataCID;
+        this.metadataURI = IPFS.ensureIpfsUriPrefix(metadataCID) + `/${this.contract}/metadata/${this.metadata.name}.json`;
     }
 
-    // upload all associated assets
+    // upload asset to folder name
     async uploadAsset(filePath, folderName="assets") {
         // add the asset to IPFS
         // const filePath = options.path || 'asset.bin';
@@ -194,25 +179,27 @@ class NFT {
         // 'ipfs://QmaNZ2FCgvBPqnxtkbToVVbK2Nes6xk5K4Ns6BsmkPucAM/cat-pic.png' instead of
         // 'ipfs://QmaNZ2FCgvBPqnxtkbToVVbK2Nes6xk5K4Ns6BsmkPucAM'
         const ipfsPath = `${this.contract}/nfts/${folderName}/${basename}`;
-        const { cid: assetCid } = await IPFS.add({ path: ipfsPath, content }, IPFS.ipfsAddOptions);
+        const { cid: assetCID } = await IPFS.add({ path: ipfsPath, content }, IPFS.ipfsAddOptions);
         // make the NFT metadata JSON
-        const assetURI = IPFS.ensureIpfsUriPrefix(assetCid) + '/' + basename;
+        const assetURI = IPFS.ensureIpfsUriPrefix(assetCID) + '/' + basename;        
         return {
-            assetCid, assetURI, assetGatewayURL: IPFS.makeGatewayURL(assetURI)
+            assetCID, assetURI
         };
     }
 
-    // TODO
-    // make sure this function works with this.upload()
-    // asset objects as key pairs: 'image':'imagePath'
-    async uploadAssets(assetObjects={}) {
-        const assets = {};
-        for (const [key, filePath] in assetObjects) {
-            const {assetCID, assetURI} = await this.uploadAsset(filePath, `assets/${key}`);
+    // should get all assets key/value pairs in this.assets
+    // and check if the value is data or a CID
+    // if its data, upload it and replace it's value with its uploaded CID
+    async uploadAssets() {
+        const assets = this.getAssets();
+        for (const [key, filePathOrCID] in assetObjects) {
+            if (IPFS.validateCIDString(filePathOrCID)) continue;
+            const {assetCID, assetURI} = await this.uploadAsset(filePathOrCID, `assets/${key}`);
+            this.metadata[key] = assetCID;
             assets[key].cid = assetCID;
-            assets[key].uri = IPFS.ensureIpfsUriPrefix(assetURI);
+            assets[key].uri = assetURI;
         }
-        this.assets = { ...this.assets, assets };
+        this.assets = assets;
     }
 
     // validate according to its schema
@@ -227,7 +214,6 @@ class NFT {
             throw "Error: unable to validate data";
         }
     }
-
 
 }
 

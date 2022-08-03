@@ -1,6 +1,6 @@
 {
   "name": "minty-fresh",
-  "version": "1.2.6",
+  "version": "1.2.8",
   "description": "",
   "main": "src/index.js",
   "scripts": {
@@ -28,6 +28,7 @@
   },
   "dependencies": {
     "@openzeppelin/contracts": "^4.5.0",
+    "@truffle/hdwallet-provider": "^2.0.13",
     "ajv": "^8.11.0",
     "chalk": "^4.1.0",
     "cids": "^1.1.6",

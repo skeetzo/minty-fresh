@@ -74,6 +74,34 @@ async function promptAdditionalAttributes(metadata) {
 }
 
 // TODO
+// possibly add type from schema into message for entering inputs
+async function promptMetadata(options) {
+    const schema = await NFT.loadSchemaFromFile(options.schema);
+    // determine metadata base
+    const metadata = await NFT.fromSchema(options.schema, options);
+    console.debug("metadata:");
+    console.debug(metadata);
+    const questions = [];
+    if (schema.hasOwnProperty("properties"))
+        for (const [key, value] of Object.entries(schema.properties))
+            questions.push({
+                'type': 'input',
+                'name': key,
+                'message': `${value["description"]}: ${key} =`
+            });
+    // prompt for missing details if not provided as cli args
+    await promptForMissing(options, questions);    
+    // prompt to add additional properties & attributes
+    await promptAdditionalProperties(metadata);
+    if (schema.hasOwnProperty("attributes") || Object.keys(schema).length == 0) // or if schema is 'blank'
+        await promptAdditionalAttributes(metadata);
+    return {
+        schema: schema,
+        metadata: metadata
+    }
+}
+
+// TODO
 // verify this actually does what it used to do still
 let defaultAttributes = false;
 async function promptForMissing(cliOptions, prompts) {
@@ -97,8 +125,6 @@ async function promptForMissing(cliOptions, prompts) {
 }
 
 module.exports = {
-    promptSchema,
-    promptAdditionalProperties,
-    promptAdditionalAttributes,
-    promptForMissing
+    promptMetadata,
+    promptSchema
 }

@@ -54,12 +54,15 @@
 	**1.2.6 : 8/1/2022**
 	- minor reorg updates to keep up with LoveBoat / Bacchus
 	- more functions fleshed out in nft.js
-**1.2.7 : 8/2/2022**
+	**1.2.7 : 8/2/2022**
 	- more patchwork updates
 	- added skeleton for minty tests; chai notes
+**1.2.8 : 8/3/2022**
+	- more cleanup & test preps
 
 ------------------------------------------------------------------------
 
+- update test_Minty.js w/ basic erc721 functionality checks
 - finish tests for test_minty.js
 
 - finish all the updates to get minty.js, nft.js and ipfs.js working

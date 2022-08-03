@@ -16,12 +16,6 @@ const { IPFS } = require('./ipfs.js');
 // different environments (e.g. testnet, mainnet, staging, production, etc).
 const config = require('getconfig');
 
-// ipfs.add parameters for more deterministic CIDs
-const ipfsAddOptions = {
-  cidVersion: 1,
-  hashAlg: 'sha2-256'
-};
-
 const ERC721URIStorage_QUERY_ERROR = "ERC721URIStorage: URI query for nonexistent token";
 
 /**
@@ -117,6 +111,7 @@ class Minty {
         const network = await provider.getNetwork();
         console.debug(`Network connected: ${JSON.stringify(network)}`)
         const networkId = network.chainId;
+        this.network = network.name;
         // get the deployed contract's address on current network
         console.debug(`Available Networks: ${networkId} <-- current`)
         console.debug(contractJSON.networks)
@@ -184,13 +179,17 @@ class Minty {
     // TODO
     // make sure this works
     // finish return value of cli output
-    async createNFT(options) {
+    async createNFT(options, skipMint=false) {
         const nft = new NFT({...options, ...this});
-        const { metadataCid, metadataURI } = await nft.upload();
+        const { metadataCID, metadataURI } = await nft.upload();
         // get the address of the token owner from options, or use the default signing address if no owner is given
         const to = await this.defaultRecipientAddress() || await this.defaultOwnerAddress();
-        if (!options.skipMint) await this.mint(to, metadataURI);
+        if (!skipMint&&!options.skipMint) await this.mint(to, metadataURI);
         return nft;
+
+        // TODO
+        // double check all these output changes
+
         // return {
         //     tokenId,
         //     ownerAddress,
@@ -234,6 +233,13 @@ class Minty {
         }
     }
 
+    async getMetadataAssets(tokenId) {
+        const nft = new NFT(await this.getMetadata(tokenId));
+        // TODO
+        // should I parse this differently, like above?
+        return nft.getAssets();
+    }
+
     /**
      * Get information about an existing token. 
      * By default, this includes the token id, owner address, metadata, and metadata URI.
@@ -260,6 +266,9 @@ class Minty {
      * @property {number} creationInfo.blockNumber
      * @returns {Promise<NFTInfo>}
      */
+
+    // TODO
+    // update to match properly returned values from nft class
     async getNFT(tokenId, opts) {
         const {metadata, metadataURI} = await this.getMetadata(tokenId);
         const ownerAddress = await this.getTokenOwner(tokenId);
@@ -309,17 +318,17 @@ class Minty {
 
     // TODO
     // double check
-    async mintBatch(ownerAddresses, metadataURIs) {
-        if (ownerAddresses.length!=metadataURIs) throw "minting lengths mismatch";
-        const mintFunction = config.mintBatchFunction || "mint";
-        if (!this.contract.hasOwnProperty(mintFunction)) throw "minting contract is missing a declared mint function";
-        for (let i=0;i<metadataURIs.length;i++)
-            metadataURIs[i] = this.ipfs.stripIpfsUriPrefix(metadataURIs[i]);
-        const gasLimit = await this.contract.estimateGas[mintFunction](ownerAddresses, metadataURIs);
-        const tx = await this.contract[mintFunction](ownerAddresses, metadataURIs, {'gasLimit':gasLimit});
-        const receipt = await tx.wait();
-        parseEvents(receipt);
-    }
+    // async mintBatch(ownerAddresses, metadataURIs) {
+    //     if (ownerAddresses.length!=metadataURIs) throw "minting lengths mismatch";
+    //     const mintFunction = config.mintBatchFunction || "mint";
+    //     if (!this.contract.hasOwnProperty(mintFunction)) throw "minting contract is missing a declared mint function";
+    //     for (let i=0;i<metadataURIs.length;i++)
+    //         metadataURIs[i] = this.ipfs.stripIpfsUriPrefix(metadataURIs[i]);
+    //     const gasLimit = await this.contract.estimateGas[mintFunction](ownerAddresses, metadataURIs);
+    //     const tx = await this.contract[mintFunction](ownerAddresses, metadataURIs, {'gasLimit':gasLimit});
+    //     const receipt = await tx.wait();
+    //     parseEvents(receipt);
+    // }
 
     // TODO
     // add missing docs for this
@@ -341,17 +350,14 @@ class Minty {
         await tx.wait();
     }
 
-
+    // TODO
+    // batch transfers
+    async transferTokens(tokenIds, toAddresses) {}
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-
-
-
 
     /**
      * @returns {Promise<string>} - the default signing address that should own new tokens, if no owner was specified.
@@ -367,21 +373,10 @@ class Minty {
         return null;
     }
 
-
-
-
-
-
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-
-
-
-
 
     /**
      * Get the address that owns the given token id.
