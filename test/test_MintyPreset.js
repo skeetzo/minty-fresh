@@ -1,30 +1,36 @@
-const Minty = artifacts.require("Minty");
+const MintyPreset = artifacts.require("MintyPreset");
 const truffleAssert = require('truffle-assertions');
+const { catchRevert_ERC721Pausable_paused } = require("../src/utils/exceptions");
 
-contract("Minty", function (accounts) {
+contract("MintyPreset", function (accounts) {
 
   let minty;
   let tokenId;
 
   before(async function () {
-    minty = await Minty.deployed();
+    minty = await MintyPreset.deployed();
     // return assert.isTrue(true);
   });
 
   it("can mint", async function () {
     let result = await minty.mint(accounts[0]);
     assert.equal((await minty.balanceOf(accounts[0])).toString(), 1, "does not mint");  
-    truffleAssert.eventEmitted(result, 'Transfer', (ev) => {
-      tokenId = ev.tokenId;
-      return true;
-    }, "does not fire transfer event");
     result = await minty.mintToken(accounts[0], "");
     assert.equal((await minty.balanceOf(accounts[0])).toString(), 2, "does not mint token");
     truffleAssert.eventEmitted(result, 'Transfer', (ev) => {
+      tokenId = ev.tokenId.toString();
       return true;
     }, "does not fire transfer event");
   })
 
+  it("can pause & unpause", async function () {
+    let result = await minty.pause();
+    truffleAssert.eventEmitted(result, 'Paused', (ev) => {return true;}, "does not fire pause event");
+    await catchRevert_ERC721Pausable_paused(minty.mint(accounts[0]));
+    result = await minty.unpause();
+    truffleAssert.eventEmitted(result, 'Unpaused', (ev) => {return true;}, "does not fire unpause event");
+  })
+  
   it("can transfer", async function () {
     const startingBalanceFrom = (await minty.balanceOf(accounts[0])).toString();
     const startingBalanceTo = (await minty.balanceOf(accounts[1])).toString();

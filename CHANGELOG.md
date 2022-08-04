@@ -57,18 +57,22 @@
 	**1.2.7 : 8/2/2022**
 	- more patchwork updates
 	- added skeleton for minty tests; chai notes
-**1.2.8 : 8/3/2022**
+	**1.2.8 : 8/3/2022**
 	- more cleanup & test preps
+**1.2.9 : 8/4/2022**
+	- added tests
+	- updated test_Minty.js & test_MintyPreset.js w/ basic erc721 functionality checks (fixed contract minting inheritence)
 
 ------------------------------------------------------------------------
 
-- update test_Minty.js w/ basic erc721 functionality checks
 - finish tests for test_minty.js
 
 - finish all the updates to get minty.js, nft.js and ipfs.js working
 - finish nft.js: metadata creation, schema loads from ipfs, upload function
 
 # TODO
+
+- possibly add direct tests for: nft.js, ipfs.js
 
 - add ipns & updateable metadata functionality
 

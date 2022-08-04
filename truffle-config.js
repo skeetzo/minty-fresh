@@ -4,7 +4,9 @@ const HDWalletProvider = require('@truffle/hdwallet-provider')
 if (typeof process.env.MNEMONIC === 'undefined') throw new Error(`MNEMONIC has not been set.`);
 
 module.exports = {
-  contracts_build_directory: "./app/src/contracts",
+  contracts_directory: "src/contracts",
+  contracts_build_directory: "src/client/src/contracts",
+  migrations_directory: "src/migrations",
   networks: {
     development: {
      host: "127.0.0.1",     // Localhost (default: none)

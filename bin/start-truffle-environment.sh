@@ -2,7 +2,7 @@
 
 echo "Compiling smart contract"
 # rm -r app/src/contracts
-mkdir -p app/src/contracts
+mkdir -p src/client/src/contracts
 npx truffle compile
 
 # ($?) is a return value of previous command

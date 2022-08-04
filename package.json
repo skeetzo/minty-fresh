@@ -1,6 +1,6 @@
 {
   "name": "minty-fresh",
-  "version": "1.2.8",
+  "version": "1.2.9",
   "description": "",
   "main": "src/index.js",
   "scripts": {
@@ -43,7 +43,8 @@
     "json-colorizer": "^2.2.2",
     "json-schema-defaults": "^0.4.0",
     "multiaddr": "^8.1.2",
-    "node-fetch": "^3.2.9"
+    "node-fetch": "^3.2.9",
+    "truffle-assertions": "^0.9.2"
   },
   "repository": "git@github.com:skeetzo/minty"
 }
