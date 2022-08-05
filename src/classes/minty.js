@@ -9,7 +9,8 @@ const { selectSchema, promptNFTMetadata, validateSchema } = require('../utils/pr
 const solc = require('solc');
 
 const { fileExists } = require('../utils/helpers.js');
-const { IPFS } = require('./ipfs.js');
+const IPFS = require('./ipfs.js');
+const NFT = require('./nft.js');
 
 // The getconfig package loads configuration from files located in the the `config` directory.
 // See https://www.npmjs.com/package/getconfig for info on how to override the default config for
@@ -37,12 +38,12 @@ const ERC721URIStorage_QUERY_ERROR = "ERC721URIStorage: URI query for nonexisten
  * To make one, use the async {@link MakeMinty} function.
  */
 class Minty {
-    constructor(opts) {
+    constructor(opts={}) {
 
         // the name of the smart contract
         this.name = opts.contract || null;
         this.symbol = opts.symbol || null;
-        this.token = opts.name || null;
+        this.token = opts.token || null;
         this.address = opts.address || null;
         // can get address from name if available in config
         if (!isNaN(this.name) && !isNaN(config.contracts[this.name]) && config.contracts[this.name].hasOwnProperty("address"))
@@ -83,20 +84,20 @@ class Minty {
         ///////////////
 
         // check for migrations file
-        if (fileExists(path.join(__dirname, config.buildPath, `${this.name}.json`))) {
-            contractJSON = require(path.join(__dirname, config.buildPath, `${this.name}.json`));
+        if (fileExists(path.join(__dirname, "../..", config.buildPath, `${this.name}.json`))) {
+            contractJSON = require(path.join(__dirname, "../..", config.buildPath, `${this.name}.json`));
             this.abi = contractJSON.abi;
             bytecode = contractJSON.bytecode;
         }
         // check for local smart contract file
-        else if (fileExists(path.join(__dirname, config.contractPath, `${this.name}.sol`))) {
-            const input = fs.readFileSync(path.join(__dirname, config.contractPath, `${this.name}.sol`));
+        else if (fileExists(path.join(__dirname, "../..", config.contractPath, `${this.name}.sol`))) {
+            const input = fs.readFileSync(path.join(__dirname, "../..", config.contractPath, `${this.name}.sol`));
             const output = solc.compile(input.toString(), 1);
             bytecode = output.contracts[this.name].bytecode;
             this.abi = JSON.parse(output.contracts[this.name].interface);
         }
         // 
-        else if (this.address && this.network.name) {
+        else if (this.address && this.network) {
             // get abi from etherscan, etc
         }
 
@@ -116,19 +117,21 @@ class Minty {
         console.debug(`Available Networks: ${networkId} <-- current`)
         console.debug(contractJSON.networks)
         // check if contract has been deployed on network, if not then deploy
-        if (!isNaN(contractJSON.networks[networkId]) && contractJSON.networks[networkId].hasOwnProperty("address"))
-            this.address = contractJSON.networks[networkId].address;
-        else {
-            try {
-                console.log(`Deploying ${this.name} to ${this.network}`);
-                // const iface = new ethers.utils.Interface(this.abi);
-                const factory = new ethers.ContractFactory(this.abi, bytecode, signer);
-                const contract = await factory.deploy(this.token, this.symbol);
-                this.address = contract.address;
-                await contract.deployTransaction.wait();
-            }
-            catch (err) {
-                console.error(err);
+        if (!this.address) {
+            if (!isNaN(contractJSON.networks[networkId]) && contractJSON.networks[networkId].hasOwnProperty("address"))
+                this.address = contractJSON.networks[networkId].address;
+            else {
+                try {
+                    console.log(`Deploying ${this.name} to ${this.network}`);
+                    // const iface = new ethers.utils.Interface(this.abi);
+                    const factory = new ethers.ContractFactory(this.abi, bytecode, signer);
+                    this.contract = await factory.deploy(this.token, this.symbol);
+                    this.address = this.contract.address;
+                    await this.contract.deployTransaction.wait();
+                }
+                catch (err) {
+                    console.error(err);
+                }
             }
         }
 
@@ -138,7 +141,7 @@ class Minty {
         // Smart Contract //
         ////////////////////
 
-        this.contract = await ethers.Contract(this.address, this.abi, signer);
+        this.contract = await new ethers.Contract(this.address, this.abi, signer);
 
         //////////
         // IPFS //

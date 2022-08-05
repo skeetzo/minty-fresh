@@ -4,11 +4,13 @@
     "properties": {
         "name": {
             "type": "string",
-            "description": "Identifies the asset to which this NFT represents"
+            "description": "Identifies the asset to which this NFT represents",
+            "default": "test"
         },
         "description": {
             "type": "string",
-            "description": "Describes the asset to which this NFT represents"
+            "description": "Describes the asset to which this NFT represents",
+            "default": "test"
         },
         "image": {
             "type": "string",

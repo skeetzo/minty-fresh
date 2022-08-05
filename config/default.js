@@ -1,10 +1,12 @@
 const config = {
 
     defaultContract : "Minty",
+    defaultToken: "Julip",
+    defaultSymbol: "JLP",
 
     // these should be fetched from truffle-config
-    buildPath: "../app/src/contracts/",
-    contractPath: "../contracts/",
+    contractPath: "src/contracts",
+    buildPath: "src/client/src/contracts",
 
     // contract addresses
     contracts : {
@@ -49,7 +51,7 @@ const config = {
 
     },
 
-    SCHEMA_PATH: "../../config/schemas"
+    SCHEMA_PATH: "config/schemas"
 }
 
 module.exports = config

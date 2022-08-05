@@ -11,7 +11,7 @@ const Minty = artifacts.require("./Minty.sol");
 // do i need to do normal truffle deploy method like in sample?
 
 
-describe('Minty', (accounts) => {
+contract('Minty', (accounts) => {
 
 	const owner = accounts[0],
 		  notOwner = accounts[1],
@@ -20,20 +20,19 @@ describe('Minty', (accounts) => {
 	let minty, mintyContract;
 
 	const options = {
-		// name,
-		// symbol,
-		// token,
-		// address,
+		contract: "Minty",
+		symbol: "JLP",
+		token: "Julep",
+		// address: 
 		// host, network, chainId,
 		// 'skipMint':true
 	};
 
 	before(async () => {
     	mintyContract = await Minty.deployed();
-		minty = await MakeMinty({
-			'address': minty.address,
-			'contract': 'Minty'
-		});
+		minty = await MakeMinty({...options, ...{
+			// 'address': mintyContract.address
+		}});
 	}) 
 
 	describe('mint', () => {
@@ -75,7 +74,7 @@ describe('Minty', (accounts) => {
 	})
 
 	describe('transfer', () => {
-		it('can transfer token', () => {
+		it('can transfer token', async () => {
 	      	let ownerBalanceStart = await mintyContract.balanceOf(owner);
 	      	let notOwnerBalanceStart = await mintyContract.balanceOf(notOwner);
 			await minty.transferToken(0, notOwner);
@@ -84,7 +83,7 @@ describe('Minty', (accounts) => {
 	      	assert.isTrue(ownerBalance, ownerBalanceStart-1, "does not transfer out");
 	      	assert.isTrue(notOwnerBalance, notOwnerBalanceStart+1, "does not transfer in");
 		})
-		it('xcan transfer batch tokens', () => {
+		it('xcan transfer batch tokens', async () => {
 			let ownerBalance = await mintyContract.balanceOf(owner);
 	      	let notOwnerBalance = await mintyContract.balanceOf(notOwner);
 			
@@ -102,7 +101,7 @@ describe('Minty', (accounts) => {
 	})
 
 	describe('pin', () => {
-		it('can pin', () => {
+		it('can pin', async () => {
 			let {assetURIs, metadataURI} = await minty.pin(0);
 			// verify returned data
 			console.log(assetURIs)

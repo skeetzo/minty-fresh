@@ -14,8 +14,8 @@ class IPFS {
       hashAlg: 'sha2-256'
     }
 
-    constructor(client, opts) {
-        this.client = client || opts.ipfsApiUrl || ipfsClient(config.ipfsApiUrl);
+    constructor(opts={}) {
+        this.client = opts.client || opts.ipfsApiUrl || ipfsClient(config.ipfsApiUrl);
         this.prefix = "ipfs" || opts.prefix;
     }
 

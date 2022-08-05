@@ -4,10 +4,12 @@ const ajv = new Ajv(); // options can be passed, e.g. {allErrors: true}
 const config = require('getconfig');
 const fs = require('fs');
 // const fs = require('fs/promises');
+const path = require('path');
 const JSONschemaDefaults = require('json-schema-defaults');
 
-const { promptSchema } = require('./prompt.js');
-const { IPFS } = require('./ipfs.js');
+const { fileExists } = require('../utils/helpers.js');
+const { promptSchema } = require('../utils/prompt.js');
+const IPFS = require('./ipfs.js');
 
 // const ERC20_interfaceId = "0x36372b07",
       // ERC721_interfaceId = "0x80ac58cd";
@@ -21,6 +23,7 @@ class NFT {
         this.assets = opts.assets ||  {};
         this.metadata = opts.metadata || {};
         this.schema = opts.schema || "default";
+        this.schemaJSON = {};
         this.tokenId = opts.tokenId || null;
 
         this.metadataCID = opts.metadataCID || null;
@@ -64,7 +67,7 @@ class NFT {
 
     // TODO
     // return object from schema
-    static fromSchema(schema) {return JSONschemaDefaults(this.schema)}
+    static fromSchema(schema) {return JSONschemaDefaults(schema)}
 
     // return schema as an IPFS cid if available
     static _getSchemaCID(schema) {
@@ -93,13 +96,13 @@ class NFT {
         function _parseTemplate(t) {return JSON.parse(fs.readFileSync(`${config.SCHEMA_PATH}/${t}.json`))}
         // get list of template files from available files in available /schema directories
         const templates = [];
-        const localPath = path.join(__dirname, "../", config.SCHEMA_PATH), // path local to this script
+        const localPath = path.join(__dirname, "../..", config.SCHEMA_PATH), // path local to this script
               addonPath = path.join(process.env.PWD, config.SCHEMA_PATH);// path to where the cwd is
         const files = [];
-        if (fileExists(localPath)) files.extend(fs.readdirSync(localPath));
-        if (addonPath != localPath && fileExists(addonPath)) files.extend(fs.readdirSync(addonPath));
-        for (const schemaPath of schemas)
-            files.extend(fs.readdirSync(schemaPath))
+        if (fileExists(localPath)) 
+            files.push(...fs.readdirSync(localPath));
+        if (addonPath != localPath && fileExists(addonPath))
+            files.push(...fs.readdirSync(addonPath));
         let defaultIndex = 0;
         for (let i=0;i<files.length;i++) {
             const filename = files[i].replace(".json","");
@@ -121,7 +124,7 @@ class NFT {
         const assets = {},
               assetTypes = config.assetTypes || {};
         for (const key in assetTypes)
-            for (const [_key, value] of this.metadata)
+            for (const [_key, value] of Object.entries(this.metadata))
                 if (key == _key)
                     assets[key] = value;
         this.assets = assets;
@@ -147,7 +150,7 @@ class NFT {
         }
         console.log(`Pinning metadata (${this.metadataURI}) for token id ${this.tokenId}...`);
         await this.ipfs.pin(this.metadataURI);
-        return {assetURIs, this.metadataURI};
+        return {assetURIs, metadataURI: this.metadataURI};
     }
 
     // is this even possible?
@@ -161,6 +164,8 @@ class NFT {
     }
 
     async uploadMetadata() {
+        // TODO
+        // possibly move the ipfs segment to ipfs class?
         // add the metadata to IPFS
         const { cid: metadataCID } = await this.ipfs.add({ path: `/${this.contract}/nfts/metadata/${this.metadata.name}.json`, content: JSON.stringify(this.metadata)}, IPFS.ipfsAddOptions);
         this.metadataCID = metadataCID;
@@ -192,7 +197,7 @@ class NFT {
     // if its data, upload it and replace it's value with its uploaded CID
     async uploadAssets() {
         const assets = this.getAssets();
-        for (const [key, filePathOrCID] in assetObjects) {
+        for (const [key, filePathOrCID] in assets) {
             if (IPFS.validateCIDString(filePathOrCID)) continue;
             const {assetCID, assetURI} = await this.uploadAsset(filePathOrCID, `assets/${key}`);
             this.metadata[key] = assetCID;
@@ -207,7 +212,7 @@ class NFT {
         // replace empty values with null for flagging validation
         for (const [key, value] of Object.entries(this.metadata))
             if (value === "") this.metadata[key] = null;
-        const validate = ajv.compile(this.schema);
+        const validate = ajv.compile(this.schemaJSON);
         const valid = validate(this.metadata);
         if (!valid) {
             console.error(validate.errors);
@@ -220,7 +225,7 @@ class NFT {
 module.exports = NFT;
 
 
-async function parseErrors(validationErrors: ErrorObject[]) {
+async function parseErrors(validationErrors) {
     let errors = [];
     validationErrors.forEach(error => {
       errors.push({

@@ -48,7 +48,8 @@ async function main() {
             .description('Mint a new NFT from an existing schema template')
             .option('-s, --schema <name>', 'The name of the schema template to mint')
             .option('-i, --image <path>', 'The path to the image asset')
-            .option('-n, --name <name>', 'The name of the token')
+            .option('-n, --name <name>', 'The name of the token', config.defaultToken)
+            .option('--symbol <name>', 'The symbol of the token', config.defaultSymbol)
             .option('-d, --description <desc>', 'A text description of the token')
             .option('-o, --owner <address>', 'The ethereum address that should own the token' +
                 'If not provided, defaults to the first signing address.')

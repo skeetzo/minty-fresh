@@ -62,6 +62,7 @@
 **1.2.9 : 8/4/2022**
 	- added tests
 	- updated test_Minty.js & test_MintyPreset.js w/ basic erc721 functionality checks (fixed contract minting inheritence)
+	- began tests & debugging for test_minty.js
 
 ------------------------------------------------------------------------
 
@@ -69,6 +70,8 @@
 
 - finish all the updates to get minty.js, nft.js and ipfs.js working
 - finish nft.js: metadata creation, schema loads from ipfs, upload function
+
+need to rememeber to remove the "default" values from simple.json schema
 
 # TODO
 

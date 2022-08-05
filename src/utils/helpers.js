@@ -1,5 +1,5 @@
-const fs = require('fs');
-// const fs = require('fs/promises');
+// const fs = require('fs');
+const fs = require('fs/promises');
 
 // ---- helpers
 
@@ -21,6 +21,7 @@ function alignOutput(labelValuePairs) {
 }
 
 function fileExists(path) {
+    // console.debug(path);
     // try {
     //     await fs.access(path, fs.F_OK);
     //     return true;
