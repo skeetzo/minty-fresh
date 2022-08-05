@@ -3,7 +3,7 @@ const { ErrorObject } = require("ajv");
 const ajv = new Ajv(); // options can be passed, e.g. {allErrors: true}
 const config = require('getconfig');
 const fs = require('fs');
-// const fs = require('fs/promises');
+const fs_ = require('fs/promises');
 const path = require('path');
 const JSONschemaDefaults = require('json-schema-defaults');
 
@@ -19,8 +19,8 @@ class NFT {
     constructor(opts) {
 
         this.ipfs = opts.ipfs || null;
-        this.contract = opts.contract || null;
-        this.assets = opts.assets ||  {};
+        this.name = opts.name || null;
+        this.assets = opts.assets || {};
         this.metadata = opts.metadata || {};
         this.schema = opts.schema || "default";
         this.schemaJSON = {};
@@ -123,7 +123,7 @@ class NFT {
         if (Object.keys(this.assets).length > 0) return this.assets;
         const assets = {},
               assetTypes = config.assetTypes || {};
-        for (const key in assetTypes)
+        for (const key of assetTypes)
             for (const [_key, value] of Object.entries(this.metadata))
                 if (key == _key)
                     assets[key] = value;
@@ -163,44 +163,42 @@ class NFT {
         await this.uploadMetadata();
     }
 
+    // upload to ipfs
     async uploadMetadata() {
-        // TODO
-        // possibly move the ipfs segment to ipfs class?
-        // add the metadata to IPFS
-        const { cid: metadataCID } = await this.ipfs.add({ path: `/${this.contract}/nfts/metadata/${this.metadata.name}.json`, content: JSON.stringify(this.metadata)}, IPFS.ipfsAddOptions);
+        const ipfsPath = `/${this.name}/nfts/metadata/${this.metadata.name}.json`;
+        const { metadataCID, metadataURI } = await this.ipfs.add(ipfsPath, JSON.stringify(this.metadata));
         this.metadataCID = metadataCID;
-        this.metadataURI = IPFS.ensureIpfsUriPrefix(metadataCID) + `/${this.contract}/metadata/${this.metadata.name}.json`;
+        this.metadataURI = metadataURI;
     }
 
     // upload asset to folder name
     async uploadAsset(filePath, folderName="assets") {
+        if (!fileExists(filePath)) throw "incorrect asset path";
         // add the asset to IPFS
         // const filePath = options.path || 'asset.bin';
         const basename =  path.basename(filePath);
-        const content = await fs.readFile(filePath);
+        const content = await fs_.readFile(filePath);
         // When you add an object to IPFS with a directory prefix in its path,
         // IPFS will create a directory structure for you. This is nice, because
         // it gives us URIs with descriptive filenames in them e.g.
         // 'ipfs://QmaNZ2FCgvBPqnxtkbToVVbK2Nes6xk5K4Ns6BsmkPucAM/cat-pic.png' instead of
         // 'ipfs://QmaNZ2FCgvBPqnxtkbToVVbK2Nes6xk5K4Ns6BsmkPucAM'
-        const ipfsPath = `${this.contract}/nfts/${folderName}/${basename}`;
-        const { cid: assetCID } = await IPFS.add({ path: ipfsPath, content }, IPFS.ipfsAddOptions);
-        // make the NFT metadata JSON
-        const assetURI = IPFS.ensureIpfsUriPrefix(assetCID) + '/' + basename;        
-        return {
-            assetCID, assetURI
-        };
+        const ipfsPath = `/${this.name}/nfts/${folderName}/${basename}`;
+        const { metadataCID: assetCID, metadataURI: assetURI } = await this.ipfs.add(ipfsPath, content);
+        // const assetURI = IPFS.ensureIpfsUriPrefix(assetCID) + '/' + basename;        
+        return { assetCID, assetURI };
     }
 
     // should get all assets key/value pairs in this.assets
     // and check if the value is data or a CID
     // if its data, upload it and replace it's value with its uploaded CID
     async uploadAssets() {
-        const assets = this.getAssets();
-        for (const [key, filePathOrCID] in assets) {
-            if (IPFS.validateCIDString(filePathOrCID)) continue;
+        const assets = {};
+        for (const [key, filePathOrCID] of Object.entries(this.getAssets())) {
+            if (IPFS.validateCIDString(filePathOrCID)) continue; // must not already be a CID string
             const {assetCID, assetURI} = await this.uploadAsset(filePathOrCID, `assets/${key}`);
             this.metadata[key] = assetCID;
+            assets[key] = {};
             assets[key].cid = assetCID;
             assets[key].uri = assetURI;
         }

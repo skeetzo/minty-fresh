@@ -15,8 +15,14 @@ class IPFS {
     }
 
     constructor(opts={}) {
-        this.client = opts.client || opts.ipfsApiUrl || ipfsClient(config.ipfsApiUrl);
+        this.client = opts.client || ipfsClient(opts.ipfsApiUrl) || ipfsClient(config.ipfsApiUrl);
         this.prefix = "ipfs" || opts.prefix;
+    }
+
+    async add(ipfsPath, content) {
+        const { cid: metadataCID } = await this.client.add({ path: ipfsPath, content}, IPFS.ipfsAddOptions);
+        const metadataURI = IPFS.ensureIpfsUriPrefix(metadataCID) + ipfsPath;
+        return { metadataCID, metadataURI };
     }
 
     /**
@@ -190,8 +196,15 @@ class IPFS {
     }
 
     static validateCIDString(possibleCIDString) {
-        const cid = new CID(possibleCIDString);
-        return CID.isCID(cid);
+        // console.debug("validating cid:", possibleCIDString);
+        try {
+            const cid = new CID(possibleCIDString);
+            return CID.isCID(cid);
+        }
+        catch (err) {
+            // console.error(err.message);
+        }
+        return false;
     }
 
 }

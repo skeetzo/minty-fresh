@@ -59,12 +59,18 @@
 	- added skeleton for minty tests; chai notes
 	**1.2.8 : 8/3/2022**
 	- more cleanup & test preps
-**1.2.9 : 8/4/2022**
+	**1.2.9 : 8/4/2022**
 	- added tests
 	- updated test_Minty.js & test_MintyPreset.js w/ basic erc721 functionality checks (fixed contract minting inheritence)
 	- began tests & debugging for test_minty.js
+**1.2.10 : 8/5/2022**
+	- more updates to test_minty.js
+	- finished testing basic mint process
 
 ------------------------------------------------------------------------
+
+- fix the fileExists function
+- fix ipfs uploads --> not appearing in ipfs client
 
 - finish tests for test_minty.js
 

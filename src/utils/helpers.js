@@ -28,13 +28,19 @@ function fileExists(path) {
     // } catch (e) {
     //     return false;
     // }
-    return fs.access(path, fs.F_OK, (err) => {
-        if (err) {
-            console.log(e);
-            return false;
-        }
-        return true;
-    });
+    try {
+        return fs.access(path, fs.F_OK, (err) => {
+            if (err) {
+                console.error(err);
+                return false;
+            }
+            return true;
+        });
+    }
+    catch (err) {
+        console.error(err);
+    }
+    return false;
 }
 
 function parseRecipient(value) {
@@ -92,3 +98,22 @@ module.exports = {
     parseAddress,
     parseDate
 }
+
+
+
+
+
+
+
+        // TODO
+        // double check all these output changes
+
+        // return {
+        //     tokenId,
+        //     ownerAddress,
+        //     metadata,
+        //     metadataURI,
+        //     metadataGatewayURL: makeGatewayURL(metadataURI),
+        //     assetURIs: assetURIs,
+        //     assetsGatewayURLs: assetURIs.map(a => makeGatewayURL(a))
+        // };

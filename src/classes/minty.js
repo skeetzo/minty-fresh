@@ -44,11 +44,11 @@ class Minty {
         this.name = opts.contract || null;
         this.symbol = opts.symbol || null;
         this.token = opts.token || null;
+        // contract address
         this.address = opts.address || null;
         // can get address from name if available in config
         if (!isNaN(this.name) && !isNaN(config.contracts[this.name]) && config.contracts[this.name].hasOwnProperty("address"))
             this.address = config.contracts[this.name].address;
-        
         // the url of the provider to connect to
         this.host = opts.host || "http://127.0.0.1:8545";
         // the name of the network to connect to
@@ -62,12 +62,14 @@ class Minty {
         if (!isNaN(this.name) && !isNaN(config.contracts[this.name]) && config.contracts[this.name].hasOwnProperty("networks") &&
             config.contracts[this.name].networks[this.network].hasOwnProperty("host"))
             this.host = config.contracts[this.name].networks[this.host];
+        this.to = opts.to || opts.owner || null;
 
         this.abi = null;
         // ipfs client
         this.ipfs = null;
         // ethers contract object
         this.contract = null;
+        this.signer = null;
 
         this._initialized = false;
     }
@@ -109,13 +111,14 @@ class Minty {
 
         const provider = new ethers.providers.StaticJsonRpcProvider(this.host);
         const signer = provider.getSigner();            
+        if (!this.to) this.to = await signer.getAddress();
         const network = await provider.getNetwork();
         console.debug(`Network connected: ${JSON.stringify(network)}`)
         const networkId = network.chainId;
         this.network = network.name;
         // get the deployed contract's address on current network
-        console.debug(`Available Networks: ${networkId} <-- current`)
-        console.debug(contractJSON.networks)
+        // console.debug(`Available Networks: ${networkId} <-- current`)
+        // console.debug(contractJSON.networks)
         // check if contract has been deployed on network, if not then deploy
         if (!this.address) {
             if (!isNaN(contractJSON.networks[networkId]) && contractJSON.networks[networkId].hasOwnProperty("address"))
@@ -142,6 +145,7 @@ class Minty {
         ////////////////////
 
         this.contract = await new ethers.Contract(this.address, this.abi, signer);
+        this.signer = signer;
 
         //////////
         // IPFS //
@@ -184,24 +188,13 @@ class Minty {
     // finish return value of cli output
     async createNFT(options, skipMint=false) {
         const nft = new NFT({...options, ...this});
-        const { metadataCID, metadataURI } = await nft.upload();
+        await nft.upload();
         // get the address of the token owner from options, or use the default signing address if no owner is given
-        const to = await this.defaultRecipientAddress() || await this.defaultOwnerAddress();
-        if (!skipMint&&!options.skipMint) await this.mint(to, metadataURI);
+        if (!skipMint&&!options.skipMint) {
+            const to = options.to || await this.defaultRecipientAddress() || await this.defaultOwnerAddress();
+            nft.tokenId  = await this.mint(to, nft.metadataURI);
+        }
         return nft;
-
-        // TODO
-        // double check all these output changes
-
-        // return {
-        //     tokenId,
-        //     ownerAddress,
-        //     metadata,
-        //     metadataURI,
-        //     metadataGatewayURL: makeGatewayURL(metadataURI),
-        //     assetURIs: assetURIs,
-        //     assetsGatewayURLs: assetURIs.map(a => makeGatewayURL(a))
-        // };
     }
 
     // TODO
@@ -307,7 +300,7 @@ class Minty {
      */
     async mint(ownerAddress, metadataURI) {
         // the smart contract might add an ipfs:// prefix to all URIs, so make sure it doesn't get added twice
-        metadataURI = this.ipfs.stripIpfsUriPrefix(metadataURI);
+        metadataURI = IPFS.stripIpfsUriPrefix(metadataURI);
         // "dynamic" mint functionality
         const mintFunction = config.mintFunction || "mint";
         if (!this.contract.hasOwnProperty(mintFunction)) throw "minting contract is missing a declared mint function";
@@ -316,7 +309,7 @@ class Minty {
         // - BUG: for some reason contract.mint won't work? so always use mintToken? as method name?
         const tx = await this.contract[mintFunction](ownerAddress, metadataURI, {'gasLimit':gasLimit});
         const receipt = await tx.wait();
-        parseEvents(receipt);
+        return parseTokenId(receipt);
     }
 
     // TODO
@@ -330,7 +323,7 @@ class Minty {
     //     const gasLimit = await this.contract.estimateGas[mintFunction](ownerAddresses, metadataURIs);
     //     const tx = await this.contract[mintFunction](ownerAddresses, metadataURIs, {'gasLimit':gasLimit});
     //     const receipt = await tx.wait();
-    //     parseEvents(receipt);
+    //     parseTokenId(receipt);(receipt);
     // }
 
     // TODO
@@ -366,8 +359,14 @@ class Minty {
      * @returns {Promise<string>} - the default signing address that should own new tokens, if no owner was specified.
      */
     async defaultOwnerAddress() {
-        const signers = await ethers.getSigners();
-        return signers[0].address;
+        return this.to;
+        // if (this.signer) return this.signer;
+        // TODO
+        // only works with hardhat
+        // const signers = await ethers.getSigners();
+        // const [owner, addr1] = await ethers.getSigners();
+        // return signers[0].address;
+        return null;
     }
 
     // TODO
@@ -456,7 +455,8 @@ module.exports = {
 
 
 
-function parseEvents(receipt) {
+function parseTokenId(receipt) {
+    // console.log(receipt);
 
     // if minty contract is an ERC1155, the event is: TransferBatch
     // if minty contract is an ERC721 that handles batch minting via single mint: multiple Transfer events
