@@ -1,6 +1,11 @@
-const ipfsClient = require('ipfs-http-client');
-const CID = require('cids');
+// const ipfsClient = require('ipfs-http-client');
+// const CID = require('cids');
 const all = require('it-all');
+const path = require('path');
+const config = require('getconfig');
+
+const { create, CID } = require('ipfs-http-client');
+// const client = create();
 
 const uint8ArrayConcat = require('uint8arrays/concat').concat;
 const uint8ArrayToString = require('uint8arrays/to-string').toString;
@@ -11,17 +16,35 @@ class IPFS {
     
     ipfsAddOptions = {
       cidVersion: 1,
-      hashAlg: 'sha2-256'
+      hashAlg: 'sha2-256',
+    }
+
+    writeOptions = { 
+        'create':true, 'parents':true,
+    'wrapWithDirectory':true
     }
 
     constructor(opts={}) {
-        this.client = opts.client || ipfsClient(opts.ipfsApiUrl) || ipfsClient(config.ipfsApiUrl);
+        // if (opts.client) this.client = opts.client;
+        // else if (opts.ipfsApiUrl) this.client = create(opts.ipfsApiUrl);
+        // else 
+            this.client = create(config.ipfsApiUrl);
+        // console.log("connecting to IPFS urls:", opts.client, opts.ipfsApiUrl, config.ipfsApiUrl);
         this.prefix = "ipfs" || opts.prefix;
     }
 
     async add(ipfsPath, content) {
-        const { cid: metadataCID } = await this.client.add({ path: ipfsPath, content}, IPFS.ipfsAddOptions);
+        const file = { 
+            name: path.basename(ipfsPath),
+            path: ipfsPath,
+            content: content
+        };
+        const { cid: metadataCID } = await this.client.add(file, IPFS.ipfsAddOptions);
         const metadataURI = IPFS.ensureIpfsUriPrefix(metadataCID) + ipfsPath;
+        for await (const filee of this.client.ls(metadataCID)) {
+          console.log(filee.path)
+        }
+        // await this.client.files.write("/"+ipfsPath, content, IPFS.writeOptions);
         return { metadataCID, metadataURI };
     }
 
@@ -32,6 +55,7 @@ class IPFS {
      * @returns {Promise<Uint8Array>} - contents of the IPFS object
      */
     async getIPFS(cidOrURI) {
+        console.log(cidOrURI)
         const cid = IPFS.stripIpfsUriPrefix(cidOrURI);
         return uint8ArrayConcat(await all(this.client.cat(cid)));
     }

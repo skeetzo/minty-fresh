@@ -66,6 +66,9 @@
 **1.2.10 : 8/5/2022**
 	- more updates to test_minty.js --> almost complete
 	- finished testing basic mint process
+**1.2.11 : 8/6/2022**
+	- more attempts to debug the ipfs uploads
+	- package updates
 
 ------------------------------------------------------------------------
 
