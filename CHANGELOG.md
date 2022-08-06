@@ -64,15 +64,15 @@
 	- updated test_Minty.js & test_MintyPreset.js w/ basic erc721 functionality checks (fixed contract minting inheritence)
 	- began tests & debugging for test_minty.js
 **1.2.10 : 8/5/2022**
-	- more updates to test_minty.js
+	- more updates to test_minty.js --> almost complete
 	- finished testing basic mint process
 
 ------------------------------------------------------------------------
 
-- fix the fileExists function
-- fix ipfs uploads --> not appearing in ipfs client
 
 - finish tests for test_minty.js
+-- finish getNFT
+-- fix ipfs uploads --> not appearing in ipfs client
 
 - finish all the updates to get minty.js, nft.js and ipfs.js working
 - finish nft.js: metadata creation, schema loads from ipfs, upload function
@@ -80,6 +80,8 @@
 need to rememeber to remove the "default" values from simple.json schema
 
 # TODO
+
+- completely fix the fileExists function
 
 - possibly add direct tests for: nft.js, ipfs.js
 

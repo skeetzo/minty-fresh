@@ -209,7 +209,6 @@ class Minty {
     // -------- NFT Retreival
     //////////////////////////////////////////////
 
-
     /**
      * Fetch the NFT metadata for a given token id.
      * 
@@ -226,13 +225,14 @@ class Minty {
         catch (err) {
             if (err.hasOwnProperty("reason") && err.reason === ERC721URIStorage_QUERY_ERROR)
                 throw "Token id does not exist!";
+            throw err.message;
         }
     }
 
+    // TODO
+    // should I parse this differently, like above?
     async getMetadataAssets(tokenId) {
-        const nft = new NFT(await this.getMetadata(tokenId));
-        // TODO
-        // should I parse this differently, like above?
+        const nft = new NFT({...await this.getMetadata(tokenId), ...this});
         return nft.getAssets();
     }
 
@@ -266,10 +266,14 @@ class Minty {
     // TODO
     // update to match properly returned values from nft class
     async getNFT(tokenId, opts) {
-        const {metadata, metadataURI} = await this.getMetadata(tokenId);
+        // const { metadata, metadataURI } = 
+        const metadata = {}
+        const metadataURI = ""
+        await this.getMetadata(tokenId);
+        return;
         const ownerAddress = await this.getTokenOwner(tokenId);
         const metadataGatewayURL = makeGatewayURL(metadataURI);
-        const {fetchAsset, fetchCreationInfo} = (opts || {})
+        // const {fetchAsset, fetchCreationInfo} = (opts || {})
         const assets = [];
         for (const [key, value] of metadata)
             if (config.assetTypes.includes(key)) {
@@ -277,13 +281,13 @@ class Minty {
                     assetURI: value,
                     assetGatewayURL: makeGatewayURL(value)
                 };
-                if (fetchAsset) asset.base64 = await this.ipfs.getIPFSBase64(value);
+                // if (fetchAsset) asset.base64 = await this.ipfs.getIPFSBase64(value);
                 assets.push(asset);
             }
         const nft = {tokenId, metadata, metadataURI, metadataGatewayURL, ownerAddress, assets};
-        if (fetchCreationInfo) {
+        // if (fetchCreationInfo) {
             nft.creationInfo = await this.getCreationInfo(tokenId);
-        }
+        // }
         return nft;
     }
 

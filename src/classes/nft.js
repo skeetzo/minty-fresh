@@ -66,6 +66,10 @@ class NFT {
     // static fromMetadata(metadata) {return {}}
 
     // TODO
+    // load directly from metadata at ipfs
+    static fromIPFS() {}
+
+    // TODO
     // return object from schema
     static fromSchema(schema) {return JSONschemaDefaults(schema)}
 
