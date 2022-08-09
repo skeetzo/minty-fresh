@@ -6,6 +6,7 @@ const config = require('getconfig');
 
 // const { create, CID } = require('ipfs-http-client');
 const { create } = require('ipfs-http-client');
+const IPFS_CLIENT = create(config.ipfsApiUrl);
 
 const uint8ArrayConcat = require('uint8arrays/concat').concat;
 const uint8ArrayToString = require('uint8arrays/to-string').toString;
@@ -17,7 +18,7 @@ class IPFS {
     ipfsAddOptions = {
       cidVersion: 1,
       hashAlg: 'sha2-256',
-    'wrapWithDirectory':true
+    // 'wrapWithDirectory':true
     }
 
     writeOptions = { 
@@ -25,28 +26,66 @@ class IPFS {
       'hashAlg': 'sha2-256',
       'create':true,
       'parents':true,
-      'wrapWithDirectory':true
+      // 'wrapWithDirectory':true
     }
 
     constructor(opts={}) {
-        // if (opts.client) this.client = opts.client;
-        // else if (opts.ipfsApiUrl) this.client = create(opts.ipfsApiUrl);
+        // if (opts.client) IPFS_CLIENT = opts.client;
+        // else if (opts.ipfsApiUrl) IPFS_CLIENT = create(opts.ipfsApiUrl);
         // else 
-            this.client = create(config.ipfsApiUrl);
+            // IPFS_CLIENT = create(config.ipfsApiUrl);
         // console.log("connecting to IPFS urls:", opts.client, opts.ipfsApiUrl, config.ipfsApiUrl);
-        this.prefix = "ipfs" || opts.prefix;
+        // IPFS.prefix = "ipfs" || opts.prefix;
     }
 
     // file must have: name, path, and content
-    async add(file) {
+    static async add(file) {
         console.debug(`adding IPFS path: ${file.path}`);
-        const { cid: metadataCID } = await this.client.add(file, IPFS.ipfsAddOptions);
+        const { cid: metadataCID } = await IPFS_CLIENT.add(file, IPFS.ipfsAddOptions);
         const metadataURI = IPFS.ensureIpfsUriPrefix(metadataCID) + "/" + file.name;
-        // for await (const filee of this.client.ls(metadataCID)) {
+        // TODO
+        // can use the ls check to prevent duplicates
+        // possibly add dialogue to confirm y/n to overwrite existing?
+        // for await (const filee of IPFS_CLIENT.ls(metadataCID)) {
           // console.log(filee.path)
         // }
-        // try {await this.client.files.write(file.path, file.content, IPFS.writeOptions);}
-        // catch (err) {console.error(err.message);}
+        // will fail if the MFS is written poorly / incorrectly
+
+        // TODO
+        // test if this is necessary at all
+        async function writeMFS() {
+            try {
+                await IPFS_CLIENT.files.write(file.path, file.content, IPFS.writeOptions)
+            }
+            catch (err) {
+                const IPFS_MISSING_FILE = "file does not exist";
+                if (err.message.includes(IPFS_MISSING_FILE)) {
+                    console.debug("missing file:", file.path);
+                }
+                else
+                    console.error(err)
+            }
+        }
+
+        // https://github.com/ipfs/ipfs-webui/issues/897
+        // $ ipfs files cp /ipfs/QmeoTsSvQvNtKxhHdPA3gy6RWD6ghVwdkjBeUWWPiHdmn6 /hello.txt
+        async function copyToWebUI() {
+            try {
+                await IPFS_CLIENT.files.cp(`/ipfs/${metadataCID}`, "/"+file.name, IPFS.ipfsAddOptions);
+            }
+            catch (err) {
+                const IPFS_DUPLICATE_CP = "directory already has entry by that name";
+                if (err.message.includes(IPFS_DUPLICATE_CP)) {
+                    console.debug("duplicate copy:", file.name);
+                }
+                else
+                    console.error(err);
+            }
+        }
+
+        // await writeMFS();
+        await copyToWebUI();
+
         return { metadataCID:metadataCID.toString(), metadataURI };
     }
 
@@ -56,10 +95,10 @@ class IPFS {
      * @param {string} cidOrURI - IPFS CID string or `ipfs://<cid>` style URI
      * @returns {Promise<Uint8Array>} - contents of the IPFS object
      */
-    async getIPFS(cidOrURI) {
+    static async getIPFS(cidOrURI) {
         // console.log(cidOrURI)
         const cid = IPFS.stripIpfsUriPrefix(cidOrURI);
-        return uint8ArrayConcat(await all(this.client.cat(cid)));
+        return uint8ArrayConcat(await all(IPFS_CLIENT.cat(cid)));
     }
 
     /**
@@ -68,8 +107,8 @@ class IPFS {
      * @param {string} cidOrURI - IPFS CID string or `ipfs://<cid>` style URI
      * @returns {Promise<string>} - the contents of the IPFS object as a string
      */
-    async getIPFSString(cidOrURI) {
-        const bytes = await this.getIPFS(cidOrURI);
+    static async getIPFSString(cidOrURI) {
+        const bytes = await IPFS.getIPFS(cidOrURI);
         return uint8ArrayToString(bytes);
     }
 
@@ -79,8 +118,8 @@ class IPFS {
      * @param {string} cidOrURI - IPFS CID string or `ipfs://<cid>` style URI
      * @returns {Promise<string>} - contents of the IPFS object, encoded to base64
      */
-    async getIPFSBase64(cidOrURI) {
-        const bytes = await this.getIPFS(cidOrURI);
+    static async getIPFSBase64(cidOrURI) {
+        const bytes = await IPFS.getIPFS(cidOrURI);
         return uint8ArrayToString(bytes, 'base64');
     }
 
@@ -90,8 +129,8 @@ class IPFS {
      * @param {string} cidOrURI - IPFS CID string or `ipfs://<cid>` style URI
      * @returns {Promise<string>} - contents of the IPFS object, as a javascript object (or array, etc depending on what was stored). Fails if the content isn't valid JSON.
      */
-    async getIPFSJSON(cidOrURI) {
-        const str = await this.getIPFSString(cidOrURI);
+    static async getIPFSJSON(cidOrURI) {
+        const str = await IPFS.getIPFSString(cidOrURI);
         return JSON.parse(str);
     }
 
@@ -105,17 +144,17 @@ class IPFS {
      * @param {string} cidOrURI - a CID or ipfs:// URI
      * @returns {Promise<void>}
      */
-    async pin(cidOrURI) {
+    static async pin(cidOrURI) {
         const cid = IPFS.extractCID(cidOrURI);
         // Make sure IPFS is set up to use our preferred pinning service.
-        await this._configurePinningService();
+        await IPFS._configurePinningService();
         // Check if we've already pinned this CID to avoid a "duplicate pin" error.
-        const pinned = await this.isPinned(cid);
+        const pinned = await IPFS.isPinned(cid);
         if (pinned) return;
         // Ask the remote service to pin the content.
         // Behind the scenes, this will cause the pinning service to connect to our local IPFS node
         // and fetch the data using Bitswap, IPFS's transfer protocol.
-        await this.client.pin.remote.add(cid, { service: config.pinningService.name });
+        await IPFS_CLIENT.pin.remote.add(cid, { service: config.pinningService.name });
     }
 
     /**
@@ -124,7 +163,7 @@ class IPFS {
      * @param {string|CID} cid 
      * @returns {Promise<boolean>} - true if the pinning service has already pinned the given cid
      */
-    async isPinned(cid) {
+    static async isPinned(cid) {
         if (typeof cid === 'string') {
             cid = new CID(cid);
         }
@@ -133,11 +172,11 @@ class IPFS {
             cid: [cid], // ls expects an array of cids
         };
         if (opts.service == "local") // local daemon
-            for await (const result of this.client.pin.ls(opts)) {
+            for await (const result of IPFS_CLIENT.pin.ls(opts)) {
                 return true;
             }
         else // remote service
-            for await (const result of this.client.pin.remote.ls(opts)) {
+            for await (const result of IPFS_CLIENT.pin.remote.ls(opts)) {
                 return true;
             }
         return false;
@@ -148,12 +187,12 @@ class IPFS {
      * 
      * @private
      */
-    async _configurePinningService() {
+    static async _configurePinningService() {
         if (!config.pinningService) {
             throw new Error(`No pinningService set up in minty config. Unable to pin.`);
         }
         // check if the service has already been added to js-ipfs
-        for (const svc of await this.client.pin.remote.service.ls()) {
+        for (const svc of await IPFS_CLIENT.pin.remote.service.ls()) {
             if (svc.service === config.pinningService.name) {
                 // service is already configured, no need to do anything
                 return;
@@ -174,7 +213,7 @@ class IPFS {
         }
         // skip remote if using local daemon
         if (name != "local")
-            await this.client.pin.remote.service.add(name, { endpoint, key });
+            await IPFS_CLIENT.pin.remote.service.add(name, { endpoint, key });
     }
 
     //////////////////////////////////////////////

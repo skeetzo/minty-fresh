@@ -7,6 +7,9 @@ const { MakeMinty } = require('../src/classes/minty.js');
 
 // const Minty = artifacts.require("./Minty.sol");
 
+const fs_ = require('fs/promises');
+const IMAGE_SOURCE = "../src/public/minty-fresh.png";
+
 // uses truffle contract method to access accounts, does not require actual contract
 contract('Minty (client)', (accounts) => {
 
@@ -77,6 +80,9 @@ contract('Minty (client)', (accounts) => {
 			const nft = await minty.getNFT(0);
 	        expect(nft.tokenId).to.not.be.null;
 	        expect(nft.metadata).to.not.be.empty;
+	        expect(nft.metadata.name).to.not.be.empty;
+	        expect(nft.metadata.description).to.not.be.empty;
+	        expect(nft.metadata.image).to.not.be.empty;
 	        expect(nft.metadataCID).to.not.be.null;
 	        expect(nft.metadataURI).to.not.be.null;
 		})
@@ -84,8 +90,18 @@ contract('Minty (client)', (accounts) => {
 			assert.isTrue(minted, "must mint beforehand");
 			const assets = await minty.getMetadataAssets(0);
 			expect(assets).to.have.any.keys(...config.assetTypes)
-			// TODO
-			// possibly verify that each asset value is a valid CID
+			// TODO: can possibly check that each asset value is a CID string
+		})
+		it('can get asset data', async () => {
+			// load the data from ipfs and compare it to the data from the path
+			const assets = await minty.getNFTAssets(0);
+			const base64regex = /^([0-9a-zA-Z+/]{4})*(([0-9a-zA-Z+/]{2}==)|([0-9a-zA-Z+/]{3}=))?$/;
+			console.log("assets:",assets)
+			// verify that each asset value is a valid CID that returns the original data form
+			for (const [ass, value] in Object.entries(assets)) {
+				console.log(ass, value, base64regex.test(value))
+				if (ass == "image") assert.isTrue(base64regex.test(value));
+			}
 		})
 		it('can get token owner', async () => {
 			assert.equal(await minty.getTokenOwner(0), owner, "does not get token owner");

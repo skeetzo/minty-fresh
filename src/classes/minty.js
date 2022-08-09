@@ -66,7 +66,7 @@ class Minty {
 
         this.abi = null;
         // ipfs client
-        this.ipfs = null;
+        IPFS = null;
         // ethers contract object
         this.contract = null;
         this.signer = null;
@@ -147,13 +147,6 @@ class Minty {
         this.contract = await new ethers.Contract(this.address, this.abi, signer);
         this.signer = signer;
 
-        //////////
-        // IPFS //
-        //////////
-
-        // creates a local IPFS node
-        this.ipfs = new IPFS();
-
         this._initialized = true;
     }
 
@@ -206,7 +199,7 @@ class Minty {
 
     // TODO
     // updates an ipns nft's metadata
-    async updateNFT(nft, options) {}
+    async updateNFT(tokenId, options) {}
 
     //////////////////////////////////////////////
     // -------- NFT Retreival
@@ -222,7 +215,7 @@ class Minty {
     async getMetadata(tokenId) {
         try {
             const metadataURI = await this.contract.tokenURI(tokenId);
-            const metadata = await this.ipfs.getIPFSJSON(metadataURI);
+            const metadata = await IPFS.getIPFSJSON(metadataURI);
             return {metadata, metadataURI};
         }
         catch (err) {
@@ -265,9 +258,6 @@ class Minty {
      * @property {number} creationInfo.blockNumber
      * @returns {Promise<NFTInfo>}
      */
-
-    // TODO
-    // update to match properly returned values from nft class
     async getNFT(tokenId) {
         console.debug(`Getting token id ${tokenId}...`);
         const nft = new NFT({...this});
@@ -279,6 +269,43 @@ class Minty {
         nft.owner = await this.getTokenOwner(tokenId);
         console.debug(`Got token id ${tokenId}.`);
         return nft;
+    }
+
+    // return the requested asset data found in the token metadata
+    async getNFTAsset(tokenId, _asset="image") {
+        console.debug(`Getting ${asset} for token id ${tokenId}...`);
+        const nft = await this.getNFT(tokenId);
+        const asset = nft.getAsset(_asset);
+        console.debug(`Got ${asset} for token id ${tokenId}.`);
+        return asset;
+    }
+
+    // return all the assets found in the token metadata
+    async getNFTAssets(tokenId) {
+        console.debug(`Getting assets for token id ${tokenId}...`);
+        const nft = await this.getNFT(tokenId);
+        const assets = nft.getAssets();
+        console.debug(`Got assets for token id ${tokenId}.`);
+        return assets;
+    }
+
+    // returns the data for the asset
+    async getNFTAssetData(tokenId, asset="image") {
+        const asset = await this.getNFTAsset(tokenId, asset);
+        const data = await asset.getData();
+        return data;
+    }
+
+    // returns array of key:data pairs
+    async getAllNFTAssetsData(tokenId) {
+        const assets = await this.getNFTAssets(tokenId);
+        const datas = [];
+        for (const asset of assets) {
+            const data = {};
+            data[asset.name] = await asset.getData();
+            datas.push(data);
+        }
+        return datas;
     }
 
     //////////////////////////////////////////////
@@ -295,7 +322,7 @@ class Minty {
     async mint(ownerAddress, metadataURI) {
         // the smart contract might add an ipfs:// prefix to all URIs, so make sure it doesn't get added twice
         metadataURI = IPFS.stripIpfsUriPrefix(metadataURI);
-        console.debug(`Minting metadata for address...\n${metadataURI} --> ${ownerAddress}`)
+        console.debug(`Minting uri for address...\n${ownerAddress} : ${metadataURI}`)
         // "dynamic" mint functionality
         const mintFunction = config.mintFunction || "mint";
         if (!this.contract.hasOwnProperty(mintFunction)) throw "minting contract is missing a declared mint function";
@@ -316,7 +343,7 @@ class Minty {
     //     const mintFunction = config.mintBatchFunction || "mint";
     //     if (!this.contract.hasOwnProperty(mintFunction)) throw "minting contract is missing a declared mint function";
     //     for (let i=0;i<metadataURIs.length;i++)
-    //         metadataURIs[i] = this.ipfs.stripIpfsUriPrefix(metadataURIs[i]);
+    //         metadataURIs[i] = IPFS.stripIpfsUriPrefix(metadataURIs[i]);
     //     const gasLimit = await this.contract.estimateGas[mintFunction](ownerAddresses, metadataURIs);
     //     const tx = await this.contract[mintFunction](ownerAddresses, metadataURIs, {'gasLimit':gasLimit});
     //     const receipt = await tx.wait();

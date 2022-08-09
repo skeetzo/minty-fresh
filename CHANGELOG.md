@@ -63,13 +63,13 @@
 	- added tests
 	- updated test_Minty.js & test_MintyPreset.js w/ basic erc721 functionality checks (fixed contract minting inheritence)
 	- began tests & debugging for test_minty.js
-**1.2.10 : 8/5/2022**
+	**1.2.10 : 8/5/2022**
 	- more updates to test_minty.js --> almost complete
 	- finished testing basic mint process
 	**1.2.11 : 8/6/2022**
 	- more attempts to debug the ipfs uploads
 	- package updates
-**1.3.0 : 8/8/2022**
+	**1.3.0 : 8/8/2022**
 	- finished tests for test_minty.js
 	-- finished getNFT & pin
 	- finished all the updates to get minty.js, nft.js and ipfs.js working (minus ipfs upload bug)
@@ -77,12 +77,17 @@
 	- wrote tests for each cli process, including multiple asset uploads
 	- tested new changes to interacting with a contract on a network
 	- removed the "default" values from simple.json schema; added test schema (duh)
-	-- ALL TESTS SUCCESSFUL --
+	-- ALL TESTS SUCCESSFUL (sorta) --
+**1.3.1 : 8/9/2022**
+	- added Asset class for tracking ipfs FileObjects better
+	- added complicated-test.json schema for testing multiple asset uploads later
+	- "fixed" ipfs webgui bug; need to finish asset.js before recontinuing ipfs tests
 
 ------------------------------------------------------------------------
 
--- fix ipfs uploads / adds --> not appearing in ipfs client
+- finish added asset.js class & interactions w/ testing for retrieving asset objects
 
+-- fix ipfs uploads / adds --> not appearing in ipfs client
 
 - test new multiple asset upload process
 
@@ -94,7 +99,7 @@
 
 - completely fix the fileExists function
 
-- possibly add direct tests for: nft.js, ipfs.js
+- possibly add direct tests for: nft.js, ipfs.js, maybe even asset.js
 
 - add ipns & updateable metadata functionality
 
