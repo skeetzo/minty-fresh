@@ -62,7 +62,7 @@ class Minty {
         if (!isNaN(this.name) && !isNaN(config.contracts[this.name]) && config.contracts[this.name].hasOwnProperty("networks") &&
             config.contracts[this.name].networks[this.network].hasOwnProperty("host"))
             this.host = config.contracts[this.name].networks[this.host];
-        this.to = opts.to || opts.owner || null;
+        this.owner = opts.to || opts.owner || null;
 
         this.abi = null;
         // ipfs client
@@ -111,9 +111,9 @@ class Minty {
 
         const provider = new ethers.providers.StaticJsonRpcProvider(this.host);
         const signer = provider.getSigner();            
-        if (!this.to) this.to = await signer.getAddress();
+        if (!this.owner) this.owner = await signer.getAddress();
         const network = await provider.getNetwork();
-        console.debug(`Network connected: ${JSON.stringify(network)}`)
+        // console.debug(`Network connected: ${JSON.stringify(network)}`)
         const networkId = network.chainId;
         this.network = network.name;
         // get the deployed contract's address on current network
@@ -125,7 +125,7 @@ class Minty {
                 this.address = contractJSON.networks[networkId].address;
             else {
                 try {
-                    console.log(`Deploying ${this.name} to ${this.network}`);
+                    // console.log(`Deploying ${this.name} to ${this.network}`);
                     // const iface = new ethers.utils.Interface(this.abi);
                     const factory = new ethers.ContractFactory(this.abi, bytecode, signer);
                     this.contract = await factory.deploy(this.token, this.symbol);
@@ -187,13 +187,16 @@ class Minty {
     // make sure this works
     // finish return value of cli output
     async createNFT(options, skipMint=false) {
+        console.debug(`Creating token...`);
         const nft = new NFT({...options, ...this});
         await nft.upload();
         // get the address of the token owner from options, or use the default signing address if no owner is given
         if (!skipMint&&!options.skipMint) {
-            const to = options.to || await this.defaultRecipientAddress() || await this.defaultOwnerAddress();
-            nft.tokenId  = await this.mint(to, nft.metadataURI);
+            // nft.owner = await this.defaultRecipientAddress() || await this.defaultOwnerAddress();
+            nft.tokenId  = await this.mint(nft.owner, nft.metadataURI);
         }
+        console.debug(`Created token:`);
+        console.debug(nft.toString());
         return nft;
     }
 
@@ -265,29 +268,16 @@ class Minty {
 
     // TODO
     // update to match properly returned values from nft class
-    async getNFT(tokenId, opts) {
-        // const { metadata, metadataURI } = 
-        const metadata = {}
-        const metadataURI = ""
-        await this.getMetadata(tokenId);
-        return;
-        const ownerAddress = await this.getTokenOwner(tokenId);
-        const metadataGatewayURL = makeGatewayURL(metadataURI);
-        // const {fetchAsset, fetchCreationInfo} = (opts || {})
-        const assets = [];
-        for (const [key, value] of metadata)
-            if (config.assetTypes.includes(key)) {
-                const asset = {
-                    assetURI: value,
-                    assetGatewayURL: makeGatewayURL(value)
-                };
-                // if (fetchAsset) asset.base64 = await this.ipfs.getIPFSBase64(value);
-                assets.push(asset);
-            }
-        const nft = {tokenId, metadata, metadataURI, metadataGatewayURL, ownerAddress, assets};
-        // if (fetchCreationInfo) {
-            nft.creationInfo = await this.getCreationInfo(tokenId);
-        // }
+    async getNFT(tokenId) {
+        console.debug(`Getting token id ${tokenId}...`);
+        const nft = new NFT({...this});
+        nft.tokenId = tokenId;
+        const { metadata, metadataURI } = await this.getMetadata(tokenId);
+        nft.metadata = metadata;
+        nft.metadataCID = IPFS.extractCID(metadataURI);
+        nft.metadataURI = metadataURI;
+        nft.owner = await this.getTokenOwner(tokenId);
+        console.debug(`Got token id ${tokenId}.`);
         return nft;
     }
 
@@ -305,6 +295,7 @@ class Minty {
     async mint(ownerAddress, metadataURI) {
         // the smart contract might add an ipfs:// prefix to all URIs, so make sure it doesn't get added twice
         metadataURI = IPFS.stripIpfsUriPrefix(metadataURI);
+        console.debug(`Minting metadata for address...\n${metadataURI} --> ${ownerAddress}`)
         // "dynamic" mint functionality
         const mintFunction = config.mintFunction || "mint";
         if (!this.contract.hasOwnProperty(mintFunction)) throw "minting contract is missing a declared mint function";
@@ -313,7 +304,9 @@ class Minty {
         // - BUG: for some reason contract.mint won't work? so always use mintToken? as method name?
         const tx = await this.contract[mintFunction](ownerAddress, metadataURI, {'gasLimit':gasLimit});
         const receipt = await tx.wait();
-        return parseTokenId(receipt);
+        const tokenId = parseTokenId(receipt);
+        console.debug(`Minted token id ${tokenId}.`);
+        return tokenId;
     }
 
     // TODO
@@ -334,6 +327,7 @@ class Minty {
     // add missing docs for this
     // also finish
     async transferToken(tokenId, toAddress) {
+        console.debug(`Transfering token id ${tokenId} to ${toAddress}...`)
         const fromAddress = await this.getTokenOwner(tokenId);
 
         // TODO
@@ -344,10 +338,9 @@ class Minty {
         const tranferFn = this.contract['safeTransferFrom(address,address,uint256)'];
         const tx = await tranferFn(fromAddress, toAddress, tokenId);
 
-
-
         // wait for the transaction to be finalized
         await tx.wait();
+        console.debug(`Transferred token id ${tokenId}.`)
     }
 
     // TODO
@@ -363,7 +356,7 @@ class Minty {
      * @returns {Promise<string>} - the default signing address that should own new tokens, if no owner was specified.
      */
     async defaultOwnerAddress() {
-        return this.to;
+        return this.owner;
         // if (this.signer) return this.signer;
         // TODO
         // only works with hardhat
@@ -430,8 +423,10 @@ class Minty {
     async pin(tokenId) {
         const {metadata, metadataURI} = await this.getMetadata(tokenId);
         const nft = await this.getNFT(tokenId);
-        console.log(`Pinning metadata for token id ${tokenId}`);
-        return await nft.pin();
+        console.log(`Pinning token id ${tokenId}...`);
+        const pinned = await nft.pin();
+        console.log(`Pinned token id ${tokenId}.`);
+        return pinned;
     }
 
 }

@@ -117,3 +117,21 @@ module.exports = {
         //     assetURIs: assetURIs,
         //     assetsGatewayURLs: assetURIs.map(a => makeGatewayURL(a))
         // };
+
+
+
+        // const metadataGatewayURL = makeGatewayURL(metadataURI);
+        // const {fetchAsset, fetchCreationInfo} = (opts || {})
+        // const assets = [];
+        // for (const [key, value] of metadata)
+        //     if (config.assetTypes.includes(key)) {
+        //         const asset = {
+        //             assetURI: value,
+        //             assetGatewayURL: makeGatewayURL(value)
+        //         };
+        //         // if (fetchAsset) asset.base64 = await this.ipfs.getIPFSBase64(value);
+        //         assets.push(asset);
+        //     }
+        // if (fetchCreationInfo) {
+            // nft.creationInfo = await this.getCreationInfo(tokenId);
+        // }

@@ -1,11 +1,11 @@
 // const ipfsClient = require('ipfs-http-client');
-// const CID = require('cids');
+const CID = require('cids');
 const all = require('it-all');
 const path = require('path');
 const config = require('getconfig');
 
-const { create, CID } = require('ipfs-http-client');
-// const client = create();
+// const { create, CID } = require('ipfs-http-client');
+const { create } = require('ipfs-http-client');
 
 const uint8ArrayConcat = require('uint8arrays/concat').concat;
 const uint8ArrayToString = require('uint8arrays/to-string').toString;
@@ -17,11 +17,15 @@ class IPFS {
     ipfsAddOptions = {
       cidVersion: 1,
       hashAlg: 'sha2-256',
+    'wrapWithDirectory':true
     }
 
     writeOptions = { 
-        'create':true, 'parents':true,
-    'wrapWithDirectory':true
+      'cidVersion': 1,
+      'hashAlg': 'sha2-256',
+      'create':true,
+      'parents':true,
+      'wrapWithDirectory':true
     }
 
     constructor(opts={}) {
@@ -33,19 +37,17 @@ class IPFS {
         this.prefix = "ipfs" || opts.prefix;
     }
 
-    async add(ipfsPath, content) {
-        const file = { 
-            name: path.basename(ipfsPath),
-            path: ipfsPath,
-            content: content
-        };
+    // file must have: name, path, and content
+    async add(file) {
+        console.debug(`adding IPFS path: ${file.path}`);
         const { cid: metadataCID } = await this.client.add(file, IPFS.ipfsAddOptions);
-        const metadataURI = IPFS.ensureIpfsUriPrefix(metadataCID) + ipfsPath;
-        for await (const filee of this.client.ls(metadataCID)) {
-          console.log(filee.path)
-        }
-        // await this.client.files.write("/"+ipfsPath, content, IPFS.writeOptions);
-        return { metadataCID, metadataURI };
+        const metadataURI = IPFS.ensureIpfsUriPrefix(metadataCID) + "/" + file.name;
+        // for await (const filee of this.client.ls(metadataCID)) {
+          // console.log(filee.path)
+        // }
+        // try {await this.client.files.write(file.path, file.content, IPFS.writeOptions);}
+        // catch (err) {console.error(err.message);}
+        return { metadataCID:metadataCID.toString(), metadataURI };
     }
 
     /**
@@ -55,7 +57,7 @@ class IPFS {
      * @returns {Promise<Uint8Array>} - contents of the IPFS object
      */
     async getIPFS(cidOrURI) {
-        console.log(cidOrURI)
+        // console.log(cidOrURI)
         const cid = IPFS.stripIpfsUriPrefix(cidOrURI);
         return uint8ArrayConcat(await all(this.client.cat(cid)));
     }
@@ -130,9 +132,14 @@ class IPFS {
             service: config.pinningService.name,
             cid: [cid], // ls expects an array of cids
         };
-        for await (const result of this.client.pin.remote.ls(opts)) {
-            return true;
-        }
+        if (opts.service == "local") // local daemon
+            for await (const result of this.client.pin.ls(opts)) {
+                return true;
+            }
+        else // remote service
+            for await (const result of this.client.pin.remote.ls(opts)) {
+                return true;
+            }
         return false;
     }
 
@@ -145,7 +152,6 @@ class IPFS {
         if (!config.pinningService) {
             throw new Error(`No pinningService set up in minty config. Unable to pin.`);
         }
-
         // check if the service has already been added to js-ipfs
         for (const svc of await this.client.pin.remote.service.ls()) {
             if (svc.service === config.pinningService.name) {
@@ -153,9 +159,8 @@ class IPFS {
                 return;
             }
         }
-
         // add the service to IPFS
-        const { name, endpoint, key } = config.pinningService
+        const { name, endpoint, key } = config.pinningService;
         if (!name) {
             throw new Error('No name configured for pinning service');
         }
@@ -167,7 +172,9 @@ class IPFS {
               `If the config references an environment variable, e.g. '$$PINATA_API_TOKEN', ` + 
               `make sure that the variable is defined.`);
         }
-        await this.client.pin.remote.service.add(name, { endpoint, key });
+        // skip remote if using local daemon
+        if (name != "local")
+            await this.client.pin.remote.service.add(name, { endpoint, key });
     }
 
     //////////////////////////////////////////////
@@ -213,12 +220,24 @@ class IPFS {
      * @param {string} cidOrURI - an ipfs:// URI or CID string
      * @returns {CID} a CID for the root of the IPFS path
      */
+    // TODO: debug
+    // error messages
+         // TypeError: Cannot read properties of undefined (reading 'byteOffset')
     static extractCID(cidOrURI) {
         // remove the ipfs:// prefix, split on '/' and return first path component (root CID)
         const cidString = IPFS.stripIpfsUriPrefix(cidOrURI).split('/')[0];
-        return new CID(cidString);
+        // console.log("cidString:",cidString)
+        try {
+            return new CID(cidString);
+        }
+        catch (err) {
+            // console.error(err.message);
+            return cidString;
+        }
     }
 
+    // TODO: debug
+    // error messages
     static validateCIDString(possibleCIDString) {
         // console.debug("validating cid:", possibleCIDString);
         try {

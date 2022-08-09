@@ -20,11 +20,13 @@ class NFT {
 
         this.ipfs = opts.ipfs || null;
         this.name = opts.name || null;
+        this._assets = null;
         this.assets = opts.assets || {};
         this.metadata = opts.metadata || {};
         this.schema = opts.schema || "default";
         this.schemaJSON = {};
         this.tokenId = opts.tokenId || null;
+        this.owner = opts.owner || null;
 
         this.metadataCID = opts.metadataCID || null;
         this.metadataURI = opts.metadataURI || null;
@@ -33,6 +35,20 @@ class NFT {
         this.standard = opts.standard || 0;
 
         this._initialized = false;
+    }
+
+    toString() {
+        return {
+            name: this.name,
+            schema: this.schema,
+            assets: this.assets,
+            metadata: this.metadata,
+            metadataCID: this.metadataCID,
+            metadataURI: this.metadataURI,
+            tokenId: this.tokenId,
+            owner: this.owner,
+            standard: this.standard
+        }
     }
 
     async init() {
@@ -97,6 +113,7 @@ class NFT {
 
     // locally from files
     static loadSchemaFromFile(schema) {
+        console.debug(`loading schema: ${schema}...`);
         function _parseTemplate(t) {return JSON.parse(fs.readFileSync(`${config.SCHEMA_PATH}/${t}.json`))}
         // get list of template files from available files in available /schema directories
         const templates = [];
@@ -124,14 +141,14 @@ class NFT {
 
     // retrieves [key, value] pairs from {} metadata matched to known schemas or default
     getAssets() {
-        if (Object.keys(this.assets).length > 0) return this.assets;
+        if (this._assets) return (this._assets);
+        // console.log("assets:",this.assets)
         const assets = {},
               assetTypes = config.assetTypes || {};
         for (const key of assetTypes)
             for (const [_key, value] of Object.entries(this.metadata))
                 if (key == _key)
                     assets[key] = value;
-        this.assets = assets;
         return assets;
     }
 
@@ -143,16 +160,16 @@ class NFT {
      * Fails if no token with the given id exists, or if pinning fails.
      */
     async pin() {
-        if (!this.tokenId) throw "missing token id";
-        if (!this.metadataURI) await this.upload();
+        if (this.tokenId === null) throw "missing token id";
+        if (this.metadataURI === null) await this.upload();
         const assetURIs = [];
         // pin each asset first
-        for (const [key, value] of this.assets) {
-            console.log(`Pinning asset data (${key}) for token id ${this.tokenId}....`);
-            await this.ipfs.pin(this.metadata[key]);
-            assetURIs.push(this.metadata[key]);
+        for (const [key, filePathOrCID] of Object.entries(this.getAssets())) {
+            console.debug(`Pinning ${key} data for token id ${this.tokenId}....`);
+            await this.ipfs.pin(filePathOrCID);
+            assetURIs.push(filePathOrCID);
         }
-        console.log(`Pinning metadata (${this.metadataURI}) for token id ${this.tokenId}...`);
+        console.debug(`Pinning metadata for token id ${this.tokenId}...`);
         await this.ipfs.pin(this.metadataURI);
         return {assetURIs, metadataURI: this.metadataURI};
     }
@@ -169,28 +186,32 @@ class NFT {
 
     // upload to ipfs
     async uploadMetadata() {
-        const ipfsPath = `/${this.name}/nfts/metadata/${this.metadata.name}.json`;
-        const { metadataCID, metadataURI } = await this.ipfs.add(ipfsPath, JSON.stringify(this.metadata));
+        const file = { 
+            name: `${this.metadata.name}.json`,
+            path: `/metadata/${this.metadata.name}.json`,
+            content: JSON.stringify(this.metadata)
+        };
+        const { metadataCID, metadataURI } = await this.ipfs.add(file);
         this.metadataCID = metadataCID;
         this.metadataURI = metadataURI;
     }
 
     // upload asset to folder name
+    // When you add an object to IPFS with a directory prefix in its path,
+    // IPFS will create a directory structure for you. This is nice, because
+    // it gives us URIs with descriptive filenames in them e.g.
+    // 'ipfs://QmaNZ2FCgvBPqnxtkbToVVbK2Nes6xk5K4Ns6BsmkPucAM/cat-pic.png' instead of
+    // 'ipfs://QmaNZ2FCgvBPqnxtkbToVVbK2Nes6xk5K4Ns6BsmkPucAM'
     async uploadAsset(filePath, folderName="assets") {
         if (!fileExists(filePath)) throw "incorrect asset path";
-        // add the asset to IPFS
-        // const filePath = options.path || 'asset.bin';
-        const basename =  path.basename(filePath);
-        const content = await fs_.readFile(filePath);
-        // When you add an object to IPFS with a directory prefix in its path,
-        // IPFS will create a directory structure for you. This is nice, because
-        // it gives us URIs with descriptive filenames in them e.g.
-        // 'ipfs://QmaNZ2FCgvBPqnxtkbToVVbK2Nes6xk5K4Ns6BsmkPucAM/cat-pic.png' instead of
-        // 'ipfs://QmaNZ2FCgvBPqnxtkbToVVbK2Nes6xk5K4Ns6BsmkPucAM'
-        const ipfsPath = `/${this.name}/nfts/${folderName}/${basename}`;
-        const { metadataCID: assetCID, metadataURI: assetURI } = await this.ipfs.add(ipfsPath, content);
-        // const assetURI = IPFS.ensureIpfsUriPrefix(assetCID) + '/' + basename;        
+        const file = { 
+            name: path.basename(filePath),
+            path: `/${folderName}/${path.basename(filePath)}`,
+            content: await fs_.readFile(filePath)
+        };
+        const { metadataCID: assetCID, metadataURI: assetURI } = await this.ipfs.add(file);
         return { assetCID, assetURI };
+        // const assetURI = IPFS.ensureIpfsUriPrefix(assetCID) + '/' + basename;        
     }
 
     // should get all assets key/value pairs in this.assets
@@ -199,18 +220,22 @@ class NFT {
     async uploadAssets() {
         const assets = {};
         for (const [key, filePathOrCID] of Object.entries(this.getAssets())) {
-            if (IPFS.validateCIDString(filePathOrCID)) continue; // must not already be a CID string
-            const {assetCID, assetURI} = await this.uploadAsset(filePathOrCID, `assets/${key}`);
+            if (IPFS.validateCIDString(filePathOrCID)) {
+                assets[key] = filePathOrCID;
+                continue; // must not already be a CID string
+            }
+            const {assetCID, assetURI} = await this.uploadAsset(filePathOrCID, key);
             this.metadata[key] = assetCID;
             assets[key] = {};
             assets[key].cid = assetCID;
             assets[key].uri = assetURI;
         }
-        this.assets = assets;
+        this._assets = assets;
     }
 
     // validate according to its schema
     validate() {
+        console.debug(`validating NFT schema: ${this.schema}...`);
         // replace empty values with null for flagging validation
         for (const [key, value] of Object.entries(this.metadata))
             if (value === "") this.metadata[key] = null;
@@ -220,6 +245,7 @@ class NFT {
             console.error(validate.errors);
             throw "Error: unable to validate data";
         }
+        console.debug("valid JSON!");
     }
 
 }

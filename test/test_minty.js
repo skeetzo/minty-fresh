@@ -4,15 +4,10 @@ const expect = chai.expect
 
 const config = require('getconfig');
 const { MakeMinty } = require('../src/classes/minty.js');
-const IPFS = require('../src/classes/ipfs.js');
 
-const truffleAssert = require('truffle-assertions');
-const Minty = artifacts.require("./Minty.sol");
+// const Minty = artifacts.require("./Minty.sol");
 
-
-// do i need to do normal truffle deploy method like in sample?
-
-
+// uses truffle contract method to access accounts, does not require actual contract
 contract('Minty (client)', (accounts) => {
 
 	const owner = accounts[0],
@@ -20,8 +15,10 @@ contract('Minty (client)', (accounts) => {
 		  notOwner2 = accounts[2];
 
 	let minty, mintyContract;
+	let minted = false;
 
 	const options = {
+		schema: "test",
 		contract: "Minty",
 		symbol: "JLP",
 		token: "Julep",
@@ -29,10 +26,24 @@ contract('Minty (client)', (accounts) => {
 		// 'skipMint':true
 	};
 
-	before(async () => {
-    	mintyContract = await Minty.deployed();
-		minty = await MakeMinty({...options, ...{'address':mintyContract.address}});
-	}) 
+	// before(async () => {
+    	// mintyContract = await Minty.deployed();
+		// minty = await MakeMinty({...options, ...{'address':mintyContract.address}});
+	// }) 
+
+	describe('deploy', () => {
+		it('can deploy Minty', async () => {
+			minty = await MakeMinty(options);
+			mintyContract = minty.contract;
+			assert.isTrue(true, "does not deploy Minty");
+		})
+		it('can deploy MintyPreset', async () => {
+			const mintyPreset = await MakeMinty({...options, ...{contract:'MintyPreset'}});
+			const mintyPresetContract = mintyPreset.contract;
+			assert.isTrue(true, "does not deploy MintyPreset");
+		})
+		it('xcan deploy any ERC721 contract', async () => {})
+	})
 
 	describe('mint', () => {
 		it('can create an NFT', async () => {
@@ -42,31 +53,39 @@ contract('Minty (client)', (accounts) => {
 	        expect(nft.metadataCID).to.not.be.null;
 	        expect(nft.metadataURI).to.not.be.null;
 	        expect(nft.tokenId).to.be.null;
+	        minted = true;
 		})
 		it('can mint an NFT', async () => {
 			const nft = await minty.createNFT(options);
 			assert.isOk(nft, "missing nft");
 			expect(nft.tokenId).to.not.be.null;
+			minted = true;
 		})
 	})
 
 	// must mint beforehand
 	describe('get', () => {
 		it('can get creation info', async () => {
+			assert.isTrue(minted, "must mint beforehand");
 			const {blockNumber, creatorAddress} = await minty.getCreationInfo(0);
 			expect(blockNumber).to.not.be.null;
 			expect(creatorAddress).to.not.be.null;
 		})
 		it('can get info', async () => {
+			assert.isTrue(minted, "must mint beforehand");
+			await minty.createNFT(options);
 			const nft = await minty.getNFT(0);
+	        expect(nft.tokenId).to.not.be.null;
 	        expect(nft.metadata).to.not.be.empty;
 	        expect(nft.metadataCID).to.not.be.null;
 	        expect(nft.metadataURI).to.not.be.null;
 		})
 		it('can get metadata assets', async () => {
+			assert.isTrue(minted, "must mint beforehand");
 			const assets = await minty.getMetadataAssets(0);
-			// check assets for correct key:value pairs
 			expect(assets).to.have.any.keys(...config.assetTypes)
+			// TODO
+			// possibly verify that each asset value is a valid CID
 		})
 		it('can get token owner', async () => {
 			assert.equal(await minty.getTokenOwner(0), owner, "does not get token owner");
@@ -75,6 +94,7 @@ contract('Minty (client)', (accounts) => {
 
 	describe('transfer', () => {
 		it('can transfer token', async () => {
+			assert.isTrue(minted, "must mint beforehand");
 	      	let ownerBalanceStart = await mintyContract.balanceOf(owner);
 	      	let notOwnerBalanceStart = await mintyContract.balanceOf(notOwner);
 			await minty.transferToken(0, notOwner);
@@ -82,8 +102,10 @@ contract('Minty (client)', (accounts) => {
 	      	let notOwnerBalance = await mintyContract.balanceOf(notOwner);
 	      	assert.equal(ownerBalance, parseInt(ownerBalanceStart)-1, "does not transfer out");
 	      	assert.equal(notOwnerBalance, parseInt(notOwnerBalanceStart)+1, "does not transfer in");
+			assert.equal(await minty.getTokenOwner(0), notOwner, "does not get token owner after transfer");
 		})
 		it('xcan transfer batch tokens', async () => {
+			assert.isTrue(minted, "must mint beforehand");
 			// let ownerBalance = await mintyContract.balanceOf(owner);
 			// let notOwnerBalance = await mintyContract.balanceOf(notOwner);
 			// await minty.transferTokens([0,1], notOwner);
@@ -99,10 +121,9 @@ contract('Minty (client)', (accounts) => {
 
 	describe('pin', () => {
 		it('can pin', async () => {
+			assert.isTrue(minted, "must mint beforehand");
 			let {assetURIs, metadataURI} = await minty.pin(0);
-			console.log(assetURIs)
-			console.log(metadataURI)
-			expect(assetURIs).to.not.be.null;
+			expect(assetURIs).to.not.be.empty;
 			expect(metadataURI).to.not.be.null;
 		})
 		
