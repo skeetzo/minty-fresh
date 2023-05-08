@@ -1,10 +1,6 @@
 #!/usr/bin/env node
 const config = require('getconfig');
-const chalk = require('chalk');
-const colorize = require('json-colorizer');
 const { Command } = require('commander');
-const fs = require('fs/promises');
-const inquirer = require('inquirer');
 const path = require('path');
 
 const { createNFT, createNFTs, getNFT, transferNFT, pinNFTData } = require('./utils/actions.js');
