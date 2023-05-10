@@ -11,6 +11,7 @@ const { fileExists } = require('../utils/helpers.js');
 const { promptSchema } = require('../utils/prompt.js');
 const Asset = require('./asset.js');
 const IPFS = require('./ipfs.js');
+const Schema = require('./schema.js');
 
 // const ERC20_interfaceId = "0x36372b07",
       // ERC721_interfaceId = "0x80ac58cd";
@@ -18,20 +19,19 @@ const IPFS = require('./ipfs.js');
 class NFT {
 
     constructor(opts) {
+        this.schema = opts.schema || "default";
 
         this.name = opts.name || null;
-        this.assets = opts.assets || [];
+        this.symbol = opts.symbol || null;
+
         this.metadata = opts.metadata || {};
-        this.schema = opts.schema || "default";
-        this.schemaJSON = {};
+        this.assets = opts.assets || [];
+        
         this.tokenId = opts.tokenId ? parseInt(opts.tokenId) : null;
         this.owner = opts.owner || null;
 
         this.metadataCID = opts.metadataCID || null;
         this.metadataURI = opts.metadataURI || null;
-
-        // is there a need for tracking ERC token standard? perhaps check at function call when doing specific checks?
-        this.standard = opts.standard || 0;
 
         this._initialized = false;
     }
@@ -39,31 +39,24 @@ class NFT {
     toString() {
         return {
             name: this.name,
-            schema: this.schema,
+            schema: this.schema, 
             // TODO: add a toString for Assets or do something here with it better
             assets: this.assets,
             metadata: this.metadata,
             metadataCID: this.metadataCID,
             metadataURI: this.metadataURI,
             tokenId: this.tokenId ? parseInt(this.tokenId) : this.tokenId,
-            owner: this.owner,
-            standard: parseInt(this.standard)
+            owner: this.owner
         }
     }
 
     async init() {
-        if (this._initialized) {
-            return;
-        }
+        if (this._initialized) return;
     
         if (process.env.cli)
-            this.schemaJSON = await promptSchema(this.schema);
-        else if (this.schema.includes("ipfs"))
-            this.schemaJSON = await NFT.loadSchemaFromIPFS(this.schema);
+            this.metadata = await promptSchema(this.schema);
         else
-            this.schemaJSON = await NFT.loadSchemaFromFile(this.schema);
-
-        this.metadata = NFT.fromSchema(this.schemaJSON);
+            this.metadata = Schema.parse(await Schema.load(this.schema));
 
         this._initialized = true;
     }
@@ -72,81 +65,24 @@ class NFT {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    // TODO
-    // act as enum?
-    // or interface with contract.methods.supportsInterface or whatever the function is
-    // static getStandard() {}
-
-    // TODO
-    // create NFT from metadata {} object possibly with schema name
-    // static fromMetadata(metadata) {return {}}
-
-    // TODO
-    // load directly from metadata at ipfs
-    static fromIPFS() {}
-
-    // TODO
-    // return object from schema
-    static fromSchema(schema) {return JSONschemaDefaults(schema)}
-
-    // return schema as an IPFS cid if available
-    static _getSchemaCID(schema) {
-        for (const [key, value] in config.schemasIPFS)
-            if (key == schema) return config.schemasIPFS[key];
-        return null;
+    getProperty(prop="image") {
+        if (!this.metadata) throw new Error("missing metadata");
+        return this.metadata[prop];
     }
 
-    // TODO
-    // return config.schemasIPFS if available
-    static _getSchemasCID() {
-        return config.schemasIPFS || null;
-    }
-
-    // TODO
-    // load schema from ipfs
-    static async loadSchemaFromIPFS(schema) {
-        let cid = NFT._getSchemaCID(schema);
-        // if (!cid) cid = NFT._getSchemasCID();
-        return null;
-
-    }
-
-    // locally from files
-    static loadSchemaFromFile(schema) {
-        console.debug(`loading schema: ${schema}...`);
-        function _parseTemplate(t) {return JSON.parse(fs.readFileSync(`${config.SCHEMA_PATH}/${t}.json`))}
-        // get list of template files from available files in available /schema directories
-        const templates = [];
-        const localPath = path.join(__dirname, "../..", config.SCHEMA_PATH), // path local to this script
-              addonPath = path.join(process.env.PWD, config.SCHEMA_PATH);// path to where the cwd is
-        const files = [];
-        if (fileExists(localPath)) 
-            files.push(...fs.readdirSync(localPath));
-        if (addonPath != localPath && fileExists(addonPath))
-            files.push(...fs.readdirSync(addonPath));
-        let defaultIndex = 0;
-        for (let i=0;i<files.length;i++) {
-            const filename = files[i].replace(".json","");
-            if (filename === schema) return _parseTemplate(filename);
-            templates.indexOf(filename) === -1 ? templates.push(filename) : console.debug(`duplicate template found: ${filename}`)
-            // set simple.json to default template
-            if (filename === "simple") defaultIndex = i;
-        }
-        return _parseTemplate(templates[defaultIndex]);
+    getProperties() {
+        if (!this.metadata) return {};
+        const properties = {};
+        for (const key of config.propTypes)
+            for (const [_key, value] of Object.entries(this.metadata))
+                if (key == _key)
+                    properties[key] = value;
+        return properties;
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    getAsset(asset="image") {
-        return Asset.getAsset(this.metadata, asset);
-    }
-
-    // this will return Asset classes
-    getAssets() {
-        return Asset.getAssets(this.metadata, this.schema);
-    }
 
     /**
      * Pins all IPFS data associated with the given tokend id to the remote pinning service.
@@ -156,32 +92,42 @@ class NFT {
      * Fails if no token with the given id exists, or if pinning fails.
      */
     async pin() {
-        if (this.tokenId === null) throw "missing token id";
+        if (this.tokenId === null) throw new Error("missing token id");
         if (this.metadataURI === null) await this.upload();
         const assetURIs = [];
         // pin each asset first
-        for (const [key, filePathOrCID] of Object.entries(this.getAssets())) {
-            console.debug(`Pinning ${key} data for token id ${this.tokenId}....`);
+        for (const [key, filePathOrCID] of Object.entries(this.getProperties())) {
+            console.debug(`pinning ${key} data for token id ${this.tokenId}....`);
             await IPFS.pin(filePathOrCID);
             assetURIs.push(filePathOrCID);
         }
-        console.debug(`Pinning metadata for token id ${this.tokenId}...`);
+        console.debug(`pinning metadata for token id ${this.tokenId}...`);
         await IPFS.pin(this.metadataURI);
         return {assetURIs, metadataURI: this.metadataURI};
     }
 
-    // is this even possible?
-    async unpin() {}
+    async unpin() {
+        if (this.tokenId === null) throw new Error("missing token id");
+        if (this.metadataURI === null) throw new Error("missing token uri");
+        // unpin each asset first
+        for (const [key, filePathOrCID] of Object.entries(this.getProperties())) {
+            console.debug(`unpinning ${key} data for token id ${this.tokenId}....`);
+            await IPFS.unpin(filePathOrCID);
+        }    
+        console.debug(`unpinning metadata for token id ${this.tokenId}...`);
+        await IPFS.unpin(this.metadataURI);
+    }
 
     async upload() {
         if (!this._initialized) await this.init();
-        this.validate();
-        await Asset.uploadAssets(this.metadata);
-        await this.uploadMetadata();
+        Schema.validate(this.schema, this.metadata);
+        await this._uploadProperties();
+        await this._uploadMetadata();
     }
 
     // upload to ipfs
-    async uploadMetadata() {
+    async _uploadMetadata() {
+        console.debug("uploading metadata...");
         const file = { 
             name: `${this.metadata.name}.json`,
             path: `/metadata/${this.metadata.name}.json`,
@@ -192,39 +138,26 @@ class NFT {
         this.metadataURI = metadataURI;
     }
 
-    // validate according to its schema
-    validate() {
-        console.debug(`validating NFT schema: ${this.schema}...`);
-        // replace empty values with null for flagging validation
-        for (const [key, value] of Object.entries(this.metadata))
-            if (value === "") this.metadata[key] = null;
-        const validate = ajv.compile(this.schemaJSON);
-        const valid = validate(this.metadata);
-        if (!valid) {
-            console.error(validate.errors);
-            throw "Error: unable to validate data";
+    async _uploadProperties() {
+        console.debug("uploading metadata properties...");
+        for (const prop of this.properties) {
+            const { metadataCID, metadataURI } = await this._uploadProperty(prop);
+            this.metadata[prop.name] = metadataCID;
         }
-        console.debug("valid JSON!");
+    }
+
+    async _uploadProperty(prop) {
+        if (!fileExists(prop.path)) throw "incorrect property path";
+        console.debug("uploading property: ", prop.name);
+        const file = { 
+            name: path.basename(prop.path).replace(/\/[^a-z0-9\s]\//gi, '_'),
+            path: `/${prop.name}s/${path.basename(prop.path)}`.replace(/\/[^a-z0-9\s]\//gi, '_'),
+            content: await fs_.readFile(prop.path)
+        };
+        const { metadataCID, metadataURI } = await IPFS.add(file);
+        return { metadataCID, metadataURI };
     }
 
 }
 
 module.exports = NFT;
-
-
-async function parseErrors(validationErrors) {
-    let errors = [];
-    validationErrors.forEach(error => {
-      errors.push({
-        param: error.params["missingProperty"],
-        key: error.keyword,
-        message: error.message,
-        property: (function() {
-          return error.keyword === 'minimum' ? error.dataPath : undefined
-        })() 
-      });
-    });
-
-    return errors;
-}
-

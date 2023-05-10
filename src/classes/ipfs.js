@@ -1,4 +1,3 @@
-// const ipfsClient = require('ipfs-http-client');
 const CID = require('cids');
 const all = require('it-all');
 const path = require('path');
@@ -19,6 +18,7 @@ class IPFS {
       cidVersion: 1,
       hashAlg: 'sha2-256',
     // 'wrapWithDirectory':true
+      pin: config.ipfsPinDefault
     }
 
     writeOptions = { 
@@ -146,15 +146,22 @@ class IPFS {
      */
     static async pin(cidOrURI) {
         const cid = IPFS.extractCID(cidOrURI);
-        // Make sure IPFS is set up to use our preferred pinning service.
         await IPFS._configurePinningService();
-        // Check if we've already pinned this CID to avoid a "duplicate pin" error.
-        const pinned = await IPFS.isPinned(cid);
-        if (pinned) return;
-        // Ask the remote service to pin the content.
-        // Behind the scenes, this will cause the pinning service to connect to our local IPFS node
-        // and fetch the data using Bitswap, IPFS's transfer protocol.
-        await IPFS_CLIENT.pin.remote.add(cid, { service: config.pinningService.name });
+        if (await IPFS.isPinned(cid)) return;
+        if (config.pinningService.name == "local")
+            await IPFS_CLIENT.pin.add(cid, { service: config.pinningService.name });
+        else
+            await IPFS_CLIENT.pin.remote.add(cid, { service: config.pinningService.name });
+    }
+
+    static async unpin(cidOrURI) {
+        const cid = IPFS.extractCID(cidOrURI);
+        await IPFS._configurePinningService();
+        if (!await IPFS.isPinned(cid)) return;
+        if (config.pinningService.name == "local")
+            await IPFS_CLIENT.pin.rm(cid, { service: config.pinningService.name });
+        else
+            await IPFS_CLIENT.pin.remote.rm(cid, { service: config.pinningService.name });
     }
 
     /**
@@ -172,13 +179,11 @@ class IPFS {
             cid: [cid], // ls expects an array of cids
         };
         if (opts.service == "local") // local daemon
-            for await (const result of IPFS_CLIENT.pin.ls(opts)) {
+            for await (const result of IPFS_CLIENT.pin.ls(opts))
                 return true;
-            }
         else // remote service
-            for await (const result of IPFS_CLIENT.pin.remote.ls(opts)) {
+            for await (const result of IPFS_CLIENT.pin.remote.ls(opts))
                 return true;
-            }
         return false;
     }
 
@@ -225,8 +230,6 @@ class IPFS {
      * @returns the input string with the `ipfs://` prefix stripped off
      */
     static stripIpfsUriPrefix(cidOrURI) {
-        // TODO
-        // possibly add a check here for whether or not to strip
         if (cidOrURI.startsWith(`ipfs://`)) {
             return cidOrURI.slice(`ipfs://`.length);
         }
@@ -235,13 +238,11 @@ class IPFS {
 
     static ensureIpfsUriPrefix(cidOrURI) {
         let uri = cidOrURI.toString()
-        if (!uri.startsWith(`ipfs://`)) {
+        if (!uri.startsWith(`ipfs://`))
             uri = `ipfs://` + cidOrURI;
-        }
         // Avoid the Nyan Cat bug (https://github.com/ipfs/go-ipfs/pull/7930)
-        if (uri.startsWith(`ipfs://ipfs/`)) {
+        if (uri.startsWith(`ipfs://ipfs/`))
           uri = uri.replace(`ipfs://ipfs/`, `ipfs://`);
-        }
         return uri;
     }
 
@@ -265,26 +266,26 @@ class IPFS {
     static extractCID(cidOrURI) {
         // remove the ipfs:// prefix, split on '/' and return first path component (root CID)
         const cidString = IPFS.stripIpfsUriPrefix(cidOrURI).split('/')[0];
-        // console.log("cidString:",cidString)
+        console.log("cidString: ",cidString)
         try {
             return new CID(cidString);
         }
         catch (err) {
-            // console.error(err.message);
-            return cidString;
+            console.error(err.message);
+            return cidOrURI;
         }
     }
 
     // TODO: debug
     // error messages
     static validateCIDString(possibleCIDString) {
-        // console.debug("validating cid:", possibleCIDString);
+        console.debug("validating cid: ", possibleCIDString);
         try {
             const cid = new CID(possibleCIDString);
             return CID.isCID(cid);
         }
         catch (err) {
-            // console.error(err.message);
+            console.error(err.message);
         }
         return false;
     }

@@ -103,7 +103,7 @@ class Minty {
             // get abi from etherscan, etc
         }
 
-        if (!this.abi) throw "unable to find ABI for contract!";
+        if (!this.abi) throw new Error("unable to find ABI for contract!");
 
         /////////////
         // Network //
@@ -138,7 +138,7 @@ class Minty {
             }
         }
 
-        if (!this.address || !this.abi) throw "unable to connect to contract!";
+        if (!this.address || !this.abi) throw new Error("unable to connect to contract!");
 
         ////////////////////
         // Smart Contract //
@@ -220,16 +220,16 @@ class Minty {
         }
         catch (err) {
             if (err.hasOwnProperty("reason") && err.reason === ERC721URIStorage_QUERY_ERROR)
-                throw "Token id does not exist!";
-            throw err.message;
+                throw new Error("Token id does not exist!");
+            throw new Error(err.message);
         }
     }
 
     // TODO
     // should I parse this differently, like above?
-    async getMetadataAssets(tokenId) {
+    async getMetadataProperties(tokenId) {
         const nft = new NFT({...await this.getMetadata(tokenId), ...this});
-        return nft.getAssets();
+        return nft.getProperties();
     }
 
     /**
@@ -267,40 +267,40 @@ class Minty {
         nft.metadataCID = IPFS.extractCID(metadataURI);
         nft.metadataURI = metadataURI;
         nft.owner = await this.getTokenOwner(tokenId);
-        console.debug(`Got token id ${tokenId}.`);
+        console.log(`Got token id ${tokenId}.`);
         return nft;
     }
 
     // return the requested asset data found in the token metadata
-    async getNFTAsset(tokenId, _asset="image") {
-        console.debug(`Getting ${asset} for token id ${tokenId}...`);
+    async getNFTProp(tokenId, _prop="image") {
+        console.log(`Getting ${_prop} for token id ${tokenId}...`);
         const nft = await this.getNFT(tokenId);
-        const asset = nft.getAsset(_asset);
-        console.debug(`Got ${asset} for token id ${tokenId}.`);
-        return asset;
+        const prop = nft.getProperty(_prop);
+        console.log(`Got ${_prop} for token id ${tokenId}.`);
+        return prop;
     }
 
-    // return all the assets found in the token metadata
-    async getNFTAssets(tokenId) {
-        console.debug(`Getting assets for token id ${tokenId}...`);
+    // return all the properties found in the token metadata
+    async getNFTProperties(tokenId) {
+        console.log(`Getting properties for token id ${tokenId}...`);
         const nft = await this.getNFT(tokenId);
-        const assets = nft.getAssets();
-        console.debug(`Got assets for token id ${tokenId}.`);
-        return assets;
+        const props = nft.getProperties();
+        console.log(`Got properties for token id ${tokenId}.`);
+        return props;
     }
 
     // returns the data for the asset
-    async getNFTAssetData(tokenId, asset="image") {
-        const asset = await this.getNFTAsset(tokenId, asset);
-        const data = await asset.getData();
+    async getNFTPropertyData(tokenId, _prop="image") {
+        const prop = await this.getNFTProp(tokenId, _prop);
+        const data = await prop.getData();
         return data;
     }
 
     // returns array of key:data pairs
-    async getAllNFTAssetsData(tokenId) {
-        const assets = await this.getNFTAssets(tokenId);
+    async getAllNFTPropertiesData(tokenId) {
+        const props = await this.getNFTProperties(tokenId);
         const datas = [];
-        for (const asset of assets) {
+        for (const asset of props) {
             const data = {};
             data[asset.name] = await asset.getData();
             datas.push(data);
@@ -325,7 +325,7 @@ class Minty {
         console.debug(`Minting uri for address...\n${ownerAddress} : ${metadataURI}`)
         // "dynamic" mint functionality
         const mintFunction = config.mintFunction || "mint";
-        if (!this.contract.hasOwnProperty(mintFunction)) throw "minting contract is missing a declared mint function";
+        if (!this.contract.hasOwnProperty(mintFunction)) throw new Error("minting contract is missing a declared mint function");
         // Calculate gas limit for more complicated contract transactions
         const gasLimit = await this.contract.estimateGas[mintFunction](ownerAddress, metadataURI);
         // - BUG: for some reason contract.mint won't work? so always use mintToken? as method name?
