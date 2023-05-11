@@ -5,7 +5,7 @@ import * as fs_  from "fs/promises";
 import 'path';
 import * as JSONschemaDefaults from 'json-schema-defaults';
 
-import { fileExists } from '../utils/helpers';
+import { fileExists, getContractForNetwork } from '../utils/helpers';
 import { promptSchema } from '../utils/prompt';
 import IPFS from './ipfs';
 import { loadSchema, parseSchema, validateSchema } from './schema';
@@ -17,19 +17,21 @@ const ajv = new Ajv(); // options can be passed, e.g. {allErrors: true}
 
 export default class NFT {
 
+    // Required: name, network
     constructor(opts={}) {
         this.schema = opts.schema || "default";
+        this.metadata = opts.metadata || {};
+        this.metadataCID = opts.metadataCID || null;
+        this.metadataURI = opts.metadataURI || null;
 
         this.name = opts.name || null;
         this.symbol = opts.symbol || null;
 
-        this.metadata = opts.metadata || {};
+        this.network = opts.network || null; // contract network
+        this.address = opts.address ? opts.address : getContractForNetwork(this.name, this.network);
         
-        this.tokenId = opts.tokenId ? parseInt(opts.tokenId) : null;
-        this.owner = opts.owner || null;
-
-        this.metadataCID = opts.metadataCID || null;
-        this.metadataURI = opts.metadataURI || null;
+        this.owner = opts.owner || null; // the owner of this NFT
+        this.id = opts.id ? parseInt(opts.id) : null;
 
         this._initialized = false;
     }
@@ -44,7 +46,7 @@ export default class NFT {
             metadata: this.metadata,
             metadataCID: this.metadataCID,
             metadataURI: this.metadataURI,
-            tokenId: this.tokenId ? parseInt(this.tokenId) : this.tokenId,
+            id: this.id ? parseInt(this.id) : this.id,
             owner: this.owner
         }
     }
@@ -66,55 +68,75 @@ export default class NFT {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     // get property in metadata matching prop
-    getProperty(prop="image") {}
+    getProperty(prop="image") {
+        if (this.metadata.hasOwnProperty(prop)) return this.metadata[prop];
+        throw new Error("missing property - "+prop);
+    }
 
-    // get all properties in metadata for the matching schema
+    // get all properties for known schema
     getProperties() {
         // load json schema from file
+        const json = Schema.loadSchema(this.schema);
         // return all the object keys from .properties
+        const props = Object.keys(json.properties);
+        // return all the keys in metadata that match properties
+        return Object.fromEntries(Object.entries(obj).filter(([key]) => props.includes(key)));
     }
 
-    // get attribute in metadata matching attr
-    getAttribute(attr="name") {}
+    // get attribute in metadata matching attr name
+    getAttribute(attr="name") {
+        for (const attribute in this.metadata.attributes)
+            if (attribute.hasOwnProperty("name") && attribute.name === attr) return attribute;
+        throw new Error("missing attribute - "+attr);
+    }
 
     // get all attributes in metadata for the matching schema
-    getAttributes() {
-        // return all the attributes in metadata
+    getAttributes(sort=false) {
+        if (!this.metadata) throw new Error("missing metadata");
+        if (!this.metadata.attributes) throw new Error("missing attributes");
+        if (sort) return this.metadata.attributes.sort((a,b) => a.name - b.name); // b - a for reverse sort
+        return this.metadata.attributes;
     }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    async _deleteMetadata() {}
+    async _deleteProperties() {}
+    async _deleteAttributes() {}
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     /**
      * Pins all IPFS data associated with the given tokend id to the remote pinning service.
      * 
-     * @param {string} tokenId - the ID of an NFT that was previously minted.
+     * @param {string} id - the ID of an NFT that was previously minted.
      * @returns {Promise<{assetURI: string, metadataURI: string}>} - the IPFS asset and metadata uris that were pinned.
      * Fails if no token with the given id exists, or if pinning fails.
      */
     async pin() {
-        if (this.tokenId === null) throw new Error("missing token id");
+        if (this.id === null) throw new Error("missing token id");
         if (this.metadataURI === null) await this.upload();
         const assetURIs = [];
         // pin each asset first
         for (const [key, filePathOrCID] of Object.entries(this.getProperties())) {
-            console.debug(`pinning ${key} data for token id ${this.tokenId}....`);
+            console.debug(`pinning ${key} data for token id ${this.id}....`);
             await IPFS.pin(filePathOrCID);
             assetURIs.push(filePathOrCID);
         }
-        console.debug(`pinning metadata for token id ${this.tokenId}...`);
+        console.debug(`pinning metadata for token id ${this.id}...`);
         await IPFS.pin(this.metadataURI);
         return {assetURIs, metadataURI: this.metadataURI};
     }
 
     async unpin() {
-        if (this.tokenId === null) throw new Error("missing token id");
+        if (this.id === null) throw new Error("missing token id");
         if (this.metadataURI === null) throw new Error("missing token uri");
         // unpin each asset first
         for (const [key, filePathOrCID] of Object.entries(this.getProperties())) {
-            console.debug(`unpinning ${key} data for token id ${this.tokenId}....`);
+            console.debug(`unpinning ${key} data for token id ${this.id}....`);
             await IPFS.unpin(filePathOrCID);
         }    
-        console.debug(`unpinning metadata for token id ${this.tokenId}...`);
+        console.debug(`unpinning metadata for token id ${this.id}...`);
         await IPFS.unpin(this.metadataURI);
     }
 

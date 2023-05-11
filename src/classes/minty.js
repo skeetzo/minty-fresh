@@ -9,8 +9,8 @@ import 'solc';
 
 import { selectSchema, promptNFTMetadata, validateSchema } from '../utils/prompt';
 import { fileExists } from '../utils/helpers';
-import { IPFS } from './ipfs';
-import { NFT } from './nft';
+import IPFS from './ipfs';
+import NFT from './nft';
 
 // The getconfig package loads configuration from files located in the the `config` directory.
 // See https://www.npmjs.com/package/getconfig for info on how to override the default config for
@@ -39,113 +39,101 @@ const ERC721URIStorage_QUERY_ERROR = "ERC721URIStorage: URI query for nonexisten
  */
 class Minty {
     constructor(opts={}) {
-
-        // the name of the smart contract
-        this.name = opts.contract || null;
-        this.symbol = opts.symbol || null;
+        // NFT class
         this.token = opts.token || null;
-        // contract address
-        this.address = opts.address || null;
-        // can get address from name if available in config
-        if (!isNaN(this.name) && !isNaN(config.contracts[this.name]) && config.contracts[this.name].hasOwnProperty("address"))
-            this.address = config.contracts[this.name].address;
         // the url of the provider to connect to
         this.host = opts.host || "http://127.0.0.1:8545";
         // the name of the network to connect to
         this.network = opts.network || config.network || null;
-        // the network_id matching in truffle-config.js
-        this.chainId = opts.chainId || null;
-        // can get network data and network_id if name & network exists in config
-        if (!isNaN(this.name) && !isNaN(config.contracts[this.name]) && config.contracts[this.name].hasOwnProperty("networks") &&
-            config.contracts[name].networks[this.network].hasOwnProperty("network_id"))
-            this.chainId = config.contracts[name].networks[this.chainId];
-        if (!isNaN(this.name) && !isNaN(config.contracts[this.name]) && config.contracts[this.name].hasOwnProperty("networks") &&
-            config.contracts[this.name].networks[this.network].hasOwnProperty("host"))
-            this.host = config.contracts[this.name].networks[this.host];
-        this.owner = opts.to || opts.owner || null;
-
-        this.abi = null;
-        // ethers contract object
-        this.contract = null;
-        this.signer = null;
+        
+        this.account = undefined; // the signing 0x account
+        this.contract = undefined; // ethers contract object
+        this.signer = undefined; // ethers signer object
 
         this._initialized = false;
     }
 
     async init() {
-        if (this._initialized) {
-            return;
-        }
+        if (this._initialized) return;
+        console.debug("initializing Minty...");
 
-        let bytecode, contractJSON = {'networks':[]};
+        const { token } = this.token instanceof NFT ? this.token : new NFT(this.token);
+        this.token = token;
 
-        ///////////////
-        // Fetch ABI //
-        ///////////////
-
-        // check for migrations file
-        if (fileExists(path.join(__dirname, "../..", config.buildPath, `${this.name}.json`))) {
-            contractJSON = require(path.join(__dirname, "../..", config.buildPath, `${this.name}.json`));
-            this.abi = contractJSON.abi;
-            bytecode = contractJSON.bytecode;
-        }
-        // check for local smart contract file
-        else if (fileExists(path.join(__dirname, "../..", config.contractPath, `${this.name}.sol`))) {
-            const input = fs.readFileSync(path.join(__dirname, "../..", config.contractPath, `${this.name}.sol`));
-            const output = solc.compile(input.toString(), 1);
-            bytecode = output.contracts[this.name].bytecode;
-            this.abi = JSON.parse(output.contracts[this.name].interface);
-        }
-        // 
-        else if (this.address && this.network) {
-            // get abi from etherscan, etc
-        }
-
-        if (!this.abi) throw new Error("unable to find ABI for contract!");
-
-        /////////////
-        // Network //
-        /////////////
-
-        const provider = new ethers.providers.StaticJsonRpcProvider(this.host);
-        const signer = provider.getSigner();            
-        if (!this.owner) this.owner = await signer.getAddress();
-        const network = await provider.getNetwork();
-        // console.debug(`Network connected: ${JSON.stringify(network)}`)
-        const networkId = network.chainId;
+        const { account, network, signer } = await _initializeEthers(this.host)
+        this.account = account;
         this.network = network.name;
+        this.signer = signer;
+
+        // load abi and any available contract json
+        const { abi, bytecode, contractJSON } = this._loadABI(account, network, token); 
+
+        const { address, contract } = await _initializeContract(abi, bytecode, contractJSON)
+        this.address = address;
+
+        if (!address && !abi) throw new Error("unable to connect to contract!");
+
+        this.contract = await new ethers.Contract(address, abi, signer);
+
+        console.debug("initialized Minty");
+        this._initialized = true;
+    }
+
+    async _initializeEthers(host) {
+        const provider = new ethers.providers.StaticJsonRpcProvider(host);
+        const signer = provider.getSigner();            
+        const account = await signer.getAddress();
+        const network = await provider.getNetwork();
+        console.debug(`network connected: ${JSON.stringify(network)}`)
+        return { account, network, signer };
+    }
+
+    async _initializeContract(abi, bytecode, contractJSON) {
         // get the deployed contract's address on current network
         // console.debug(`Available Networks: ${networkId} <-- current`)
         // console.debug(contractJSON.networks)
         // check if contract has been deployed on network, if not then deploy
-        if (!this.address) {
-            if (!isNaN(contractJSON.networks[networkId]) && contractJSON.networks[networkId].hasOwnProperty("address"))
-                this.address = contractJSON.networks[networkId].address;
-            else {
-                try {
-                    // console.log(`Deploying ${this.name} to ${this.network}`);
-                    // const iface = new ethers.utils.Interface(this.abi);
-                    const factory = new ethers.ContractFactory(this.abi, bytecode, signer);
-                    this.contract = await factory.deploy(this.token, this.symbol);
-                    this.address = this.contract.address;
-                    await this.contract.deployTransaction.wait();
-                }
-                catch (err) {
-                    console.error(err);
-                }
+        if (!isNaN(contractJSON.networks[networkId]) && contractJSON.networks[networkId].hasOwnProperty("address"))
+            return { address: contractJSON.networks[networkId].address };
+        else {
+            try {
+                // console.log(`Deploying ${this.name} to ${this.network}`);
+                // const iface = new ethers.utils.Interface(abi);
+                const factory = new ethers.ContractFactory(abi, bytecode, signer);
+                const contract = await factory.deploy(this.name, this.symbol);
+                await contract.deployTransaction.wait();
+                return { address: contract.address };
+            }
+            catch (err) {
+                console.error(err);
             }
         }
+        return {}
+    }
 
-        if (!this.address || !this.abi) throw new Error("unable to connect to contract!");
-
-        ////////////////////
-        // Smart Contract //
-        ////////////////////
-
-        this.contract = await new ethers.Contract(this.address, this.abi, signer);
-        this.signer = signer;
-
-        this._initialized = true;
+    _loadABI(account, network, token) {
+        let contractJSON = {'networks':[]},
+            abi = null,
+            bytecode = null;
+        // check for migrations file
+        if (fileExists(path.join(__dirname, "../..", config.buildPath, `${token.name}.json`))) {
+            contractJSON = require(path.join(__dirname, "../..", config.buildPath, `${token.name}.json`));
+            abi = contractJSON.abi;
+            bytecode = contractJSON.bytecode;
+        }
+        // check for local smart contract file
+        else if (fileExists(path.join(__dirname, "../..", config.contractPath, `${token.name}.sol`))) {
+            const input = fs.readFileSync(path.join(__dirname, "../..", config.contractPath, `${token.name}.sol`));
+            const output = solc.compile(input.toString(), 1);
+            bytecode = output.contracts[token.name].bytecode;
+            abi = JSON.parse(output.contracts[token.name].interface);
+        }
+        // 
+        else if (account && network) {
+            // get abi from etherscan, etc
+        }
+        if (!abi) throw new Error("unable to find ABI for contract!");
+        return { abi, bytecode, contractJSON };
     }
 
     //////////////////////////////////////////////
@@ -198,6 +186,9 @@ class Minty {
     // TODO
     // updates an ipns nft's metadata
     async updateNFT(tokenId, options) {}
+
+    // TODO
+    async burnNFT(tokenId, options) {}
 
     //////////////////////////////////////////////
     // -------- NFT Retreival

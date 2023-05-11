@@ -87,7 +87,9 @@
 	- removed drizzle client subsection (unnecessary bloat from main focus)
 **1.3.3 : 5-10-2023**
 	- more cleanup and updates
-	- removal of asset.js in favor of direct .properties and .attribute handling
+	- removal of asset.js in favor of direct .properties and .attributes handling
+	- beginning attempts to update code to es6
+
 
 ------------------------------------------------------------------------
 
@@ -95,11 +97,12 @@
 # TODO
 
 - add Loopring API
+- add Loopring schema for counterfactual nfts
+
 - add additional chains
 
 
 - clean up functionality and inline todos
-- possibly update code for es6
 
 - figure out an easier way to add all the repeated blockchain/network options
 - update minty.parseEvents as necessary for multiple transfer types / contracts

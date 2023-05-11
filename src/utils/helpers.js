@@ -43,6 +43,17 @@ function fileExists(path) {
     return false;
 }
 
+// can get address from name if available in config
+export const getContractForNetwork = function(name, network) {
+    console.debug(`getting ${name} on ${network}...`);
+    if (isNaN(name)) throw Error("missing contract name");
+    if (isNaN(network)) throw Error("missing contract network");
+    for (const contract of config.contracts)
+        if (contract.name === name && contract.network === network)
+            return contract.address;
+    throw new Error("missing contract: "+name);
+}
+
 function parseRecipient(value) {
          // get the address of the token owner from options, or use the default signing address if no owner is given
         // let ownerAddress = options.to || options.owner || options.recipient;

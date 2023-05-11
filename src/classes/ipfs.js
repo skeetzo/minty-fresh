@@ -2,15 +2,13 @@ import * as CID from 'cids';
 import * as all from 'it-all';
 import * as path from 'path';
 import * as config from 'getconfig';
-
-// const { create, CID } = require('ipfs-http-client');
 import { create } from 'ipfs-http-client';
-const IPFS_CLIENT = create(config.ipfsApiUrl);
-
 import { concat as uint8ArrayConcat } from 'uint8arrays/concat';
 import { toString as uint8ArrayToString } from 'uint8arrays/to-string';
 
-class IPFS {
+const IPFS_CLIENT = create(config.ipfsApiUrl);
+
+export default class IPFS {
     
     ipfsAddOptions = {
       cidVersion: 1,
@@ -27,14 +25,7 @@ class IPFS {
       // 'wrapWithDirectory':true
     }
 
-    constructor(opts={}) {
-        // if (opts.client) IPFS_CLIENT = opts.client;
-        // else if (opts.ipfsApiUrl) IPFS_CLIENT = create(opts.ipfsApiUrl);
-        // else 
-            // IPFS_CLIENT = create(config.ipfsApiUrl);
-        // console.log("connecting to IPFS urls:", opts.client, opts.ipfsApiUrl, config.ipfsApiUrl);
-        // IPFS.prefix = "ipfs" || opts.prefix;
-    }
+    constructor() {}
 
     // file must have: name, path, and content
     static async add(file) {
@@ -86,6 +77,9 @@ class IPFS {
 
         return { metadataCID:metadataCID.toString(), metadataURI };
     }
+
+    // TODO
+    static async remove(file) {}
 
     /**
      * Get the full contents of the IPFS object identified by the given CID or URI.
@@ -289,5 +283,3 @@ class IPFS {
     }
 
 }
-
-module.exports = IPFS;
