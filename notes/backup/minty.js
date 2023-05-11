@@ -1,21 +1,21 @@
+// const fs = require('fs/promises');
+const fs = require('fs')
+const path = require('path');
+
+const ethers = require('ethers');
+const { BigNumber } = require('ethers');
+const { selectSchema, promptNFTMetadata, validateSchema } = require('../utils/prompt.js');
 // const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
-// import "fs/promises"
-import "fs";
-import "path";
+const solc = require('solc');
 
-import "ethers";
-import { BigNumber } from 'ethers';
-import 'solc';
-
-import { selectSchema, promptNFTMetadata, validateSchema } from '../utils/prompt';
-import { fileExists } from '../utils/helpers';
-import { IPFS } from './ipfs';
-import { NFT } from './nft';
+const { fileExists } = require('../utils/helpers.js');
+const IPFS = require('./ipfs.js');
+const NFT = require('./nft.js');
 
 // The getconfig package loads configuration from files located in the the `config` directory.
 // See https://www.npmjs.com/package/getconfig for info on how to override the default config for
 // different environments (e.g. testnet, mainnet, staging, production, etc).
-import * as config from 'getconfig';
+const config = require('getconfig');
 
 const ERC721URIStorage_QUERY_ERROR = "ERC721URIStorage: URI query for nonexistent token";
 

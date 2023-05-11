@@ -1,19 +1,20 @@
-import { Ajv, ErrorObject } from "ajv";
-import * as config from 'getconfig';
-import * as fs from "fs";
-import * as fs_  from "fs/promises";
-import 'path';
-import * as JSONschemaDefaults from 'json-schema-defaults';
+const Ajv = require("ajv");
+const { ErrorObject } = require("ajv");
+const ajv = new Ajv(); // options can be passed, e.g. {allErrors: true}
+const config = require('getconfig');
+const fs = require('fs');
+const fs_ = require('fs/promises');
+const path = require('path');
+const JSONschemaDefaults = require('json-schema-defaults');
 
-import { fileExists } from '../utils/helpers';
-import { promptSchema } from '../utils/prompt';
-import IPFS from './ipfs';
-import { loadSchema, parseSchema, validateSchema } from './schema';
+const { fileExists } = require('../utils/helpers.js');
+const { promptSchema } = require('../utils/prompt.js');
+const Asset = require('./asset.js');
+const IPFS = require('./ipfs.js');
+const Schema = require('./schema.js');
 
 // const ERC20_interfaceId = "0x36372b07",
       // ERC721_interfaceId = "0x80ac58cd";
-
-const ajv = new Ajv(); // options can be passed, e.g. {allErrors: true}
 
 class NFT {
 

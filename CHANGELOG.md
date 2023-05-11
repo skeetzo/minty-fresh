@@ -92,6 +92,10 @@
 
 # TODO
 
+- add Loopring API
+- add additional chains
+
+
 - clean up functionality and inline todos
 - possibly update code for es6
 

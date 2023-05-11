@@ -1,14 +1,16 @@
-import * as CID from 'cids';
-import * as all from 'it-all';
-import * as path from 'path';
-import * as config from 'getconfig';
+const CID = require('cids');
+const all = require('it-all');
+const path = require('path');
+const config = require('getconfig');
 
 // const { create, CID } = require('ipfs-http-client');
-import { create } from 'ipfs-http-client';
+const { create } = require('ipfs-http-client');
 const IPFS_CLIENT = create(config.ipfsApiUrl);
 
-import { concat as uint8ArrayConcat } from 'uint8arrays/concat';
-import { toString as uint8ArrayToString } from 'uint8arrays/to-string';
+const uint8ArrayConcat = require('uint8arrays/concat').concat;
+const uint8ArrayToString = require('uint8arrays/to-string').toString;
+
+// ipfs.add parameters for more deterministic CIDs
 
 class IPFS {
     

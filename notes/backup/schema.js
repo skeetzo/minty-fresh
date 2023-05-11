@@ -1,20 +1,24 @@
-import { Ajv, ErrorObject } from "ajv";
-import * as config from 'getconfig';
-import * as fs from "fs";
-import * as fs_  from "fs/promises";
-import * as path from 'path';
-import * as JSONschemaDefaults from 'json-schema-defaults';
+const Ajv = require("ajv");
+// const { ErrorObject } = require("ajv");
+const ajv = new Ajv(); // options can be passed, e.g. {allErrors: true}
+const config = require('getconfig');
+const fs = require('fs');
+// const fs_ = require('fs/promises');
+const path = require('path');
+const JSONschemaDefaults = require('json-schema-defaults');
 
-import { fileExists } from '../utils/helpers';
-import IPFS from './ipfs';
+const { fileExists } = require('../utils/helpers.js');
+const IPFS = require('./ipfs.js');
 
-export const loadSchema = async function(schemaNameOrCID) {
+
+const loadSchema = async function(schemaNameOrCID) {
     console.debug("loading schema: ", schema);
     if (IPFS.validateCIDString(schema))
         return await _loadSchemaFromIPFS(schemaNameOrCID);
     else
         return _loadSchemaFromFile(schemaNameOrCID);
 }
+module.exports.load = loadSchema;
 
 const _loadSchemaFromIPFS = async function(schema) {
     console.debug("loading schema cid...");
@@ -45,23 +49,25 @@ const _loadSchemaFromFile = function(schema) {
     return _parseTemplate(templates[defaultIndex]);
 }
 
-export const parseSchema = function(schema) {return JSONschemaDefaults(schema)}
+const parseSchema = function(schema) {return JSONschemaDefaults(schema)}
+module.exports.parse = parseSchema;
 
     // validate according to its schema
-export const validateSchema = function(schema, metadata) {
-    console.debug(`validating schema...`);
-    // replace empty values with null for flagging validation
-    // for (const [key, value] of Object.entries(this.metadata))
-        // if (value === "") this.metadata[key] = null;
-    const validate = ajv.compile(parseSchema(schema));
-    const valid = validate(metadata);
-    if (!valid) {
-        console.error(validate.errors);
-        throw new Error("Error: unable to validate data");
+const validate = function(schema, metadata) {
+        console.debug(`validating schema...`);
+        // replace empty values with null for flagging validation
+        // for (const [key, value] of Object.entries(this.metadata))
+            // if (value === "") this.metadata[key] = null;
+        const validate = ajv.compile(parseSchema(schema));
+        const valid = validate(metadata);
+        if (!valid) {
+            console.error(validate.errors);
+            throw new Error("Error: unable to validate data");
+        }
+        console.debug("valid JSON!");
     }
-    console.debug("valid JSON!");
 }
-
+module.exports.validate = validate;
 
 // async function parseErrors(validationErrors) {
 //     let errors = [];
