@@ -85,7 +85,9 @@
 **1.3.2 : 5-8-2023**
 	- project cleanup for retouches
 	- removed drizzle client subsection (unnecessary bloat from main focus)
-
+**1.3.3 : 5-10-2023**
+	- more cleanup and updates
+	- removal of asset.js in favor of direct .properties and .attribute handling
 
 ------------------------------------------------------------------------
 

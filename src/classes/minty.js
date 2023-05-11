@@ -65,8 +65,6 @@ class Minty {
         this.owner = opts.to || opts.owner || null;
 
         this.abi = null;
-        // ipfs client
-        IPFS = null;
         // ethers contract object
         this.contract = null;
         this.signer = null;

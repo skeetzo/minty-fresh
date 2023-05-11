@@ -9,7 +9,6 @@ const JSONschemaDefaults = require('json-schema-defaults');
 
 const { fileExists } = require('../utils/helpers.js');
 const { promptSchema } = require('../utils/prompt.js');
-const Asset = require('./asset.js');
 const IPFS = require('./ipfs.js');
 const Schema = require('./schema.js');
 
@@ -18,14 +17,13 @@ const Schema = require('./schema.js');
 
 class NFT {
 
-    constructor(opts) {
+    constructor(opts={}) {
         this.schema = opts.schema || "default";
 
         this.name = opts.name || null;
         this.symbol = opts.symbol || null;
 
         this.metadata = opts.metadata || {};
-        this.assets = opts.assets || [];
         
         this.tokenId = opts.tokenId ? parseInt(opts.tokenId) : null;
         this.owner = opts.owner || null;
@@ -39,9 +37,10 @@ class NFT {
     toString() {
         return {
             name: this.name,
+            symbol: this.symbol,
             schema: this.schema, 
-            // TODO: add a toString for Assets or do something here with it better
-            assets: this.assets,
+            properties: this.properties,
+            attributes: this.attributes,
             metadata: this.metadata,
             metadataCID: this.metadataCID,
             metadataURI: this.metadataURI,
@@ -53,35 +52,36 @@ class NFT {
     async init() {
         if (this._initialized) return;
     
-        if (process.env.cli)
-            this.metadata = await promptSchema(this.schema);
-        else
-            this.metadata = Schema.parse(await Schema.load(this.schema));
+        // populate metadata if empty
+        if (Object.keys(this.metadata).length === 0) {
+            if (process.env.cli)
+                this.metadata = await promptSchema(this.schema);
+            else
+                this.metadata = Schema.parse(await Schema.load(this.schema));
+        }
 
         this._initialized = true;
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    getProperty(prop="image") {
-        if (!this.metadata) throw new Error("missing metadata");
-        return this.metadata[prop];
-    }
+    // get property in metadata matching prop
+    getProperty(prop="image") {}
 
+    // get all properties in metadata for the matching schema
     getProperties() {
-        if (!this.metadata) return {};
-        const properties = {};
-        for (const key of config.propTypes)
-            for (const [_key, value] of Object.entries(this.metadata))
-                if (key == _key)
-                    properties[key] = value;
-        return properties;
+        // load json schema from file
+        // return all the object keys from .properties
     }
 
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // get attribute in metadata matching attr
+    getAttribute(attr="name") {}
+
+    // get all attributes in metadata for the matching schema
+    getAttributes() {
+        // return all the attributes in metadata
+    }
+
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     /**
@@ -121,6 +121,7 @@ class NFT {
     async upload() {
         if (!this._initialized) await this.init();
         Schema.validate(this.schema, this.metadata);
+        await this._uploadAttributes();
         await this._uploadProperties();
         await this._uploadMetadata();
     }
@@ -139,14 +140,26 @@ class NFT {
     }
 
     async _uploadProperties() {
+        // upload each property in metadata
+        // replace local files with uploaded CID
+
+
         console.debug("uploading metadata properties...");
-        for (const prop of this.properties) {
+        // TODO: this for loop needs to be updated to loop object keys in .metadata
+        for (const prop of this.metadata.properties) {
             const { metadataCID, metadataURI } = await this._uploadProperty(prop);
             this.metadata[prop.name] = metadataCID;
         }
     }
 
     async _uploadProperty(prop) {
+        // check if property is a local file or a CID
+        // if local, upload property and return CID
+        // if CID, return CID
+
+
+
+
         if (!fileExists(prop.path)) throw "incorrect property path";
         console.debug("uploading property: ", prop.name);
         const file = { 
@@ -157,6 +170,13 @@ class NFT {
         const { metadataCID, metadataURI } = await IPFS.add(file);
         return { metadataCID, metadataURI };
     }
+
+    async _uploadAttributes() {
+        // upload each attribute in metadata
+        // replace local files with uploaded CID
+        
+    }
+    async _uploadAttribute(attr) {}
 
 }
 
