@@ -82,47 +82,47 @@
 	- added Asset class for tracking ipfs FileObjects better
 	- added complicated-test.json schema for testing multiple asset uploads later
 	- "fixed" ipfs webgui bug; need to finish asset.js before recontinuing ipfs tests
-**1.3.2 : 5-8-2023**
+	**1.3.2 : 5-8-2023**
 	- project cleanup for retouches
 	- removed drizzle client subsection (unnecessary bloat from main focus)
-**1.3.3 : 5-10-2023**
+	**1.3.3 : 5-10-2023**
 	- more cleanup and updates
 	- removal of asset.js in favor of direct .properties and .attributes handling
 	- beginning attempts to update code to es6
-
+	- added ability to mint from schemas found already uploaded on IPFS aka add loading schemas from IPFS cid
+**1.3.4 : 5-11-2023**
+	- finished update to es6
+	- updated properties & attributes references
 
 ------------------------------------------------------------------------
 
 
 # TODO
 
-- add Loopring API
-- add Loopring schema for counterfactual nfts
-
 - add additional chains
-
-
-- clean up functionality and inline todos
-
 - figure out an easier way to add all the repeated blockchain/network options
+- clean up functionality and inline todos
 - update minty.parseEvents as necessary for multiple transfer types / contracts
 
+(loopring)
+- add Loopring API -> separate project "ringpops" first for API wrapper (use axios notes)
+- add Loopring schema for counterfactual nfts
+
 (tests)
-- finish added asset.js class & interactions w/ testing for retrieving asset objects
+- test updated properties & attributes interactions w/ testing for retrieving files / CIDs
 - fix ipfs uploads / adds --> not appearing in ipfs client
 - completely fix the fileExists function
-- test new multiple asset upload process
-- possibly add direct tests for: nft.js, ipfs.js, maybe even asset.js
+- test multiple metadata properties and attributes upload process
+- possibly add direct tests for: nft.js, ipfs.js
 
-(staging)
+(minor)
 - add ipns & updateable metadata functionality
 - update "NFT"-centric design to more tokenized generality --> works for ERC20s, (specifically) ERC1155s
-- add ability to mint from schemas found already uploaded on IPFS aka add loading schemas from IPFS cid
 
-(production)
-- finalize & test process for minty being ran on mainnets and with live wallets
-- update / add docstring comments
+(major)
 - add method for interacting with private / anonymous wallets; possibly on remote nodes
+- finalize & test process for minty being ran on mainnets and with live wallets (privately)
+- update / add docstring comments
 
 
 # Links
@@ -130,4 +130,36 @@
 
 # Dev
 
+Run:
+
 npm link
+
+
+# Tests
+
+add ipfs tests:
+
+add
+remove
+getIPFS
+getIPFSString
+getIPFSBase64
+getIPFSJSON
+pin
+unpin
+isPinned
+stripIpfsUriPrefix
+ensureIpfsUriPrefix
+makeGatewayURL
+extractCID
+validateCIDString
+
+add nft tests:
+get properties
+get attributes
+unpin
+
+add minty tests:
+burn
+get properties
+get attributes

@@ -7,9 +7,9 @@ import { alignOutput, colorizeOptions } from '../utils/helpers.mjs';
 
 // ---- command action functions
 
-export const createNFT = async function(options, _minty=null) {
+export const mintNFT = async function(options, _minty=null) {
     const minty = _minty || await MakeMinty(options);
-    const nft = await minty.createNFT(options, options.schema);
+    const nft = await minty.mintNFT(options, options.schema);
     if (!options.quiet) {
         if (options.skipMint)
             console.log(`🌿 Pretend minted a new ${minty.name} ${options.schema}: `);
@@ -36,12 +36,12 @@ export const createNFT = async function(options, _minty=null) {
         console.log('Token ID: %s', chalk.green(nft.tokenId));
 }
 
-export const createNFTs = async function(options, _minty=null) {
+export const mintNFTs = async function(options, _minty=null) {
     const minty = _minty || await MakeMinty(options);
-    const nfts = await minty.createNFTs(options, options.schema);
+    const nfts = await minty.mintNFTs(options, options.schema);
     if (!options.quiet) {
         if (options.skipMint)
-            console.log(`🌿 Pretend minted new ${minty.name} ${options.schema}s: `);
+            console.log(`🌿 Practice minted new ${minty.name} ${options.schema}s: `);
         else
             console.log(`🌿 Minted new ${minty.name} ${options.schema}s: `);
         const output = [
@@ -97,12 +97,30 @@ export const getNFT = async function(tokenId, options) {
 
 export const transferNFT = async function(tokenId, toAddress, options) {
     const minty = await MakeMinty(options);
-    await minty.transferToken(tokenId, toAddress);
+    await minty.transfer(tokenId, toAddress);
     console.log(`🌿 Transferred token ${chalk.green(tokenId)} to ${chalk.yellow(toAddress)}`);
+}
+
+export const transferNFTs = async function(tokenIds, toAddresses, options) {
+    const minty = await MakeMinty(options);
+    await minty.transferBatch(tokenIds, toAddresses);
+    console.log(`🌿 Transferred tokens ${chalk.green(tokenIds)} to ${chalk.yellow(toAddresses)}`);
 }
 
 export const pinNFTData = async function(tokenId, options) {
     const minty = await MakeMinty(options);
-    const {assetURIs, metadataURI} = await minty.pin(tokenId);
+    const {metadataURI} = await minty.pin(tokenId);
     console.log(`🌿 Pinned all data for token id ${chalk.green(tokenId)}`);
+}
+
+export const unpinNFTData = async function(tokenId, options) {
+    const minty = await MakeMinty(options);
+    const {metadataURI} = await minty.unpin(tokenId);
+    console.log(`🌿 Unpinned all data for token id ${chalk.green(tokenId)}`);
+}
+
+export const burnNFT = async function(tokenId, options) {
+    const minty = await MakeMinty(options);
+    const {metadataURI} = await minty.burn(tokenId);
+    console.log(`🌿 Burned token id ${chalk.green(tokenId)}`);
 }

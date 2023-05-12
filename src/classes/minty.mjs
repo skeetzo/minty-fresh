@@ -163,8 +163,12 @@ class Minty {
     // TODO
     // make sure this works
     // finish return value of cli output
-    async createNFT(options, skipMint=false) {
-        console.debug(`Creating token...`);
+    async mintNFT(options, skipMint=false) {
+        if (skipMint)
+            console.debug(`practicing token mint...`);
+        else
+            console.debug(`minting token...`);
+        
         const nft = new NFT({...options, ...this});
         await nft.upload();
         // get the address of the token owner from options, or use the default signing address if no owner is given
@@ -172,14 +176,18 @@ class Minty {
             // nft.owner = await this.defaultRecipientAddress() || await this.defaultOwnerAddress();
             nft.tokenId  = await this.mint(nft.owner, nft.metadataURI);
         }
-        console.debug(`Created token:`);
+
+        if (skipMint)
+            console.debug(`pretend token:`);
+        else 
+            console.debug(`minted token:`);
         console.debug(nft.toString());
         return nft;
     }
 
     // TODO
     // probably mostly same as above or uses above
-    async createNFTs(options, schema) {}
+    async mintNFTs(options, schema) {}
 
     // TODO
     // updates an ipns nft's metadata
@@ -210,13 +218,6 @@ class Minty {
                 throw new Error("Token id does not exist!");
             throw new Error(err.message);
         }
-    }
-
-    // TODO
-    // should I parse this differently, like above?
-    async getMetadataProperties(tokenId) {
-        const nft = new NFT({...await this.getMetadata(tokenId), ...this});
-        return nft.getProperties();
     }
 
     /**
@@ -276,23 +277,21 @@ class Minty {
         return props;
     }
 
-    // returns the data for the asset
-    async getNFTPropertyData(tokenId, _prop="image") {
-        const prop = await this.getNFTProp(tokenId, _prop);
-        const data = await prop.getData();
-        return data;
+    async getNFTAttr(tokenId, _attr="image") {
+        console.log(`Getting ${_attr} for token id ${tokenId}...`);
+        const nft = await this.getNFT(tokenId);
+        const attr = nft.getAttribute(_attr);
+        console.log(`Got ${_attr} for token id ${tokenId}.`);
+        return attr;
     }
 
-    // returns array of key:data pairs
-    async getAllNFTPropertiesData(tokenId) {
-        const props = await this.getNFTProperties(tokenId);
-        const datas = [];
-        for (const asset of props) {
-            const data = {};
-            data[asset.name] = await asset.getData();
-            datas.push(data);
-        }
-        return datas;
+    // return all the properties found in the token metadata
+    async getNFTAttributes(tokenId) {
+        console.log(`Getting attributes for token id ${tokenId}...`);
+        const nft = await this.getNFT(tokenId);
+        const attrs = nft.getAttributes();
+        console.log(`Got attributes for token id ${tokenId}.`);
+        return attrs;
     }
 
     //////////////////////////////////////////////
@@ -325,22 +324,22 @@ class Minty {
 
     // TODO
     // double check
-    // async mintBatch(ownerAddresses, metadataURIs) {
-    //     if (ownerAddresses.length!=metadataURIs) throw "minting lengths mismatch";
-    //     const mintFunction = config.mintBatchFunction || "mint";
-    //     if (!this.contract.hasOwnProperty(mintFunction)) throw "minting contract is missing a declared mint function";
-    //     for (let i=0;i<metadataURIs.length;i++)
-    //         metadataURIs[i] = IPFS.stripIpfsUriPrefix(metadataURIs[i]);
-    //     const gasLimit = await this.contract.estimateGas[mintFunction](ownerAddresses, metadataURIs);
-    //     const tx = await this.contract[mintFunction](ownerAddresses, metadataURIs, {'gasLimit':gasLimit});
-    //     const receipt = await tx.wait();
-    //     parseTokenId(receipt);(receipt);
-    // }
+    async mintBatch(ownerAddresses, metadataURIs) {
+        if (ownerAddresses.length!=metadataURIs) throw "minting lengths mismatch";
+        const mintFunction = config.mintBatchFunction || "mint";
+        if (!this.contract.hasOwnProperty(mintFunction)) throw "minting contract is missing a declared mint function";
+        for (let i=0;i<metadataURIs.length;i++)
+            metadataURIs[i] = IPFS.stripIpfsUriPrefix(metadataURIs[i]);
+        const gasLimit = await this.contract.estimateGas[mintFunction](ownerAddresses, metadataURIs);
+        const tx = await this.contract[mintFunction](ownerAddresses, metadataURIs, {'gasLimit':gasLimit});
+        const receipt = await tx.wait();
+        parseTokenId(receipt);(receipt);
+    }
 
     // TODO
     // add missing docs for this
     // also finish
-    async transferToken(tokenId, toAddress) {
+    async transfer(tokenId, toAddress) {
         console.debug(`Transfering token id ${tokenId} to ${toAddress}...`)
         const fromAddress = await this.getTokenOwner(tokenId);
 
@@ -359,7 +358,7 @@ class Minty {
 
     // TODO
     // batch transfers
-    async transferTokens(tokenIds, toAddresses) {}
+    async transferBatch(tokenIds, toAddresses) {}
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -441,6 +440,15 @@ class Minty {
         const pinned = await nft.pin();
         console.log(`Pinned token id ${tokenId}.`);
         return pinned;
+    }
+
+    async unpin(tokenId) {
+        const {metadata, metadataURI} = await this.getMetadata(tokenId);
+        const nft = await this.getNFT(tokenId);
+        console.log(`Unpinning token id ${tokenId}...`);
+        const unpinned = await nft.unpin();
+        console.log(`Unpinned token id ${tokenId}.`);
+        return unpinned;
     }
 
 }

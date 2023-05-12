@@ -49,7 +49,7 @@ contract('Minty (client)', (accounts) => {
 	})
 
 	describe('mint', () => {
-		it('can create an NFT', async () => {
+		it('can create an NFT reference', async () => {
 			const nft = await minty.createNFT(options, true);
 			assert.isOk(nft, "missing nft");
 	        expect(nft.metadata).to.not.be.empty;

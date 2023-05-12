@@ -71,7 +71,7 @@ export default class NFT {
         throw new Error("missing property - "+prop);
     }
 
-    // get all properties for known schema
+    // get all property keys for known schema
     getProperties() {
         // load json schema from file
         const json = Schema.loadSchema(this.schema);
@@ -88,12 +88,12 @@ export default class NFT {
         throw new Error("missing attribute - "+attr);
     }
 
-    // get all attributes in metadata for the matching schema
+    // get all attribute objects in metadata for the matching schema
     getAttributes(sort=false) {
         if (!this.metadata) throw new Error("missing metadata");
         if (!this.metadata.attributes) throw new Error("missing attributes");
-        if (sort) return this.metadata.attributes.sort((a,b) => a.name - b.name); // b - a for reverse sort
-        return this.metadata.attributes;
+        // b - a for reverse sort
+        return sort ? this.metadata.attributes.sort((a,b) => a.name - b.name) : this.metadata.attributes;
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -159,43 +159,58 @@ export default class NFT {
         this.metadataURI = metadataURI;
     }
 
+    // upload each property in metadata
+    // replace local files with uploaded CID
     async _uploadProperties() {
-        // upload each property in metadata
-        // replace local files with uploaded CID
-
-
         console.debug("uploading metadata properties...");
-        // TODO: this for loop needs to be updated to loop object keys in .metadata
-        for (const prop of this.metadata.properties) {
+        for (const prop of this.getProperties()) {
             const { metadataCID, metadataURI } = await this._uploadProperty(prop);
-            this.metadata[prop.name] = metadataCID;
+            this.metadata[prop] = metadataCID;
         }
     }
 
+    // check if property is a local file or a CID
+    // if local, upload property and return CID
+    // if CID, return CID
     async _uploadProperty(prop) {
-        // check if property is a local file or a CID
-        // if local, upload property and return CID
-        // if CID, return CID
-
-
-
-
-        if (!fileExists(prop.path)) throw "incorrect property path";
-        console.debug("uploading property: ", prop.name);
+        const property = this.getProperty(prop);
+        if (IPFS.validateCIDString(property)) return property;
+        // TODO: add url check
+        if (!fileExists(property)) throw "incorrect property path";
+        console.debug("uploading property: ", prop);
         const file = { 
-            name: path.basename(prop.path).replace(/\/[^a-z0-9\s]\//gi, '_'),
-            path: `/${prop.name}s/${path.basename(prop.path)}`.replace(/\/[^a-z0-9\s]\//gi, '_'),
-            content: await fs_.readFile(prop.path)
+            'name': path.basename(property).replace(/\/[^a-z0-9\s]\//gi, '_'),
+            'path': `/${prop}s/${path.basename(property)}`.replace(/\/[^a-z0-9\s]\//gi, '_'),
+            'content': await fs_.readFile(property)
         };
         const { metadataCID, metadataURI } = await IPFS.add(file);
         return { metadataCID, metadataURI };
     }
 
+    // upload each attribute in metadata
+    // replace local files with uploaded CID
     async _uploadAttributes() {
-        // upload each attribute in metadata
-        // replace local files with uploaded CID
-        
+        console.debug("uploading metadata attributes...");
+        for (const attr of this.getAttributes()) {
+            const { metadataCID, metadataURI } = await this._uploadAttribute(attr);
+            const index = this.metadata.attributes.findIndex((obj => obj.name == attr.name));
+            this.metadata.attributes[index].metadataCID = metadataCID;
+            this.metadata.attributes[index].metadataURI = metadataURI;
+        }   
     }
-    async _uploadAttribute(attr) {}
+    async _uploadAttribute(attr) {
+        const attribute = this.getAttribute(attr);
+        if (IPFS.validateCIDString(attribute.path)) return attribute;
+        // TODO: add url check
+        if (!fileExists(attribute.path)) throw "incorrect attribute path";
+        console.debug("uploading attribute: ", attribute.name);
+        const file = { 
+            'name': path.basename(attribute.name).replace(/\/[^a-z0-9\s]\//gi, '_'),
+            'path': `/${attribute.name}s/${path.basename(attribute.path)}`.replace(/\/[^a-z0-9\s]\//gi, '_'),
+            'content': await fs_.readFile(attribute.path)
+        };
+        const { metadataCID, metadataURI } = await IPFS.add(file);
+        return { metadataCID, metadataURI };
+    }
 
 }
