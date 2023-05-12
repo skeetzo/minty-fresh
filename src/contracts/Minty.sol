@@ -36,7 +36,7 @@ contract Minty is ERC721, ERC721URIStorage {
         return "";
     }
 
-    function _beforeTokenTransfer(address from, address to, uint256 tokenId) internal virtual override {
+    function _beforeTokenTransfer(address from, address to, uint256 tokenId) internal virtual {
         super._beforeTokenTransfer(from, to, tokenId);
     }
 

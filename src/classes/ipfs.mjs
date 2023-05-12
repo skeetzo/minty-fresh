@@ -75,6 +75,9 @@ export default class IPFS {
         // await writeMFS();
         await copyToWebUI();
 
+        console.debug("metadataCID: ", metadataCID);
+        console.debug("metadataURI: ", metadataURI);
+
         return { metadataCID:metadataCID.toString(), metadataURI };
     }
 
