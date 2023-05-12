@@ -1,19 +1,17 @@
-import { Ajv, ErrorObject } from "ajv";
 import * as config from 'getconfig';
 import * as fs from "fs";
 import * as fs_  from "fs/promises";
 import 'path';
 import * as JSONschemaDefaults from 'json-schema-defaults';
 
-import { fileExists, getContractForNetwork } from '../utils/helpers';
-import { promptSchema } from '../utils/prompt';
-import IPFS from './ipfs';
-import { loadSchema, parseSchema, validateSchema } from './schema';
+import { fileExists, getContractForNetwork } from '../utils/helpers.mjs';
+import { promptSchema } from '../utils/prompt.mjs';
+import IPFS from './ipfs.mjs';
+import { loadSchema, parseSchema, validateSchema } from './schema.mjs';
 
 // const ERC20_interfaceId = "0x36372b07",
       // ERC721_interfaceId = "0x80ac58cd";
 
-const ajv = new Ajv(); // options can be passed, e.g. {allErrors: true}
 
 export default class NFT {
 
@@ -201,5 +199,3 @@ export default class NFT {
     async _uploadAttribute(attr) {}
 
 }
-
-module.exports = NFT;

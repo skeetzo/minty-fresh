@@ -6,8 +6,9 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "type": "commonjs",
   "bin": {
-    "minty": "src/index.js"
+    "minty": "src/index.mjs"
   },
   "exports": {
     ".": "./index.js",
@@ -43,7 +44,7 @@
     "json-colorizer": "^2.2.2",
     "json-schema-defaults": "^0.4.0",
     "multiaddr": "^10.0.1",
-    "node-fetch": "^3.2.9",
+    "node-fetch": "^2.6.11",
     "truffle-assertions": "^0.9.2"
   },
   "repository": "git@github.com:skeetzo/minty"

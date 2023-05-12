@@ -1,14 +1,13 @@
 
-const chalk = require('chalk');
-const colorize = require('json-colorizer');
+import * as chalk from "chalk"
+import * as colorize from 'json-colorizer';
 
-const { MakeMinty } = require('../classes/minty');
-
-const { alignOutput, colorizeOptions } = require('../utils/helpers.js');
+import { MakeMinty } from '../classes/minty.mjs';
+import { alignOutput, colorizeOptions } from '../utils/helpers.mjs';
 
 // ---- command action functions
 
-async function createNFT(options, _minty=null) {
+export const createNFT = async function(options, _minty=null) {
     const minty = _minty || await MakeMinty(options);
     const nft = await minty.createNFT(options, options.schema);
     if (!options.quiet) {
@@ -37,7 +36,7 @@ async function createNFT(options, _minty=null) {
         console.log('Token ID: %s', chalk.green(nft.tokenId));
 }
 
-async function createNFTs(options, _minty=null) {
+export const createNFTs = async function(options, _minty=null) {
     const minty = _minty || await MakeMinty(options);
     const nfts = await minty.createNFTs(options, options.schema);
     if (!options.quiet) {
@@ -70,7 +69,7 @@ async function createNFTs(options, _minty=null) {
             console.log('Token ID: %s', chalk.green(nfts[i].tokenId));  
 }
 
-async function getNFT(tokenId, options) {
+export const getNFT = async function(tokenId, options) {
     const { creationInfo: fetchCreationInfo, fetchAssets: fetchAssetData } = options;
     const minty = await MakeMinty(options);
     const nft = await minty.getNFT(tokenId, {fetchAssetData, fetchCreationInfo});
@@ -96,22 +95,14 @@ async function getNFT(tokenId, options) {
     console.log(colorize(JSON.stringify(nft.metadata), colorizeOptions));
 }
 
-async function transferNFT(tokenId, toAddress, options) {
+export const transferNFT = async function(tokenId, toAddress, options) {
     const minty = await MakeMinty(options);
     await minty.transferToken(tokenId, toAddress);
     console.log(`🌿 Transferred token ${chalk.green(tokenId)} to ${chalk.yellow(toAddress)}`);
 }
 
-async function pinNFTData(tokenId, options) {
+export const pinNFTData = async function(tokenId, options) {
     const minty = await MakeMinty(options);
     const {assetURIs, metadataURI} = await minty.pin(tokenId);
     console.log(`🌿 Pinned all data for token id ${chalk.green(tokenId)}`);
-}
-
-module.exports = {
-    createNFT,
-    createNFTs,
-    getNFT,
-    transferNFT,
-    pinNFTData
 }

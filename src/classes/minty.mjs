@@ -1,4 +1,3 @@
-// const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
 // import "fs/promises"
 import "fs";
 import "path";
@@ -7,10 +6,9 @@ import "ethers";
 import { BigNumber } from 'ethers';
 import 'solc';
 
-import { selectSchema, promptNFTMetadata, validateSchema } from '../utils/prompt';
-import { fileExists } from '../utils/helpers';
-import IPFS from './ipfs';
-import NFT from './nft';
+import { fileExists } from '../utils/helpers.mjs';
+import IPFS from './ipfs.mjs';
+import NFT from './nft.mjs';
 
 // The getconfig package loads configuration from files located in the the `config` directory.
 // See https://www.npmjs.com/package/getconfig for info on how to override the default config for
@@ -23,7 +21,7 @@ const ERC721URIStorage_QUERY_ERROR = "ERC721URIStorage: URI query for nonexisten
  * Construct and asynchronously initialize a new Minty instance.
  * @returns {Promise<Minty>} a new instance of Minty, ready to mint NFTs.
  */
- async function MakeMinty(opts) {
+export const MakeMinty = async function(opts) {
     const m = new Minty(opts);
     await m.init();
     return m;
@@ -445,15 +443,6 @@ class Minty {
         return pinned;
     }
 
-}
-
-//////////////////////////////////////////////
-// -------- Exports
-//////////////////////////////////////////////
-
-module.exports = {
-    MakeMinty,
-    Minty
 }
 
 

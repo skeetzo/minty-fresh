@@ -1,10 +1,17 @@
 #!/usr/bin/env node
-const config = require('getconfig');
-const { Command } = require('commander');
-const path = require('path');
+import * as config from 'getconfig';
+import { Command } from 'commander';
 
-const { createNFT, createNFTs, getNFT, transferNFT, pinNFTData } = require('./utils/actions.js');
-const { alignOutput, colorizeOptions, fileExists } = require('./utils/helpers.js');
+import * as path from 'path';
+
+import { createNFT, createNFTs, getNFT, transferNFT, pinNFTData } from './utils/actions.mjs';
+import { alignOutput, colorizeOptions, fileExists } from './utils/helpers.mjs';
+
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 // the .env variable to use to reference the path for a minty "addon"
 const MINTY_ADDON_KEY = config.mintyAddonKey || "MINTY_ADDON";
@@ -14,11 +21,11 @@ async function main() {
 
     let program;
     // get .env of current dir so command must be ran at project root to use corresponding addon
-    if (fileExists('./.env')) {
-        const dotenv = require('dotenv').config({ path: './.env' });
-        if (dotenv.parsed[MINTY_ADDON_KEY] && fileExists(path.join(process.cwd(), dotenv.parsed[MINTY_ADDON_KEY])))
-            program = (await require(path.join(process.cwd(), dotenv.parsed[MINTY_ADDON_KEY])))();
-    }
+    // if (fileExists('./.env')) {
+    //     const dotenv = require('dotenv').config({ path: './.env' });
+    //     if (dotenv.parsed[MINTY_ADDON_KEY] && fileExists(path.join(process.cwd(), dotenv.parsed[MINTY_ADDON_KEY])))
+    //         program = (await require(path.join(process.cwd(), dotenv.parsed[MINTY_ADDON_KEY])))();
+    // }
 
     if (!program) {
         program = new Command();
