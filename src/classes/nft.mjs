@@ -1,4 +1,4 @@
-import * as config from 'getconfig';
+import config from 'getconfig';
 import * as fs from "fs";
 import * as fs_  from "fs/promises";
 import 'path';

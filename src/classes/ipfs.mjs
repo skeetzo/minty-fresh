@@ -1,7 +1,11 @@
-import * as CID from 'cids';
-import * as all from 'it-all';
+import { CID } from 'multiformats/cid';
+// import * as json from 'multiformats/codecs/json'
+// import { sha256 } from 'multiformats/hashes/sha2'
+
+import all from 'it-all';
 import * as path from 'path';
-import * as config from 'getconfig';
+// import * as config from 'getconfig';
+import config from 'getconfig';
 import { create } from 'ipfs-http-client';
 import { concat as uint8ArrayConcat } from 'uint8arrays/concat';
 import { toString as uint8ArrayToString } from 'uint8arrays/to-string';
@@ -72,7 +76,7 @@ export default class IPFS {
             }
         }
 
-        // await writeMFS();
+        await writeMFS();
         await copyToWebUI();
 
         console.debug("metadataCID: ", metadataCID);
@@ -259,11 +263,13 @@ export default class IPFS {
     // error messages
          // TypeError: Cannot read properties of undefined (reading 'byteOffset')
     static extractCID(cidOrURI) {
+        console.debug("extracting: ", cidOrURI);
         // remove the ipfs:// prefix, split on '/' and return first path component (root CID)
         const cidString = IPFS.stripIpfsUriPrefix(cidOrURI).split('/')[0];
-        console.log("cidString: ",cidString)
+        console.debug("cidString: ", cidString)
         try {
-            return new CID(cidString);
+            // return new CID(cidString);
+            return cidString;
         }
         catch (err) {
             console.error(err.message);
@@ -277,7 +283,8 @@ export default class IPFS {
         console.debug("validating cid: ", possibleCIDString);
         try {
             const cid = new CID(possibleCIDString);
-            return CID.isCID(cid);
+            // return CID.isCID(cid);
+            return true;
         }
         catch (err) {
             console.error(err.message);

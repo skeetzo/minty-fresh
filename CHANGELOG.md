@@ -93,6 +93,8 @@
 **1.3.4 : 5-11-2023**
 	- finished update to es6
 	- updated properties & attributes references
+**1.3.5 : 5-13-2023**
+	- finished most of test_ipfs
 
 ------------------------------------------------------------------------
 

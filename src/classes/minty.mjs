@@ -13,7 +13,7 @@ import NFT from './nft.mjs';
 // The getconfig package loads configuration from files located in the the `config` directory.
 // See https://www.npmjs.com/package/getconfig for info on how to override the default config for
 // different environments (e.g. testnet, mainnet, staging, production, etc).
-import * as config from 'getconfig';
+import config from 'getconfig';
 
 const ERC721URIStorage_QUERY_ERROR = "ERC721URIStorage: URI query for nonexistent token";
 
