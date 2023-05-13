@@ -8,3 +8,5 @@ dev/
 #Hardhat files
 cache
 artifacts
+
+.env.pinata

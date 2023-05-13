@@ -1,4 +1,5 @@
-import { CID } from 'multiformats/cid';
+import CID from 'cids';
+// import { CID } from 'multiformats/cid';
 // import * as json from 'multiformats/codecs/json'
 // import { sha256 } from 'multiformats/hashes/sha2'
 
@@ -95,7 +96,6 @@ export default class IPFS {
      * @returns {Promise<Uint8Array>} - contents of the IPFS object
      */
     static async getIPFS(cidOrURI) {
-        // console.log(cidOrURI)
         const cid = IPFS.stripIpfsUriPrefix(cidOrURI);
         return uint8ArrayConcat(await all(IPFS_CLIENT.cat(cid)));
     }
@@ -129,8 +129,8 @@ export default class IPFS {
      * @returns {Promise<string>} - contents of the IPFS object, as a javascript object (or array, etc depending on what was stored). Fails if the content isn't valid JSON.
      */
     static async getIPFSJSON(cidOrURI) {
-        const str = await IPFS.getIPFSString(cidOrURI);
-        return JSON.parse(str);
+        const cid = await IPFS.getIPFSString(cidOrURI);
+        return JSON.parse(cid);
     }
 
     //////////////////////////////////////////////
@@ -144,23 +144,23 @@ export default class IPFS {
      * @returns {Promise<void>}
      */
     static async pin(cidOrURI) {
-        const cid = IPFS.extractCID(cidOrURI);
+        const cid = new CID(IPFS.extractCID(cidOrURI));
         await IPFS._configurePinningService();
         if (await IPFS.isPinned(cid)) return;
-        if (config.pinningService.name == "local")
-            await IPFS_CLIENT.pin.add(cid, { service: config.pinningService.name });
-        else
-            await IPFS_CLIENT.pin.remote.add(cid, { service: config.pinningService.name });
+        // if (config.pinningService.name == "local")
+        await IPFS_CLIENT.pin.add(cid, { service: config.pinningService.name });
+        // else
+            // await IPFS_CLIENT.pin.remote.add(cid, { service: config.pinningService.name });
     }
 
     static async unpin(cidOrURI) {
-        const cid = IPFS.extractCID(cidOrURI);
+        const cid = new CID(IPFS.extractCID(cidOrURI));
         await IPFS._configurePinningService();
         if (!await IPFS.isPinned(cid)) return;
-        if (config.pinningService.name == "local")
+        // if (config.pinningService.name == "local")
             await IPFS_CLIENT.pin.rm(cid, { service: config.pinningService.name });
-        else
-            await IPFS_CLIENT.pin.remote.rm(cid, { service: config.pinningService.name });
+        // else
+            // await IPFS_CLIENT.pin.remote.rm(cid, { service: config.pinningService.name });
     }
 
     /**
@@ -170,19 +170,18 @@ export default class IPFS {
      * @returns {Promise<boolean>} - true if the pinning service has already pinned the given cid
      */
     static async isPinned(cid) {
-        if (typeof cid === 'string') {
+        if (typeof cid != CID)
             cid = new CID(cid);
-        }
         const opts = {
             service: config.pinningService.name,
             cid: [cid], // ls expects an array of cids
         };
-        if (opts.service == "local") // local daemon
+        // if (opts.service == "local") // local daemon
             for await (const result of IPFS_CLIENT.pin.ls(opts))
                 return true;
-        else // remote service
-            for await (const result of IPFS_CLIENT.pin.remote.ls(opts))
-                return true;
+        // else // remote service
+            // for await (const result of IPFS_CLIENT.pin.remote.ls(opts))
+                // return true;
         return false;
     }
 
@@ -259,22 +258,12 @@ export default class IPFS {
      * @param {string} cidOrURI - an ipfs:// URI or CID string
      * @returns {CID} a CID for the root of the IPFS path
      */
-    // TODO: debug
-    // error messages
-         // TypeError: Cannot read properties of undefined (reading 'byteOffset')
     static extractCID(cidOrURI) {
         console.debug("extracting: ", cidOrURI);
         // remove the ipfs:// prefix, split on '/' and return first path component (root CID)
         const cidString = IPFS.stripIpfsUriPrefix(cidOrURI).split('/')[0];
         console.debug("cidString: ", cidString)
-        try {
-            // return new CID(cidString);
-            return cidString;
-        }
-        catch (err) {
-            console.error(err.message);
-            return cidOrURI;
-        }
+        return cidString;
     }
 
     // TODO: debug
@@ -283,8 +272,7 @@ export default class IPFS {
         console.debug("validating cid: ", possibleCIDString);
         try {
             const cid = new CID(possibleCIDString);
-            // return CID.isCID(cid);
-            return true;
+            return CID.isCID(cid);
         }
         catch (err) {
             console.error(err.message);
