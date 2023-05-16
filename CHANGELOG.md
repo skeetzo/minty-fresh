@@ -95,11 +95,15 @@
 	- updated properties & attributes references
 **1.3.5 : 5-13-2023**
 	- finished most of test_ipfs
+**1.3.6 : 5-15-2023**
+	- added test_nft
 
 ------------------------------------------------------------------------
 
 
 # TODO
+
+- finish test_nft
 
 - add additional chains
 - figure out an easier way to add all the repeated blockchain/network options
