@@ -104,6 +104,109 @@ export default class NFT {
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+    /////////////////////////////////////////////////////
+    // --------- Smart contract interactions --------- //
+    /////////////////////////////////////////////////////
+
+    /**
+     * Create a new NFT token that references the given metadata CID, owned by the given address.
+     * 
+     * @param {string} ownerAddress - the ethereum address that should own the new token
+     * @param {string} metadataURI - IPFS URI for the NFT metadata that should be associated with this token
+     * @returns {Promise<string>} - the ID of the new token
+     */
+    async mint(ownerAddress, metadataURI) {
+        // the smart contract might add an ipfs:// prefix to all URIs, so make sure it doesn't get added twice
+        metadataURI = IPFS.stripIpfsUriPrefix(metadataURI);
+        console.debug(`Minting uri for address...\n${ownerAddress} : ${metadataURI}`)
+        // "dynamic" mint functionality
+        const mintFunction = config.mintFunction || "mint";
+        if (!this.contract.hasOwnProperty(mintFunction)) throw new Error("minting contract is missing a declared mint function");
+        // Calculate gas limit for more complicated contract transactions
+        const gasLimit = await this.contract.estimateGas[mintFunction](ownerAddress, metadataURI);
+        // - BUG: for some reason contract.mint won't work? so always use mintToken? as method name?
+        const tx = await this.contract[mintFunction](ownerAddress, metadataURI, {'gasLimit':gasLimit});
+        const receipt = await tx.wait();
+        const tokenId = parseTokenId(receipt);
+        console.debug(`Minted token id ${tokenId}.`);
+        return tokenId;
+    }
+
+    // TODO
+    // double check
+    async mintBatch(ownerAddresses, metadataURIs) {
+        if (ownerAddresses.length!=metadataURIs) throw "minting lengths mismatch";
+        const mintFunction = config.mintBatchFunction || "mint";
+        if (!this.contract.hasOwnProperty(mintFunction)) throw "minting contract is missing a declared mint function";
+        for (let i=0;i<metadataURIs.length;i++)
+            metadataURIs[i] = IPFS.stripIpfsUriPrefix(metadataURIs[i]);
+        const gasLimit = await this.contract.estimateGas[mintFunction](ownerAddresses, metadataURIs);
+        const tx = await this.contract[mintFunction](ownerAddresses, metadataURIs, {'gasLimit':gasLimit});
+        const receipt = await tx.wait();
+        parseTokenId(receipt);
+    }
+
+    // TODO
+    // add missing docs for this
+    // also finish
+    async transfer(tokenId, toAddress) {
+        console.debug(`Transfering token id ${tokenId} to ${toAddress}...`)
+        const fromAddress = await this.getTokenOwner(tokenId);
+
+        // TODO
+        // gonna need to update how this references the base transfer function when using multiple token standards
+
+        // because the base ERC721 contract has two overloaded versions of the safeTranferFrom function,
+        // we need to refer to it by its fully qualified name.
+        const tranferFn = this.contract['safeTransferFrom(address,address,uint256)'];
+        const tx = await tranferFn(fromAddress, toAddress, tokenId);
+
+        // wait for the transaction to be finalized
+        await tx.wait();
+        console.debug(`Transferred token id ${tokenId}.`)
+    }
+
+    // TODO
+    // batch transfers
+    async transferBatch(tokenIds, toAddresses) {}
+
+    /**
+     * Get the address that owns the given token id.
+     * 
+     * @param {string} tokenId - the id of an existing token
+     * @returns {Promise<string>} - the ethereum address of the token owner. Fails if no token with the given id exists.
+     */
+    async getTokenOwner(tokenId) {
+        return this.contract.ownerOf(tokenId);
+    }
+
+    /**
+     * Get historical information about the token.
+     * 
+     * @param {string} tokenId - the id of an existing token
+     * 
+     * @typedef {object} NFTCreationInfo
+     * @property {number} blockNumber - the block height at which the token was minted
+     * @property {string} creatorAddress - the ethereum address of the token's initial owner
+     * 
+     * @returns {Promise<NFTCreationInfo>}
+     */
+    async getCreationInfo(tokenId) {
+        const filter = await this.contract.filters.Transfer(null, null, BigNumber.from(tokenId));
+        const logs = await this.contract.queryFilter(filter);
+        const blockNumber = logs[0].blockNumber;
+        const creatorAddress = logs[0].args.to;
+        return {
+            blockNumber,
+            creatorAddress,
+        };
+    }
+
+
+    //////////////////////////////
+    // --------- IPFS --------- //
+    //////////////////////////////
+
     /**
      * Pins all IPFS data associated with the given tokend id to the remote pinning service.
      * 
@@ -143,7 +246,7 @@ export default class NFT {
         Schema.validate(this.schema, this.metadata);
         await this._uploadAttributes();
         await this._uploadProperties();
-        await this._uploadMetadata();
+        return await this._uploadMetadata();
     }
 
     // upload to ipfs
@@ -157,6 +260,7 @@ export default class NFT {
         const { metadataCID, metadataURI } = await IPFS.add(file);
         this.metadataCID = metadataCID;
         this.metadataURI = metadataURI;
+        return { metadataCID, metadataURI };
     }
 
     // upload each property in metadata

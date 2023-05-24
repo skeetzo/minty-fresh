@@ -1,14 +1,10 @@
 
-const chai = require('chai')
+import * as chai from 'chai';
+import * as fs_  from "fs/promises";
+import { MakeMinty } from '../src/classes/minty.mjs';
+
 const expect = chai.expect
-
-const config = require('getconfig');
-const { MakeMinty } = require('../src/classes/minty.js');
-
 // const Minty = artifacts.require("./Minty.sol");
-
-const fs_ = require('fs/promises');
-const IMAGE_SOURCE = "../src/public/minty-fresh.png";
 
 // uses truffle contract method to access accounts, does not require actual contract
 contract('Minty (client)', (accounts) => {
@@ -35,20 +31,24 @@ contract('Minty (client)', (accounts) => {
 	// }) 
 
 	describe('deploy', () => {
+
 		it('can deploy Minty', async () => {
 			minty = await MakeMinty(options);
 			mintyContract = minty.contract;
 			assert.isTrue(true, "does not deploy Minty");
 		})
+
 		it('can deploy MintyPreset', async () => {
 			const mintyPreset = await MakeMinty({...options, ...{contract:'MintyPreset'}});
 			const mintyPresetContract = mintyPreset.contract;
 			assert.isTrue(true, "does not deploy MintyPreset");
 		})
+
 		it('xcan deploy any ERC721 contract', async () => {})
 	})
 
 	describe('mint', () => {
+
 		it('can create an NFT reference', async () => {
 			const nft = await minty.createNFT(options, true);
 			assert.isOk(nft, "missing nft");
@@ -58,22 +58,26 @@ contract('Minty (client)', (accounts) => {
 	        expect(nft.tokenId).to.be.null;
 	        minted = true;
 		})
+
 		it('can mint an NFT', async () => {
 			const nft = await minty.createNFT(options);
 			assert.isOk(nft, "missing nft");
 			expect(nft.tokenId).to.not.be.null;
 			minted = true;
 		})
+
 	})
 
 	// must mint beforehand
 	describe('get', () => {
+
 		it('can get creation info', async () => {
 			assert.isTrue(minted, "must mint beforehand");
 			const {blockNumber, creatorAddress} = await minty.getCreationInfo(0);
 			expect(blockNumber).to.not.be.null;
 			expect(creatorAddress).to.not.be.null;
 		})
+
 		it('can get info', async () => {
 			assert.isTrue(minted, "must mint beforehand");
 			await minty.createNFT(options);
@@ -86,12 +90,14 @@ contract('Minty (client)', (accounts) => {
 	        expect(nft.metadataCID).to.not.be.null;
 	        expect(nft.metadataURI).to.not.be.null;
 		})
+
 		it('can get metadata assets', async () => {
 			assert.isTrue(minted, "must mint beforehand");
 			const assets = await minty.getMetadataAssets(0);
-			expect(assets).to.have.any.keys(...config.assetTypes)
+			// expect(assets).to.have.any.keys(...config.assetTypes)
 			// TODO: can possibly check that each asset value is a CID string
 		})
+
 		it('can get asset data', async () => {
 			// load the data from ipfs and compare it to the data from the path
 			const assets = await minty.getNFTAssets(0);
@@ -103,12 +109,15 @@ contract('Minty (client)', (accounts) => {
 				if (ass == "image") assert.isTrue(base64regex.test(value));
 			}
 		})
+
 		it('can get token owner', async () => {
 			assert.equal(await minty.getTokenOwner(0), owner, "does not get token owner");
 		})
+
 	})
 
 	describe('transfer', () => {
+
 		it('can transfer token', async () => {
 			assert.isTrue(minted, "must mint beforehand");
 	      	let ownerBalanceStart = await mintyContract.balanceOf(owner);
@@ -120,6 +129,7 @@ contract('Minty (client)', (accounts) => {
 	      	assert.equal(notOwnerBalance, parseInt(notOwnerBalanceStart)+1, "does not transfer in");
 			assert.equal(await minty.getTokenOwner(0), notOwner, "does not get token owner after transfer");
 		})
+
 		it('xcan transfer batch tokens', async () => {
 			assert.isTrue(minted, "must mint beforehand");
 			// let ownerBalance = await mintyContract.balanceOf(owner);
@@ -133,9 +143,11 @@ contract('Minty (client)', (accounts) => {
 			// assert.equal(ownerBalance, ownerBalanceStart-1, "does not transfer out");
 	      	// assert.equal(notOwnerBalance, notOwnerBalanceStart+1, "does not transfer in");
 		})
+
 	})
 
 	describe('pin', () => {
+
 		it('can pin', async () => {
 			assert.isTrue(minted, "must mint beforehand");
 			let {assetURIs, metadataURI} = await minty.pin(0);

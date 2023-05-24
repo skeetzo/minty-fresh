@@ -4,7 +4,7 @@ import { Command } from 'commander';
 
 import * as path from 'path';
 
-import { mintNFT, mintNFTs, getNFT, transferNFT, pinNFTData } from './utils/actions.mjs';
+import { mint, mintBatch, get, transfer, transferBatch pin } from './utils/actions.mjs';
 import { alignOutput, colorizeOptions, fileExists } from './utils/helpers.mjs';
 
 import { fileURLToPath } from 'url';
@@ -60,7 +60,7 @@ async function main() {
             .option('-cA, --contract-address <address>', 'The address of a deployed contract')
             .option('-n, --network <name>', 'The name of the network to connect to', 'development')
             .option('-cId, --chainId <number>', 'The network id', '1337')
-        .action(mintNFT);
+        .action(mint);
 
     if (!_commandExists("show"))
         program.command('show <token-id>')
@@ -71,7 +71,7 @@ async function main() {
             .option('-cA, --contract-address <address>', 'The address of a deployed contract')
             .option('-n, --network <name>', 'The name of the network to connect to', 'development')
             .option('-cId, --chainId <number>', 'The network id', '*')
-        .action(getNFT);
+        .action(get);
 
     if (!_commandExists("transfer"))
         program.command('transfer <token-id> <to-address>')
@@ -80,7 +80,7 @@ async function main() {
             .option('-cA, --contract-address <address>', 'The address of a deployed contract')
             .option('-n, --network <name>', 'The name of the network to connect to', 'development')
             .option('-cId, --chainId <number>', 'The network id', '*')
-        .action(transferNFT);
+        .action(transfer);
 
     if (!_commandExists("pin"))
         program.command('pin <token-id>')
@@ -89,7 +89,7 @@ async function main() {
             .option('-cA, --contract-address <address>', 'The address of a deployed contract')
             .option('-n, --network <name>', 'The name of the network to connect to', 'development')
             .option('-cId, --chainId <number>', 'The network id', '*')
-        .action(pinNFTData);
+        .action(pin);
 
     await program.parseAsync(process.argv);
 }

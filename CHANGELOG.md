@@ -90,20 +90,26 @@
 	- removal of asset.js in favor of direct .properties and .attributes handling
 	- beginning attempts to update code to es6
 	- added ability to mint from schemas found already uploaded on IPFS aka add loading schemas from IPFS cid
-**1.3.4 : 5-11-2023**
+	**1.3.4 : 5-11-2023**
 	- finished update to es6
 	- updated properties & attributes references
-**1.3.5 : 5-13-2023**
+	**1.3.5 : 5-13-2023**
 	- finished most of test_ipfs
-**1.3.6 : 5-15-2023**
+	**1.3.6 : 5-15-2023**
 	- added test_nft
+**1.3.7 : 5-24-2023**
+	- finish fleshing out test_nft
+	- updated actions
+	- reorg minty to mostly static functions to interface with nft class
 
 ------------------------------------------------------------------------
 
 
 # TODO
 
-- finish test_nft
+- finish fleshing out minty functionality between minty & nft
+- add more commands to action
+- update test_minty
 
 - add additional chains
 - figure out an easier way to add all the repeated blockchain/network options
@@ -115,6 +121,9 @@
 - add Loopring schema for counterfactual nfts
 
 (tests)
+- actually test via test_nft
+- update nft.mjs to pass tests
+- update ipfs to pass tests (if necessary) 
 - test updated properties & attributes interactions w/ testing for retrieving files / CIDs
 - fix ipfs uploads / adds --> not appearing in ipfs client
 - completely fix the fileExists function

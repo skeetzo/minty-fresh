@@ -2,14 +2,13 @@
 import * as chalk from "chalk"
 import * as colorize from 'json-colorizer';
 
-import { MakeMinty } from '../classes/minty.mjs';
+import Minty from '../classes/minty.mjs';
 import { alignOutput, colorizeOptions } from '../utils/helpers.mjs';
 
 // ---- command action functions
 
-export const mintNFT = async function(options, _minty=null) {
-    const minty = _minty || await MakeMinty(options);
-    const nft = await minty.mintNFT(options, options.schema);
+export const mint = async function(options) {
+    const nft = await Minty.mintNFT(options);
     if (!options.quiet) {
         if (options.skipMint)
             console.log(`🌿 Pretend minted a new ${minty.name} ${options.schema}: `);
@@ -36,9 +35,8 @@ export const mintNFT = async function(options, _minty=null) {
         console.log('Token ID: %s', chalk.green(nft.tokenId));
 }
 
-export const mintNFTs = async function(options, _minty=null) {
-    const minty = _minty || await MakeMinty(options);
-    const nfts = await minty.mintNFTs(options, options.schema);
+export const mintBatch = async function(options) {
+    const nfts = await Minty.mintNFTs(options);
     if (!options.quiet) {
         if (options.skipMint)
             console.log(`🌿 Practice minted new ${minty.name} ${options.schema}s: `);
@@ -69,10 +67,8 @@ export const mintNFTs = async function(options, _minty=null) {
             console.log('Token ID: %s', chalk.green(nfts[i].tokenId));  
 }
 
-export const getNFT = async function(tokenId, options) {
-    const { creationInfo: fetchCreationInfo, fetchAssets: fetchAssetData } = options;
-    const minty = await MakeMinty(options);
-    const nft = await minty.getNFT(tokenId, {fetchAssetData, fetchCreationInfo});
+export const get = async function(tokenId, options) {
+    const nft = await Minty.getNFT(tokenId, options);
     const output = [
         ['Contract Name:', chalk.green(minty.name)],
         ['Contract Address:', chalk.yellow(minty.contract.address)],
@@ -95,32 +91,32 @@ export const getNFT = async function(tokenId, options) {
     console.log(colorize(JSON.stringify(nft.metadata), colorizeOptions));
 }
 
-export const transferNFT = async function(tokenId, toAddress, options) {
-    const minty = await MakeMinty(options);
-    await minty.transfer(tokenId, toAddress);
+export const transfer = async function(tokenId, toAddress, options) {
+    await Minty.transfer(tokenId, toAddress, options);
     console.log(`🌿 Transferred token ${chalk.green(tokenId)} to ${chalk.yellow(toAddress)}`);
 }
 
-export const transferNFTs = async function(tokenIds, toAddresses, options) {
-    const minty = await MakeMinty(options);
-    await minty.transferBatch(tokenIds, toAddresses);
+export const transferBatch = async function(tokenIds, toAddresses, options) {
+    await Minty.transferBatch(tokenIds, toAddresses, options);
     console.log(`🌿 Transferred tokens ${chalk.green(tokenIds)} to ${chalk.yellow(toAddresses)}`);
 }
 
-export const pinNFTData = async function(tokenId, options) {
-    const minty = await MakeMinty(options);
-    const {metadataURI} = await minty.pin(tokenId);
+export const pin = async function(tokenId, options) {
+    const {metadataURI} = await Minty.pin(tokenId, options);
     console.log(`🌿 Pinned all data for token id ${chalk.green(tokenId)}`);
 }
 
-export const unpinNFTData = async function(tokenId, options) {
-    const minty = await MakeMinty(options);
-    const {metadataURI} = await minty.unpin(tokenId);
+export const unpin = async function(tokenId, options) {
+    const {metadataURI} = await Minty.unpin(tokenId, options);
     console.log(`🌿 Unpinned all data for token id ${chalk.green(tokenId)}`);
 }
 
-export const burnNFT = async function(tokenId, options) {
-    const minty = await MakeMinty(options);
-    const {metadataURI} = await minty.burn(tokenId);
+export const burn = async function(tokenId, options) {
+    const {metadataURI} = await Minty.burn(tokenId, options);
     console.log(`🌿 Burned token id ${chalk.green(tokenId)}`);
+}
+
+export const burnBatch = async function(tokenIds, options) {
+    const {metadataURI} = await Minty.burnBatch(tokenIds, options);
+    console.log(`🌿 Burned token ids ${chalk.green(tokenIds)}`);
 }
