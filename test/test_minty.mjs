@@ -146,6 +146,12 @@ contract('Minty (client)', (accounts) => {
 
 	})
 
+	describe('update', () => {
+
+		xit('can update token', async () => {});
+
+	})
+
 	describe('pin', () => {
 
 		it('can pin', async () => {
@@ -157,6 +163,12 @@ contract('Minty (client)', (accounts) => {
 		
 		// not a thing? or not a thing that ever matters?
 		// it('can unpin', () => {})
+	})
+
+	describe('burn', () => {
+
+		xit('can burn token', async () => {});
+
 	})
 
 })

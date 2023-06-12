@@ -101,13 +101,17 @@
 	- finish fleshing out test_nft
 	- updated actions
 	- reorg minty to mostly static functions to interface with nft class
+**1.3.8 : 6-12-2023**
+	- added burn functions to nft and double checked minty & nft class cohesion for function calls
+	- added batch functions
+	- updated transfer code to match mint fx w/ gas estimates
+	- finished fleshing out minty functionality between minty & nft
 
 ------------------------------------------------------------------------
 
 
 # TODO
 
-- finish fleshing out minty functionality between minty & nft
 - add more commands to action
 - update test_minty
 
@@ -117,7 +121,7 @@
 - update minty.parseEvents as necessary for multiple transfer types / contracts
 
 (loopring)
-- add Loopring API -> separate project "ringpops" first for API wrapper (use axios notes)
+- add Loopring API -> separate project "loopdeloop" first for API wrapper (use axios notes)
 - add Loopring schema for counterfactual nfts
 
 (tests)

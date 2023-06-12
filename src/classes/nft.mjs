@@ -98,15 +98,44 @@ export default class NFT {
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    async _deleteMetadata() {}
-    async _deleteProperties() {}
-    async _deleteAttributes() {}
+    // TODOs
+    async _deleteMetadata() {return false;}
+    async _deleteProperties() {return false;}
+    async _deleteAttributes() {return false;}
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     /////////////////////////////////////////////////////
     // --------- Smart contract interactions --------- //
     /////////////////////////////////////////////////////
+
+    async burn(tokenId) {
+        console.debug(`Burning token id ${tokenId}.`)
+        // "dynamic" mint functionality
+        const burnFunction = config.burnFunction || "burn(uint256)";
+        if (!this.contract.hasOwnProperty(burnFunction)) throw new Error("minting contract is missing a declared burn function");
+        // Calculate gas limit for more complicated contract transactions
+        const gasLimit = await this.contract.estimateGas[burnFunction](tokenId);
+        // - BUG: for some reason contract.mint won't work? so always use mintToken? as method name?
+        const tx = await this.contract[burnFunction](tokenId, {'gasLimit':gasLimit});
+        const receipt = await tx.wait();
+        const tokenId = parseTokenId(receipt);
+        console.debug(`Burned token id ${tokenId}.`);
+    }
+
+    async burnBatch(tokenIds, owner, tokenIds, amounts) {
+        console.debug(`Burning token ids ${tokenIds}.`)
+        // "dynamic" mint functionality
+        const burnFunction = config.burnFunction || "burnBatch(address,uint256[],uint256[])";
+        if (!this.contract.hasOwnProperty(burnFunction)) throw new Error("minting contract is missing a declared burn function");
+        // Calculate gas limit for more complicated contract transactions
+        const gasLimit = await this.contract.estimateGas[burnFunction](owner, tokenIds, amounts);
+        // - BUG: for some reason contract.mint won't work? so always use mintToken? as method name?
+        const tx = await this.contract[burnFunction](owner, tokenIds, amounts, {'gasLimit':gasLimit});
+        const receipt = await tx.wait();
+        const tokenId = parseTokenIds(receipt);
+        console.debug(`Burned token ids ${tokenIds}.`);
+    }
 
     /**
      * Create a new NFT token that references the given metadata CID, owned by the given address.
@@ -120,7 +149,7 @@ export default class NFT {
         metadataURI = IPFS.stripIpfsUriPrefix(metadataURI);
         console.debug(`Minting uri for address...\n${ownerAddress} : ${metadataURI}`)
         // "dynamic" mint functionality
-        const mintFunction = config.mintFunction || "mint";
+        const mintFunction = config.mintFunction || "mint(address,uint256)";
         if (!this.contract.hasOwnProperty(mintFunction)) throw new Error("minting contract is missing a declared mint function");
         // Calculate gas limit for more complicated contract transactions
         const gasLimit = await this.contract.estimateGas[mintFunction](ownerAddress, metadataURI);
@@ -132,43 +161,42 @@ export default class NFT {
         return tokenId;
     }
 
-    // TODO
-    // double check
-    async mintBatch(ownerAddresses, metadataURIs) {
-        if (ownerAddresses.length!=metadataURIs) throw "minting lengths mismatch";
-        const mintFunction = config.mintBatchFunction || "mint";
-        if (!this.contract.hasOwnProperty(mintFunction)) throw "minting contract is missing a declared mint function";
-        for (let i=0;i<metadataURIs.length;i++)
-            metadataURIs[i] = IPFS.stripIpfsUriPrefix(metadataURIs[i]);
-        const gasLimit = await this.contract.estimateGas[mintFunction](ownerAddresses, metadataURIs);
-        const tx = await this.contract[mintFunction](ownerAddresses, metadataURIs, {'gasLimit':gasLimit});
+    async mintBatch(ownerAddresses, tokenIds, amounts, data) {
+        const mintFunction = config.mintBatchFunction || "mintBatch(address,uint256[],uint256[],bytes)";
+        if (!this.contract.hasOwnProperty(mintFunction)) throw "minting contract is missing a declared batch mint function";
+        const gasLimit = await this.contract.estimateGas[mintFunction](ownerAddresses, tokenIds, amounts, data);
+        const tx = await this.contract[mintFunction](ownerAddresses, tokenIds, amounts, data, {'gasLimit':gasLimit});
         const receipt = await tx.wait();
-        parseTokenId(receipt);
+        const tokenIds = parseTokenIds(receipt);
+        console.debug(`Minted token ids ${tokenIds}.`);
+        return tokenIds;
     }
 
-    // TODO
-    // add missing docs for this
-    // also finish
+    // TODO: gonna need to update how this references the base transfer function when using multiple token standards
     async transfer(tokenId, toAddress) {
         console.debug(`Transfering token id ${tokenId} to ${toAddress}...`)
         const fromAddress = await this.getTokenOwner(tokenId);
-
-        // TODO
-        // gonna need to update how this references the base transfer function when using multiple token standards
-
+        const gasLimit = await this.contract.estimateGas['safeTransferFrom(address,address,uint256)'](fromAddress, toAddress, tokenId);
         // because the base ERC721 contract has two overloaded versions of the safeTranferFrom function,
         // we need to refer to it by its fully qualified name.
         const tranferFn = this.contract['safeTransferFrom(address,address,uint256)'];
-        const tx = await tranferFn(fromAddress, toAddress, tokenId);
-
-        // wait for the transaction to be finalized
+        const tx = await tranferFn(fromAddress, toAddress, tokenId, {'gasLimit':gasLimit});
         await tx.wait();
         console.debug(`Transferred token id ${tokenId}.`)
     }
 
-    // TODO
-    // batch transfers
-    async transferBatch(tokenIds, toAddresses) {}
+    // TODO: gonna need to update how this references the base transfer function when using multiple token standards
+    async transferBatch(tokenIds, toAddresses, amounts, data) {
+        console.debug(`Transfering token ids ${tokenId} to ${toAddresses}...`)
+        const fromAddress = await this.getTokenOwner(tokenId);
+        const gasLimit = await this.contract.estimateGas['safeBatchTransferFrom(address,uint256[],uint256[],bytes)'](fromAddress, toAddresses, amounts, data);
+        // because the base ERC721 contract has two overloaded versions of the safeTranferFrom function,
+        // we need to refer to it by its fully qualified name.
+        const tranferFn = this.contract['safeBatchTransferFrom(address,uint256[],uint256[],bytes)'];
+        const tx = await tranferFn(fromAddress, toAddresses, amounts, data);
+        await tx.wait();
+        console.debug(`Transferred token ids ${tokenIds}.`)
+    }
 
     /**
      * Get the address that owns the given token id.

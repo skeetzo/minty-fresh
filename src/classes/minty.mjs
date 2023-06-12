@@ -39,6 +39,7 @@ export default class Minty {
     constructor(opts={}) {
         // NFT class
         this.token = opts.token || null;
+
         // the url of the provider to connect to
         this.host = opts.host || "http://127.0.0.1:8545";
         // the name of the network to connect to
@@ -55,6 +56,7 @@ export default class Minty {
         if (this._initialized) return;
         console.debug("initializing Minty...");
 
+        // initialize token from provided token options
         const { token } = this.token instanceof NFT ? this.token : new NFT(this.token);
         this.token = token;
 
@@ -66,14 +68,16 @@ export default class Minty {
         // load abi and any available contract json
         const { abi, bytecode, contractJSON } = this._loadABI(account, network, token); 
 
-        const { address, contract } = await _initializeContract(abi, bytecode, contractJSON)
+        // initialize contract 
+        const { address } = await _initializeContract(abi, bytecode, contractJSON)
         this.address = address;
 
         if (!address && !abi) throw new Error("unable to connect to contract!");
 
+        console.debug("connecting to contract...");
         this.contract = await new ethers.Contract(address, abi, signer);
 
-        console.debug("initialized Minty");
+        console.debug("initialized Minty!");
         this._initialized = true;
     }
 
@@ -94,19 +98,9 @@ export default class Minty {
         if (!isNaN(contractJSON.networks[networkId]) && contractJSON.networks[networkId].hasOwnProperty("address"))
             return { address: contractJSON.networks[networkId].address };
         else {
-            try {
-                // console.log(`Deploying ${this.name} to ${this.network}`);
-                // const iface = new ethers.utils.Interface(abi);
-                const factory = new ethers.ContractFactory(abi, bytecode, signer);
-                const contract = await factory.deploy(this.name, this.symbol);
-                await contract.deployTransaction.wait();
-                return { address: contract.address };
-            }
-            catch (err) {
-                console.error(err);
-            }
+            return await deployContract(abi, bytecode);
         }
-        return {}
+        return { address: "Unknown Address" }
     }
 
     _loadABI(account, network, token) {
@@ -128,10 +122,28 @@ export default class Minty {
         }
         // 
         else if (account && network) {
+            // TODO
             // get abi from etherscan, etc
         }
         if (!abi) throw new Error("unable to find ABI for contract!");
         return { abi, bytecode, contractJSON };
+    }
+
+    async deployContract(abi, bytecode) {
+        const contractName = this.token.name || "Unknown Contract";
+        try {
+            console.log(`Deploying ${contractName} to ${this.network}`);
+            // const iface = new ethers.utils.Interface(abi);
+            const factory = new ethers.ContractFactory(abi, bytecode, this.signer);
+            const contract = await factory.deploy(this.token.name, this.token.symbol);
+            await contract.deployTransaction.wait();
+            return { address: contract.address };
+        }
+        catch (err) {
+            console.error(err);
+            console.warn("Unable to deploy contract!");
+        }
+        return { address: null }
     }
 
     //////////////////////////////////////////////
@@ -160,16 +172,12 @@ export default class Minty {
      * 
      * @returns {Promise<CreateNFTResult>}
      */
-    // TODO
-    // make sure this works
     // finish return value of cli output
     static async mintNFT(options) {
         options.skipMint ? console.debug(`practicing token mint...`) : console.debug(`minting token...`);
-
         const minty = await MakeMinty(options);
-
         const nft = new NFT({...options, ...this});
-        await nft.upload();
+        await nft.upload(); // ensure metadata is uploaded
         // get the address of the token owner from options, or use the default signing address if no owner is given
         if (!options.skipMint) {
             if (!nft.owner) nft.owner = await this.defaultRecipientAddress() || await this.defaultOwnerAddress();
@@ -182,16 +190,60 @@ export default class Minty {
         return nft;
     }
 
-    // TODO
-    // probably mostly same as above or uses above
-    static async mintNFTs(options) {}
+    static async mintNFTs(options) {
+        options.skipMint ? console.debug(`practicing token batch mint...`) : console.debug(`batch minting tokens...`);
+        const minty = await MakeMinty(options);
+        const nft = new NFT({...options, ...this});
+        await nft.upload(); // ensure metadata is uploaded
+        // get the address of the token owner from options, or use the default signing address if no owner is given
+        if (!options.skipMint) {
+            if (!nft.owner) nft.owner = await this.defaultRecipientAddress() || await this.defaultOwnerAddress();
+            // only works with "standard" minting behavior
+            nft.tokenId = await nft.mint(nft.owner, nft.metadataURI);
+            console.debug(`pretend token: `);
+        }
+        else 
+            console.debug(`minted token: `);
+        console.debug(nft.toString());
+        return nft;
+    }
 
-    // TODO
     // updates an ipns nft's metadata
-    static async updateNFT(tokenId, options) {}
+    static async updateNFT(tokenId, options, updates) {
+        options.skipMint ? console.debug(`practicing token update...`) : console.debug(`updating token...`);
+        const minty = await MakeMinty(options);
+        const nft = new NFT({...options, ...this});
+        // await nft.upload(); // ensure metadata is uploaded
+        // get the address of the token owner from options, or use the default signing address if no owner is given
+        if (!options.skipMint) {
+            if (!nft.owner) nft.owner = await this.defaultRecipientAddress() || await this.defaultOwnerAddress();
+            // only works with "standard" minting behavior
+            // TODO
+            // await nft.update(updates);
+            console.debug(`pretend token: `);
+        }
+        else 
+            console.debug(`minted token: `);
+        console.debug(nft.toString());
+        return nft;
+    }
 
-    // TODO
-    static async burnNFT(tokenId, options) {}
+    static async burnNFT(tokenId, options) {
+        options.skipMint ? console.debug(`practicing token burn...`) : console.debug(`burning token...`);
+        const minty = await MakeMinty(options);
+        const nft = new NFT({...options, ...this});
+        await nft.upload(); // ensure metadata is uploaded
+        // get the address of the token owner from options, or use the default signing address if no owner is given
+        if (!options.skipMint) {
+            if (!nft.owner) nft.owner = await this.defaultRecipientAddress() || await this.defaultOwnerAddress();
+            await nft.burn();
+            console.debug(`pretend token: `);
+        }
+        else 
+            console.debug(`minted token: `);
+        console.debug(nft.toString());
+        return nft;
+    }
 
     //////////////////////////////////////////////
     // -------- NFT Retreival
@@ -208,7 +260,7 @@ export default class Minty {
         try {
             const metadataURI = await this.contract.tokenURI(tokenId);
             const metadata = await IPFS.getIPFSJSON(metadataURI);
-            return {metadata, metadataURI};
+            return { metadata, metadataURI };
         }
         catch (err) {
             if (err.hasOwnProperty("reason") && err.reason === ERC721URIStorage_QUERY_ERROR)

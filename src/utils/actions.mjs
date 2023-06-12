@@ -5,7 +5,7 @@ import * as colorize from 'json-colorizer';
 import Minty from '../classes/minty.mjs';
 import { alignOutput, colorizeOptions } from '../utils/helpers.mjs';
 
-// ---- command action functions
+// ---- command action functions for basic ERC721 & ERC1155 functionality
 
 export const mint = async function(options) {
     const nft = await Minty.mintNFT(options);
@@ -119,4 +119,9 @@ export const burn = async function(tokenId, options) {
 export const burnBatch = async function(tokenIds, options) {
     const {metadataURI} = await Minty.burnBatch(tokenIds, options);
     console.log(`🌿 Burned token ids ${chalk.green(tokenIds)}`);
+}
+
+export const update = async function(tokenId, options) {
+    const { metadataURI } = await Minty.update(tokenIds, options, options.updates);
+    console.log(`🌿 Updated token id ${chalk.green(tokenId)}`);
 }
