@@ -1,10 +1,12 @@
 #!/usr/bin/env node
+
+// const chalk = require('chalk');
+// const colorize = require('json-colorizer');
+// const fs = require('fs/promises');
+// const inquirer = require('inquirer');
+
 const config = require('getconfig');
-const chalk = require('chalk');
-const colorize = require('json-colorizer');
 const { Command } = require('commander');
-const fs = require('fs/promises');
-const inquirer = require('inquirer');
 const path = require('path');
 
 const { createNFT, createNFTs, getNFT, transferNFT, pinNFTData } = require('./utils/actions.js');
@@ -16,6 +18,7 @@ process.env.cli = true;
 
 async function main() {
 
+    // TODO: remove this properly from here and other implementations cause the addon process is pointless
     let program;
     // get .env of current dir so command must be ran at project root to use corresponding addon
     if (fileExists('./.env')) {

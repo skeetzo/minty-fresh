@@ -113,32 +113,19 @@ class Minty {
         const signer = provider.getSigner();            
         if (!this.owner) this.owner = await signer.getAddress();
         const network = await provider.getNetwork();
-        // console.debug(`Network connected: ${JSON.stringify(network)}`)
+        console.debug(`Network connected: ${JSON.stringify(network)}`)
         const networkId = network.chainId;
         this.network = network.name;
+
         // get the deployed contract's address on current network
         // console.debug(`Available Networks: ${networkId} <-- current`)
         // console.debug(contractJSON.networks)
-        // check if contract has been deployed on network, if not then deploy
-        if (!this.address) {
+        if (!this.address)
             if (!isNaN(contractJSON.networks[networkId]) && contractJSON.networks[networkId].hasOwnProperty("address"))
                 this.address = contractJSON.networks[networkId].address;
-            else {
-                try {
-                    // console.log(`Deploying ${this.name} to ${this.network}`);
-                    // const iface = new ethers.utils.Interface(this.abi);
-                    const factory = new ethers.ContractFactory(this.abi, bytecode, signer);
-                    this.contract = await factory.deploy(this.token, this.symbol);
-                    this.address = this.contract.address;
-                    await this.contract.deployTransaction.wait();
-                }
-                catch (err) {
-                    console.error(err);
-                }
-            }
-        }
+         
 
-        if (!this.address || !this.abi) throw "unable to connect to contract!";
+        if (!this.address) throw "unable to connect to contract!";
 
         ////////////////////
         // Smart Contract //
@@ -290,8 +277,8 @@ class Minty {
     }
 
     // returns the data for the asset
-    async getNFTAssetData(tokenId, asset="image") {
-        const asset = await this.getNFTAsset(tokenId, asset);
+    async getNFTAssetData(tokenId, _asset="image") {
+        const asset = await this.getNFTAsset(tokenId, _asset);
         const data = await asset.getData();
         return data;
     }

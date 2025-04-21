@@ -1,11 +1,12 @@
 // const ipfsClient = require('ipfs-http-client');
 const CID = require('cids');
 const all = require('it-all');
-const path = require('path');
+// const path = require('path');
 const config = require('getconfig');
 
-// const { create, CID } = require('ipfs-http-client');
-const { create } = require('ipfs-http-client');
+// const { create } = require("kubo-rpc-client");
+import { create } from "kubo-rpc-client";
+
 const IPFS_CLIENT = create(config.ipfsApiUrl);
 
 const uint8ArrayConcat = require('uint8arrays/concat').concat;
