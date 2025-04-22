@@ -34,7 +34,7 @@ export function loadSchemaFromFile(schema) {
     let defaultIndex = 0;
     for (let i=0;i<files.length;i++) {
         const filename = files[i].replace(".json","");
-        // console.log(filename)
+        console.log(filename)
         if (filename === schema) return _parseTemplate(filename);
         templates.indexOf(filename) === -1 ? templates.push(filename) : console.debug(`duplicate template found: ${filename}`)
         // set simple.json to default template
