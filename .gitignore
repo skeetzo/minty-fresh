@@ -8,3 +8,6 @@ dev/
 #Hardhat files
 cache
 artifacts
+
+private.pem
+public.pem
