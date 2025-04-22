@@ -88,8 +88,17 @@
 **1.3.3 : 4-21-2025**
 - project update to es6 to fix import error for kubo
 - updated packages
+**1.3.4 : 4-22-2025**
+- cleanup exports in packages.json
+- beginning sync with ContentNFTs
 
 ------------------------------------------------------------------------
+
+- finish integrating with ContentNFTs and LoveBoat
+
+
+
+
 
 - finish added asset.js class & interactions w/ testing for retrieving asset objects --> finish what?
 - test new multiple asset upload process --> how?
