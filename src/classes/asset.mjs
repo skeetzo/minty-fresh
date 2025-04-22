@@ -14,7 +14,6 @@ export class Asset {
 	
 	constructor(opts) {
 		name = opts.name || "image";
-
 		// CID on IPFS
 		cid = opts.cid || null;
 		// URI on IPFS
@@ -23,10 +22,8 @@ export class Asset {
 		content = opts.content || null;
 		// path to local file
 		path = opts.path || null;
-
 		// locally stored object data of the asset
 		data = opts.data || null;
-
 		// File mode to store the entry with (see https://en.wikipedia.org/wiki/File_system_permissions#Numeric_notation)
 		  // mode?: number | string
 		mode = opts.mode || null;
@@ -43,15 +40,21 @@ export class Asset {
 		}
 	}
 
-	// TODO
-	// all of these
-
 	// load data from local path (if exists) or IPFS
-	async getData() {}
+	async getData() {
+		if (this.data) return this.data
+		return null;
+	}
+
 	// load file from local path
-	async getFile() {}
+	getFile() {
+		return fs.readFileSync(this.path);
+	}
+
 	// load data from IPFS
-	async getIPFS() {}
+	async getIPFS() {
+		return IPFS.getIPFS(this.cid || this.uri);
+	}
 
     // When you add an object to IPFS with a directory prefix in its path,
     // IPFS will create a directory structure for you. This is nice, because
@@ -63,7 +66,7 @@ export class Asset {
         const file = { 
             name: path.basename(this.path).replace(/\/[^a-z0-9\s]\//gi, '_'),
             path: `/${this.name}s/${path.basename(this.path)}`.replace(/\/[^a-z0-9\s]\//gi, '_'),
-            content: await fs.readFileSync(this.path)
+            content: fs.readFileSync(this.path)
         };
         const { metadataCID, metadataURI } = await IPFS.add(file);
         this.cid = metadataCID;
@@ -72,7 +75,6 @@ export class Asset {
         // const assetURI = IPFS.ensureIpfsUriPrefix(assetCID) + '/' + basename;        
     }
 
-	// TODO
     // should innately replace metadata[key] values with the cid
     static async uploadAssets(metadata, schema="default") {
     	for (const asset of Asset.getAssets(metadata, schema)) {
@@ -82,11 +84,18 @@ export class Asset {
     }
 
 	// TODO
+	// what is this even meant to do?
 	static getAsset(metadata, assetName) {
 		const newAsset = Asset({
 			name: assetName,
-
+			// cid: 
+			// uri: 
+			// content: 
+			// path: 
+			// data: 
+			// mode: 
 		})
+		return newAsset;
 	}
 
 	// TODO

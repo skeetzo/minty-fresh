@@ -91,31 +91,40 @@
 
 ------------------------------------------------------------------------
 
-- update project to sync with LoveBoat, FreeWilly, and ContentNFTs
-
-- finish added asset.js class & interactions w/ testing for retrieving asset objects
+- finish added asset.js class & interactions w/ testing for retrieving asset objects --> finish what?
+- test new multiple asset upload process --> how?
 
 -- fix ipfs uploads / adds --> not appearing in ipfs client
 --- was this fixed in the webgui fix in 1.3.1?
 
-- test new multiple asset upload process
+
+- update project to sync with LoveBoat, FreeWilly, and ContentNFTs
+-- must be able to upload: content data --> IPFS
+-- must be able to mint: content token --> loveboat TBA | content wallet TBA
+-- must be able to mint: king token --> loveboat TBA | content wallet TBA (| or other project wallet TBA)
+
+what is uploaded? how?
+- content data is uploaded
+- content object is uploaded that points to content data
+--------------------------------
+either custom fx here or via contentNFTs:
+- content is added to contract
+- token is minted
+- content is minted
+
 
 # TODO
 
-
 - add ipns & updateable metadata functionality
 
+(smart contract stuff)
+- cleanup / isolate all smart contract operations vs IPFS operations
+- update minty.parseEvents as necessary for multiple transfer types / contracts
 - add back in hardhat w/ contract debugging stuff
 
-- update minty.parseEvents as necessary for multiple transfer types / contracts
-
-- completely fix the fileExists function
-
-- possibly add direct tests for: nft.js, ipfs.js, maybe even asset.js
-
-- cleanup / isolate all smart contract operations vs IPFS operations
-
 (todo eventually)
+- possibly add direct tests for: nft.js, ipfs.js, maybe even asset.js
+- completely fix the fileExists function (is it broken?)
 - [minty][cli] figure out an easier way to add all the repeated blockchain/network options
 - [minty][cli] add method for interacting with private / anonymous wallets; possibly on remote nodes
 - [minty][design] update "NFT"-centric design to more tokenized generality --> works for ERC20s, (specifically) ERC1155s
