@@ -25,7 +25,7 @@ export function loadSchemaFromFile(schema) {
     function _parseTemplate(t) {return JSON.parse(fs.readFileSync(`${SCHEMA_PATH}/${t}.json`))}
     // get list of template files from available files in available /schema directories
     const templates = [];
-    const localPath = path.join(__dirname, "../", SCHEMA_PATH); // path local to this script
+    const localPath = path.join(__dirname, "../../config", SCHEMA_PATH); // path local to this script
           // addonPath = path.join(process.env.PWD, SCHEMA_PATH);// path to where the cwd is
     const files = [];
     if (fs.existsSync(localPath))
