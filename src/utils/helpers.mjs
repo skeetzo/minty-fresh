@@ -1,9 +1,9 @@
-// const fs = require('fs');
-const fs = require('fs/promises');
+
+import * as fs from 'fs';
 
 // ---- helpers
 
-const colorizeOptions = {
+export const colorizeOptions = {
     pretty: true,
     colors: {
         STRING_KEY: 'blue.bold',
@@ -11,7 +11,7 @@ const colorizeOptions = {
     }
 };
 
-function alignOutput(labelValuePairs) {
+export function alignOutput(labelValuePairs) {
     const maxLabelLength = labelValuePairs
       .map(([l, _]) => l.length)
       .reduce((len, max) => len > max ? len : max);
@@ -20,7 +20,7 @@ function alignOutput(labelValuePairs) {
     }
 }
 
-function fileExists(path) {
+export function fileExists(path) {
     // console.debug(path);
     // try {
     //     await fs.access(path, fs.F_OK);
@@ -52,14 +52,14 @@ function parseRecipient(value) {
 
 
 // ensure value is an 0x address
-function parseAddress(value) {
+export function parseAddress(value) {
     if (!ethers.utils.isAddress(value))
         throw new commander.InvalidArgumentError('Not an ETH address.');
     return value;
 }
 
 // ensure value is a date value that equates to a unix timestamp
-function parseDate(value) {
+export function parseDate(value) {
     if (!isValidDate(value))
         throw new commander.InvalidArgumentError('Not a date.');
     return value;
@@ -90,19 +90,6 @@ function isValidDate(dateString) {
     // Check the range of the day
     return day > 0 && day <= monthLength[month - 1];
 }
-
-module.exports = {
-    alignOutput,
-    colorizeOptions,
-    fileExists,
-    parseAddress,
-    parseDate
-}
-
-
-
-
-
 
 
         // TODO

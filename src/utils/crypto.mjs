@@ -1,11 +1,7 @@
 
-// import * as fs from 'fs';
-// import * as path from 'path';
-// import * as crypto from 'crypto';
-
-const fs = require("fs");
-const path = require("path");
-const crypto = require("crypto");
+import * as fs from 'fs';
+import * as path from "path";
+import * as crypto from "crypto";
 
 generateKeys()
 

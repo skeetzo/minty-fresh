@@ -82,13 +82,15 @@
 	- added Asset class for tracking ipfs FileObjects better
 	- added complicated-test.json schema for testing multiple asset uploads later
 	- "fixed" ipfs webgui bug; need to finish asset.js before recontinuing ipfs tests
-**1.3.2 : 4-20-2025**
-- review & check in
-- project cleanup
+	**1.3.2 : 4-20-2025**
+	- review & check in
+	- project cleanup
+**1.3.3 : 4-21-2025**
+- project update to es6 to fix import error for kubo
+- updated packages
 
 ------------------------------------------------------------------------
 
-- possibly update to es6 to fix import error for kubo
 - update project to sync with LoveBoat, FreeWilly, and ContentNFTs
 
 - finish added asset.js class & interactions w/ testing for retrieving asset objects
@@ -100,6 +102,7 @@
 
 # TODO
 
+
 - add ipns & updateable metadata functionality
 
 - add back in hardhat w/ contract debugging stuff
@@ -110,6 +113,7 @@
 
 - possibly add direct tests for: nft.js, ipfs.js, maybe even asset.js
 
+- cleanup / isolate all smart contract operations vs IPFS operations
 
 (todo eventually)
 - [minty][cli] figure out an easier way to add all the repeated blockchain/network options

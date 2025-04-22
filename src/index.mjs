@@ -1,44 +1,35 @@
 #!/usr/bin/env node
 
-// const chalk = require('chalk');
-// const colorize = require('json-colorizer');
-// const fs = require('fs/promises');
-// const inquirer = require('inquirer');
+import * as config from "getconfig";
+import * as path from "path";
+import { Command } from 'commander';
 
-const config = require('getconfig');
-const { Command } = require('commander');
-const path = require('path');
-
-const { createNFT, createNFTs, getNFT, transferNFT, pinNFTData } = require('./utils/actions.js');
-const { alignOutput, colorizeOptions, fileExists } = require('./utils/helpers.js');
+import { createNFT, createNFTs, getNFT, transferNFT, pinNFTData } from './utils/actions.mjs';
+import { alignOutput, colorizeOptions, fileExists } from './utils/helpers.mjs';
 
 // the .env variable to use to reference the path for a minty "addon"
-const MINTY_ADDON_KEY = config.mintyAddonKey || "MINTY_ADDON";
+// const MINTY_ADDON_KEY = config.mintyAddonKey || "MINTY_ADDON";
 process.env.cli = true;
+
+
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 async function main() {
 
-    // TODO: remove this properly from here and other implementations cause the addon process is pointless
-    let program;
-    // get .env of current dir so command must be ran at project root to use corresponding addon
-    if (fileExists('./.env')) {
-        const dotenv = require('dotenv').config({ path: './.env' });
-        if (dotenv.parsed[MINTY_ADDON_KEY] && fileExists(path.join(process.cwd(), dotenv.parsed[MINTY_ADDON_KEY])))
-            program = (await require(path.join(process.cwd(), dotenv.parsed[MINTY_ADDON_KEY])))();
-    }
+    const program = new Command();
+    program.name('Minty Fresh')
+      .description('CLI to some JavaScript NFT utilities')
+      .version('1.2.2', '-v', '--version', 'Output the current version');
 
-    if (!program) {
-        program = new Command();
-        program.name('Minty Fresh')
-          .description('CLI to some JavaScript NFT utilities')
-          .version('1.2.2', '-v', '--version', 'Output the current version');
-
-        // The hardhat and getconfig modules both expect to be running from the root directory of the project,
-        // so we change the current directory to the parent dir of this script file to make things work
-        // even if you call minty from elsewhere
-        const rootDir = path.join(__dirname, '..');
-        process.chdir(rootDir);
-    }
+    // The hardhat and getconfig modules both expect to be running from the root directory of the project,
+    // so we change the current directory to the parent dir of this script file to make things work
+    // even if you call minty from elsewhere
+    const rootDir = path.join(__dirname, '..');
+    process.chdir(rootDir);
+    
 
     // returns true|false depending on if the cmd string exists
     function _commandExists(cmd) {if (isNaN(program.commands.filter(obj => {return obj._name === cmd.toString()}))) return true;return false;}

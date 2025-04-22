@@ -1,17 +1,20 @@
 
-// const { fileURLToPath } = require('url');
-// // import { dirname } from 'path';
-// const __filename = fileURLToPath(import.meta.url);
-// const __dirname = path.dirname(__filename);
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-const fs = require("fs");
-const path = require("path");
+import * as fs from 'fs';
+import * as path from "path";
 
-const Ajv = require("ajv");
-const { ErrorObject } = require("ajv");
+// const Ajv = require("ajv");
+import Ajv from "ajv"
+// const { ErrorObject } = require("ajv");
+
+// const JSONschemaDefaults = require('json-schema-defaults');
+import * as JSONschemaDefaults from 'json-schema-defaults';
+
 const ajv = new Ajv(); // options can be passed, e.g. {allErrors: true}
-
-const JSONschemaDefaults = require('json-schema-defaults');
 
 const SCHEMA_PATH = "./schemas";
 

@@ -1,21 +1,23 @@
-// const fs = require('fs/promises');
-const fs = require('fs')
-const path = require('path');
+// TODO: phase out config
 
-const ethers = require('ethers');
-const { BigNumber } = require('ethers');
-const { selectSchema, promptNFTMetadata, validateSchema } = require('../utils/prompt.js');
-// const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
-const solc = require('solc');
+import * as fs from 'fs';
+import * as path from "path";
 
-const { fileExists } = require('../utils/helpers.js');
-const IPFS = require('./ipfs.js');
-const NFT = require('./nft.js');
+// const ethers = require('ethers');
+import * as ethers from "ethers";
+import { BigNumber } from 'ethers';
+import * as solc from "solc";
+// const solc = require('solc');
+
+// import { fileExists } from '../utils/helpers.js';
+import { IPFS } from './ipfs.mjs';
+import { NFT } from './nft.mjs';
 
 // The getconfig package loads configuration from files located in the the `config` directory.
 // See https://www.npmjs.com/package/getconfig for info on how to override the default config for
 // different environments (e.g. testnet, mainnet, staging, production, etc).
-const config = require('getconfig');
+// const config = require('getconfig');
+import * as config from "getconfig";
 
 const ERC721URIStorage_QUERY_ERROR = "ERC721URIStorage: URI query for nonexistent token";
 
@@ -23,7 +25,7 @@ const ERC721URIStorage_QUERY_ERROR = "ERC721URIStorage: URI query for nonexisten
  * Construct and asynchronously initialize a new Minty instance.
  * @returns {Promise<Minty>} a new instance of Minty, ready to mint NFTs.
  */
- async function MakeMinty(opts) {
+export async function MakeMinty(opts) {
     const m = new Minty(opts);
     await m.init();
     return m;
@@ -37,7 +39,7 @@ const ERC721URIStorage_QUERY_ERROR = "ERC721URIStorage: URI query for nonexisten
  * Minty requires async initialization, so the Minty class (and its constructor) are not exported. 
  * To make one, use the async {@link MakeMinty} function.
  */
-class Minty {
+export class Minty {
     constructor(opts={}) {
 
         // the name of the smart contract
@@ -98,7 +100,6 @@ class Minty {
             bytecode = output.contracts[this.name].bytecode;
             this.abi = JSON.parse(output.contracts[this.name].interface);
         }
-        // 
         else if (this.address && this.network) {
             // get abi from etherscan, etc
         }
@@ -444,17 +445,6 @@ class Minty {
     }
 
 }
-
-//////////////////////////////////////////////
-// -------- Exports
-//////////////////////////////////////////////
-
-module.exports = {
-    MakeMinty,
-    Minty
-}
-
-
 
 
 

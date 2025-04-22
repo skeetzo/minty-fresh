@@ -1,15 +1,16 @@
 
-const config = require('getconfig');
-const path = require('path');
-const { fileExists } = require('../utils/helpers.js');
-const IPFS = require('./ipfs.js');
-const fs_ = require('fs/promises');
+import * as config from "getconfig";
+import * as fs from 'fs';
+import * as path from "path";
+
+import { fileExists } from '../utils/helpers.mjs';
+import { IPFS } from './ipfs.mjs';
 
 // meant to model basic expected FileObject from 
 // https://github.com/ipfs/js-ipfs/blob/master/docs/core-api/FILES.md#ipfsfileswritepath-content-options
 // as well as juggle multiple file types to easily ensure data is uploaded / fetched locally
 
-class Asset {
+export class Asset {
 	
 	constructor(opts) {
 		name = opts.name || "image";
@@ -62,7 +63,7 @@ class Asset {
         const file = { 
             name: path.basename(this.path).replace(/\/[^a-z0-9\s]\//gi, '_'),
             path: `/${this.name}s/${path.basename(this.path)}`.replace(/\/[^a-z0-9\s]\//gi, '_'),
-            content: await fs_.readFile(this.path)
+            content: await fs.readFileSync(this.path)
         };
         const { metadataCID, metadataURI } = await IPFS.add(file);
         this.cid = metadataCID;

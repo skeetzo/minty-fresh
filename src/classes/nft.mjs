@@ -1,15 +1,14 @@
 
-// const { fileExists } = require('../utils/helpers.js');
-const { promptSchema } = require('../utils/prompt.js');
-const { fromSchema, loadSchemaFromFile, validate } = require("../utils/schema.js");
+import { Asset } from './asset.mjs';
+import { IPFS } from './ipfs.mjs';
 
-const Asset = require('./asset.js');
-const IPFS = require('./ipfs.js');
+import { promptSchema } from '../utils/prompt.mjs';
+import { fromSchema, loadSchemaFromFile, validate } from '../utils/schema.mjs';
 
 // const ERC20_interfaceId = "0x36372b07",
       // ERC721_interfaceId = "0x80ac58cd";
 
-class NFT {
+export class NFT {
 
     constructor(opts) {
 
@@ -140,9 +139,6 @@ class NFT {
     }
 
 }
-
-module.exports = NFT;
-
 
 async function parseErrors(validationErrors) {
     let errors = [];

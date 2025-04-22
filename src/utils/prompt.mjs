@@ -1,7 +1,7 @@
-const fs = require('fs');
-const inquirer = require('inquirer');
+import * as fs from 'fs';
+import inquirer from 'inquirer';
 
-async function promptSchema(templates=[], defaultIndex=0) {
+export async function promptSchema(templates=[], defaultIndex=0) {
     if (templates.length==1) return templates[0];
     // prompt for templates
     const question = {
@@ -75,7 +75,7 @@ async function promptAdditionalAttributes(metadata) {
 
 // TODO
 // possibly add type from schema into message for entering inputs
-async function promptMetadata(options) {
+export async function promptMetadata(options) {
     const schema = await NFT.loadSchemaFromFile(options.schema);
     // determine metadata base
     const metadata = await NFT.fromSchema(options.schema, options);
@@ -122,9 +122,4 @@ async function promptForMissing(cliOptions, prompts) {
         questions.push(prompt);
     }
     return inquirer.prompt(questions);
-}
-
-module.exports = {
-    promptMetadata,
-    promptSchema
 }

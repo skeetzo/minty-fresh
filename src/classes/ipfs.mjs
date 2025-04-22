@@ -1,20 +1,19 @@
-// const ipfsClient = require('ipfs-http-client');
-const CID = require('cids');
-const all = require('it-all');
-// const path = require('path');
-const config = require('getconfig');
 
-// const { create } = require("kubo-rpc-client");
+import * as config from "getconfig";
+import { CID } from 'multiformats/cid'
+import all from 'it-all'
+
+import { concat, toString } from 'uint8arrays';
+const uint8ArrayConcat = concat;
+const uint8ArrayToString = toString;
+// import { uint8ArrayToString } from 'uint8arrays/to-string';
+
 import { create } from "kubo-rpc-client";
-
 const IPFS_CLIENT = create(config.ipfsApiUrl);
-
-const uint8ArrayConcat = require('uint8arrays/concat').concat;
-const uint8ArrayToString = require('uint8arrays/to-string').toString;
 
 // ipfs.add parameters for more deterministic CIDs
 
-class IPFS {
+export class IPFS {
     
     ipfsAddOptions = {
       cidVersion: 1,
@@ -291,5 +290,3 @@ class IPFS {
     }
 
 }
-
-module.exports = IPFS;
