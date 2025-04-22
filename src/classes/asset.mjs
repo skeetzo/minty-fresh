@@ -5,6 +5,7 @@ import * as path from "path";
 
 import { fileExists } from '../utils/helpers.mjs';
 import { IPFS } from './ipfs.mjs';
+import { encryptFile } from "../utils/crypto.mjs";
 
 // meant to model basic expected FileObject from 
 // https://github.com/ipfs/js-ipfs/blob/master/docs/core-api/FILES.md#ipfsfileswritepath-content-options
@@ -40,6 +41,10 @@ export class Asset {
 		}
 	}
 
+	async encrypt() {
+
+	}
+
 	// load data from local path (if exists) or IPFS
 	async getData() {
 		if (this.data) return this.data
@@ -61,25 +66,39 @@ export class Asset {
     // it gives us URIs with descriptive filenames in them e.g.
     // 'ipfs://QmaNZ2FCgvBPqnxtkbToVVbK2Nes6xk5K4Ns6BsmkPucAM/cat-pic.png' instead of
     // 'ipfs://QmaNZ2FCgvBPqnxtkbToVVbK2Nes6xk5K4Ns6BsmkPucAM'
-    async upload() {
+    async upload(encrypt=false) {
+
         if (!fileExists(this.path)) throw "incorrect asset path";
+        // merge this into above check?
+		if (fs.lstatSync(this.path).isDirectory())
+			throw "found folder instead of file";
+
+		let content, key;
+		if (encrypt) {
+			let { encrypted, key } = await encryptFile(this.path);
+			content = encrypted;
+		}
+		else
+			content = fs.readFileSync(this.path)
+
         const file = { 
             name: path.basename(this.path).replace(/\/[^a-z0-9\s]\//gi, '_'),
             path: `/${this.name}s/${path.basename(this.path)}`.replace(/\/[^a-z0-9\s]\//gi, '_'),
-            content: fs.readFileSync(this.path)
+            content
         };
         const { metadataCID, metadataURI } = await IPFS.add(file);
         this.cid = metadataCID;
         this.uri = metadataURI;
-        return { metadataCID, metadataURI };
+        return { metadataCID, metadataURI, key };
         // const assetURI = IPFS.ensureIpfsUriPrefix(assetCID) + '/' + basename;        
     }
 
     // should innately replace metadata[key] values with the cid
-    static async uploadAssets(metadata, schema="default") {
+    static async uploadAssets(metadata, schema="default", encrypt=false) {
     	for (const asset of Asset.getAssets(metadata, schema)) {
-            const { metadataCID, metadataURI } = await asset.upload();
+            const { metadataCID, metadataURI, key } = await asset.upload(encrypt);
             metadata[asset.name] = metadataCID;
+            metadata[asset.name+"_key"] = key;
         }
     }
 
@@ -110,6 +129,8 @@ export class Asset {
             for (const [_key, value] of Object.entries(metadata))
                 if (key == _key)
                     assets[key] = value;
+
+        // this must return an array of Asset objects
         return assets;
 	}
 

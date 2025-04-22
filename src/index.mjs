@@ -39,7 +39,7 @@ async function main() {
 
     if (!_commandExists("mint"))
         program.command('mint')
-            .description('Mint a new NFT from an existing schema template')
+            .description('mint a new NFT from an existing schema template')
             .option('-s, --schema <name>', 'The name of the schema template to mint')
             .option('-i, --image <path>', 'The path to the image asset')
             .option('-n, --name <name>', 'The name of the token', config.defaultToken)
@@ -55,7 +55,7 @@ async function main() {
 
     if (!_commandExists("show"))
         program.command('show <token-id>')
-            .description('Get info about an NFT using its token ID')
+            .description('get info about an NFT using its token ID')
             .option('-fA, --fetch-assets', 'Asset data will be fetched from IPFS')
             .option('-cI, --creation-info', 'Include the creator address and block number the NFT was minted')
             .option('-cN, --contract <name>', 'The name of the contract', config.defaultContract)
@@ -66,7 +66,7 @@ async function main() {
 
     if (!_commandExists("transfer"))
         program.command('transfer <token-id> <to-address>')
-            .description('Transfer an NFT to a new owner')
+            .description('transfer an NFT to a new owner')
             .option('-cN, --contract <name>', 'The name of the contract', config.defaultContract)
             .option('-cA, --contract-address <address>', 'The address of a deployed contract')
             .option('-n, --network <name>', 'The name of the network to connect to', 'development')
@@ -75,7 +75,7 @@ async function main() {
 
     if (!_commandExists("pin"))
         program.command('pin <token-id>')
-            .description('"pin" the data for an NFT to a remote IPFS Pinning Service')
+            .description('pin the data for an NFT to a remote IPFS Pinning Service')
             .option('-cN, --contract <name>', 'The name of the contract', config.defaultContract)
             .option('-cA, --contract-address <address>', 'The address of a deployed contract')
             .option('-n, --network <name>', 'The name of the network to connect to', 'development')

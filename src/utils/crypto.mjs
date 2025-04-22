@@ -6,6 +6,7 @@ import * as crypto from "crypto";
 generateKeys()
 
 export async function encryptFile(file) {
+  // console.log("encrypting file:", file)
   try {
     const name = path.basename(file);
     const buff = fs.readFileSync(file);
@@ -33,7 +34,7 @@ export async function encryptFile(file) {
 }
 
 export async function encryptFolder(folderPath) {
-  // console.log("folderPath:", folderPath);
+  // console.log("encrypting folder:", folderPath);
   const files = fs.readdirSync(folderPath);
   const encryptedFiles = [];
   for (const file of files) {
@@ -64,94 +65,6 @@ export async function decryptFile(file_data) {
     console.log(err)
     throw err;
   }
-}
-
-////////////////////////////////
-//////////// IPFS //////////////
-////////////////////////////////
-
-async function uploadFileEncrypted(file, ipfs) {
-  try {
-    const ipfspath = '/encrypted/data/' + path.basename(file) // ipfspath
-    const buff = fs.readFileSync(file);
-    const key = crypto.randomBytes(16).toString('hex'); // 16 bytes -> 32 chars
-    const iv = crypto.randomBytes(8).toString('hex');   // 8 bytes -> 16 chars
-    const ekey = encryptRSA(key); // 32 chars -> 684 chars
-    const ebuff = encryptAES(buff, key, iv);
-
-    const content = Buffer.concat([ // headers: encrypted key and IV (len: 700=684+16)
-      Buffer.from(ekey, 'utf8'),   // char length: 684
-      Buffer.from(iv, 'utf8'),     // char length: 16
-      Buffer.from(ebuff, 'utf8')
-    ])
-    
-    // await ipfs.files.write(
-    //   ipfspath,
-    //   content,
-    //   {create: true, parents: true}
-    // );
-
-    const added = await ipfs.add(
-      {
-        content: content
-      }
-    )
-
-    console.log('ENCRYPTION --------')
-    console.log('key:', key, 'iv:', iv, 'ekey:', ekey.length)
-    console.log('contents:', buff.length, 'encrypted:', ebuff.length)
-    console.log(' ')
-
-    const url = `https://freewilly.infura-ipfs.io/ipfs/${added.path}`
-    console.log("Upload successful!");
-    // console.log(added);
-    console.log(url);
-    return added.path;
-  } catch (err) {
-    console.log(err)
-    throw err;
-  }
-}
-
-async function downloadFileEncrypted(ipfspath, ipfs) {
-  try {
-    // let file_data = await ipfs.files.read(ipfspath)
-    let file_data = await ipfs.get(ipfspath);
-    
-    let edata = []
-    for await (const chunk of file_data)
-      edata.push(chunk)
-    edata = Buffer.concat(edata)
-
-    const key = decryptRSA(edata.slice(0, 684).toString('utf8'))
-    const iv = edata.slice(684, 700).toString('utf8')
-    const econtent = edata.slice(700).toString('utf8')
-    const ebuf = Buffer.from(econtent, 'hex')
-    const content = decryptAES(ebuf, key, iv)
-
-    console.log(' ')
-    console.log('DECRYPTION --------')
-    console.log('key:', key, 'iv:', iv)
-    console.log('contents:', content.length, 'encrypted:', econtent.length)
-    console.log('downloaded:', edata.length)
-    
-    return content
-    
-  } catch (err) {
-    console.log(err)
-    throw err;
-  }
-}
-
-
-////////////////////////////////
-
-async function toArray(asyncIterator) { 
-  const arr=[]; 
-  for await(const i of asyncIterator) {
-    arr.push(i); 
-  }
-  return arr;
 }
 
 ////////////////////////////////
@@ -212,4 +125,14 @@ function decryptRSA(toDecrypt, privkeyPath='private.pem') {
   buffer,
   )
   return decrypted.toString('utf8')
+}
+
+////////////////////////////////
+
+async function toArray(asyncIterator) { 
+  const arr=[]; 
+  for await(const i of asyncIterator) {
+    arr.push(i); 
+  }
+  return arr;
 }

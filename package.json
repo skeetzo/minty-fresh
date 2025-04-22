@@ -12,8 +12,9 @@
   "exports": {
     ".": "./index.mjs",
     "./actions.mjs": "src/utils/actions.mjs",
+    "./ipfs.mjs": "src/classes/ipfs.mjs",
     "./helpers.mjs": "src/utils/helpers.mjs",
-    "./schemas.mjs": "src/utils/schemas.mjs"
+    "./schema.mjs": "src/utils/schema.mjs"
   },
   "type": "commonjs",
   "keywords": [

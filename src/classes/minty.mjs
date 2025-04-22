@@ -200,7 +200,7 @@ export class Minty {
      * @returns {Promise<{metadata: object, metadataURI: string}>} - resolves to an object containing the metadata and
      * metadata URI. Fails if the token does not exist, or if fetching the data fails.
      */
-    async getMetadata(tokenId) {
+    async getMetadataForToken(tokenId) {
         try {
             const metadataURI = await this.contract.tokenURI(tokenId);
             const metadata = await IPFS.getIPFSJSON(metadataURI);
@@ -216,7 +216,7 @@ export class Minty {
     // TODO
     // should I parse this differently, like above?
     async getMetadataAssets(tokenId) {
-        const nft = new NFT({...await this.getMetadata(tokenId), ...this});
+        const nft = new NFT({...await this.getMetadataForToken(tokenId), ...this});
         return nft.getAssets();
     }
 
@@ -250,7 +250,7 @@ export class Minty {
         console.debug(`Getting token id ${tokenId}...`);
         const nft = new NFT({...this});
         nft.tokenId = tokenId;
-        const { metadata, metadataURI } = await this.getMetadata(tokenId);
+        const { metadata, metadataURI } = await this.getMetadataForToken(tokenId);
         nft.metadata = metadata;
         nft.metadataCID = IPFS.extractCID(metadataURI);
         nft.metadataURI = metadataURI;
@@ -436,7 +436,7 @@ export class Minty {
      * Fails if no token with the given id exists, or if pinning fails.
      */
     async pin(tokenId) {
-        const {metadata, metadataURI} = await this.getMetadata(tokenId);
+        // const {metadata, metadataURI} = await this.getMetadataForToken(tokenId);
         const nft = await this.getNFT(tokenId);
         console.log(`Pinning token id ${tokenId}...`);
         const pinned = await nft.pin();

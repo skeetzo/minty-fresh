@@ -1,0 +1,47 @@
+{
+    "title": "Content Metadata",
+    "type": "object",
+    "properties": {
+        "name": {
+            "type": "string",
+            "description": "The filename"
+        },
+        "director": {
+            "type": "string",
+            "description": "The content director"
+        },
+        "producer": {
+            "type": "string",
+            "description": "The content producer"
+        },
+        "performers": {
+            "type": "array",
+            "description": "The token ids of the performers in the content"
+        },
+        "consentors": {
+            "type": "array",
+            "description": "The signatures of the performers in the content"
+        },
+        "max": {
+            "type": "integer",
+            "description": "The max number of times the content may be minted"
+        },
+        "format": {
+            "type": "string",
+            "description": "The file extension"
+        },
+        "cid": {
+            "type": "string",
+            "description": "The URI for this asset"
+        },
+        "encrypted": {
+            "type": "boolean",
+            "description": "Whether or not the content is encrypted"
+        },
+        "key": {
+            "type": "string",
+            "description": "The encryption key for this content"
+        }
+    },
+    "required": ["name", "cid", "encrypted"]
+}

@@ -1,5 +1,7 @@
 const config = {
 
+    encrypt: true,
+
     defaultContract : "Minty",
     defaultToken: "Julip",
     defaultSymbol: "JLP",

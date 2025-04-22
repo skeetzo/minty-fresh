@@ -122,7 +122,13 @@ export class NFT {
     async upload() {
         if (!this._initialized) await this.init();
         validate(this.metadata, this.schema, this.schemaJSON);
-        await Asset.uploadAssets(this.metadata);
+        
+        // upload each asset
+
+        // TODO: decide if this is the best spot to start the encryption true/false process
+        await Asset.uploadAssets(this.metadata, this.schema, config.encrypt || false);
+        
+        // upload the final metadata containing each uploaded assets' cids
         await this.uploadMetadata();
     }
 
