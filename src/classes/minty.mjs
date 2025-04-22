@@ -5,7 +5,7 @@ import * as path from "path";
 
 // const ethers = require('ethers');
 import * as ethers from "ethers";
-import { BigNumber } from 'ethers';
+// import { BigNumber } from 'ethers';
 import * as solc from "solc";
 // const solc = require('solc');
 
@@ -414,7 +414,8 @@ export class Minty {
      * @returns {Promise<NFTCreationInfo>}
      */
     async getCreationInfo(tokenId) {
-        const filter = await this.contract.filters.Transfer(null, null, BigNumber.from(tokenId));
+        // const filter = await this.contract.filters.Transfer(null, null, BigNumber.from(tokenId));
+        const filter = await this.contract.filters.Transfer(null, null, tokenId.toString());
         const logs = await this.contract.queryFilter(filter);
         const blockNumber = logs[0].blockNumber;
         const creatorAddress = logs[0].args.to;

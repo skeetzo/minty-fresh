@@ -10,11 +10,11 @@
     "minty": "src/index.mjs"
   },
   "exports": {
-    ".": "./index.mjs",
-    "./actions.mjs": "src/utils/actions.mjs",
-    "./ipfs.mjs": "src/classes/ipfs.mjs",
-    "./helpers.mjs": "src/utils/helpers.mjs",
-    "./schema": "src/utils/schema.mjs"
+    ".": "./src/index.mjs",
+    "./actions": "./src/utils/actions.mjs",
+    "./ipfs": "./src/classes/ipfs.mjs",
+    "./helpers": "./src/utils/helpers.mjs",
+    "./schema": "./src/utils/schema.mjs"
   },
   "type": "commonjs",
   "keywords": [
