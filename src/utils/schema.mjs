@@ -12,7 +12,7 @@ import Ajv from "ajv"
 // const { ErrorObject } = require("ajv");
 
 // const JSONschemaDefaults = require('json-schema-defaults');
-// import { JSONschemaDefaults } from 'json-schema-defaults';
+// import * as JSONschemaDefaults from 'json-schema-defaults';
 import pkg from 'json-schema-defaults';
 const { JSONschemaDefaults } = pkg;
 
