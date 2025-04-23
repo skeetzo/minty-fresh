@@ -2,6 +2,8 @@ const MintyPreset = artifacts.require("MintyPreset");
 const truffleAssert = require('truffle-assertions');
 const { catchRevert_ERC721Pausable_paused } = require("../src/utils/exceptions");
 
+
+
 contract("MintyPreset", function (accounts) {
 
   let minty;

@@ -1,14 +1,9 @@
 
-const chai = require('chai')
-const expect = chai.expect
+import { expect } from 'chai';
+import * as config from "getconfig";
+import { MakeMinty } from '../src/classes/minty.mjs';
 
-const config = require('getconfig');
-const { MakeMinty } = require('../src/classes/minty.js');
-
-// const Minty = artifacts.require("./Minty.sol");
-
-const fs_ = require('fs/promises');
-const IMAGE_SOURCE = "../src/public/minty-fresh.png";
+const IMAGE_SOURCE = "../public/minty-fresh.png";
 
 // uses truffle contract method to access accounts, does not require actual contract
 contract('Minty (client)', (accounts) => {

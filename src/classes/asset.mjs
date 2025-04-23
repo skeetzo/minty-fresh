@@ -11,26 +11,29 @@ import { encryptFile } from "../utils/crypto.mjs";
 // https://github.com/ipfs/js-ipfs/blob/master/docs/core-api/FILES.md#ipfsfileswritepath-content-options
 // as well as juggle multiple file types to easily ensure data is uploaded / fetched locally
 
+const default_asset_types = ["image","video"];
+
 export class Asset {
 	
 	constructor(opts) {
-		name = opts.name || "image";
+		this.name = opts.name || "image";
 		// CID on IPFS
-		cid = opts.cid || null;
+		this.cid = opts.cid || null;
 		// URI on IPFS
-		uri = opts.uri || null;
+		this.uri = opts.uri || null;
 		// (base64) data stored on IPFS 
-		content = opts.content || null;
+		this.content = opts.content || null;
 		// path to local file
-		path = opts.path || null;
+		this.path = opts.path || null;
 		// locally stored object data of the asset
-		data = opts.data || null;
+		// data = opts.data || null;
 		// File mode to store the entry with (see https://en.wikipedia.org/wiki/File_system_permissions#Numeric_notation)
 		  // mode?: number | string
-		mode = opts.mode || null;
+		this.mode = opts.mode || null;
 
-		encrypt = opts.encrypted || false;
-		encrypted = opts.encrypted || false;
+		this.encrypt = opts.encrypt || false;
+		this.encrypted = opts.encrypted || false;
+		this.key = opts.key || "";
 	}
 
 	toString() {
@@ -45,7 +48,10 @@ export class Asset {
 	}
 
 	async encrypt() {
-		if (this.encrypted) return { this.content, this.key };
+		if (this.encrypted) {
+			let content = this.content, key = this.key;
+			return { content, key };
+		}
 		let { encrypted, key } = await encryptFile(this.path);
 		this.content = encrypted;
 		this.key = key;
@@ -53,11 +59,10 @@ export class Asset {
 		return { encrypted, key };
 	}
 
-	// load data from local path (if exists) or IPFS
-	async getData() {
-		if (this.data) return this.data
-		return null;
-	}
+	// async getData() {
+		// if (this.data) return this.data
+		// return null;
+	// }
 
 	// load file from local path
 	async getFile() {
@@ -94,7 +99,8 @@ export class Asset {
         const { metadataCID, metadataURI } = await IPFS.add(file);
         this.cid = metadataCID;
         this.uri = metadataURI;
-        return { metadataCID, metadataURI, this.key };
+        let key = this.key;
+        return { metadataCID, metadataURI, key };
         // const assetURI = IPFS.ensureIpfsUriPrefix(assetCID) + '/' + basename;        
     }
 
@@ -128,21 +134,28 @@ export class Asset {
 	static getAssets(metadata, schema) {
         const assets = [];
 
-        const assetTypes = [...config.assetTypes, ...Asset.loadAssetsFromSchema(schema)];
+        const assetTypes = [...default_asset_types, ...Asset.loadAssetsForSchema(schema)];
         const unique = [...new Set(assetTypes)];
 
         for (const key of unique)
             for (const [_key, value] of Object.entries(metadata))
                 if (key == _key)
-                    assets[key] = value;
+                	assets.push(new Asset({
+                		'name': key,
+                		'cid': metadata['cid'],
+                		'uri': metadata['uri'],
+                		'content': metadata['content'],
+                		'path': metadata['path'],
+                		'encrypt': metadata['encrypt'],
+                	}));
 
         // this must return an array of Asset objects
         return assets;
 	}
 
 	// TODO
-	// return the asset types for the schema
-	static async loadAssetsFromSchema(schema) {return []}
+	// return the asset types for the schema1
+	static async loadAssetsForSchema(schema) {return []}
 
 }
 

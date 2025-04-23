@@ -91,20 +91,26 @@
 **1.3.4 : 4-22-2025**
 - cleanup exports in packages.json
 - beginning sync with ContentNFTs
+**1.3.5 : 4-23-2025**
+- write basic tests for asset class
+- updated asset.js for retrieving asset objects
 
 ------------------------------------------------------------------------
 
-- finish integrating with ContentNFTs and LoveBoat
+- finish asset tests
+
 - finish added asset.js class & interactions w/ testing for retrieving asset objects
-- write tests for asset class
-- write tests new multiple asset upload process
-- test scripts in ContentNFTs to test asset / nft / ipfs classes
 
-
+- write tests for new multiple asset upload process
 
 -- fix ipfs uploads / adds --> not appearing in ipfs client
 --- was this fixed in the webgui fix in 1.3.1?
 
+
+
+
+- test scripts in ContentNFTs to test asset / nft / ipfs classes
+- finish integrating with ContentNFTs and LoveBoat
 
 - update project to sync with LoveBoat, FreeWilly, and ContentNFTs
 -- must be able to upload: content data --> IPFS
