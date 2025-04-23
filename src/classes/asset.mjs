@@ -28,6 +28,9 @@ export class Asset {
 		// File mode to store the entry with (see https://en.wikipedia.org/wiki/File_system_permissions#Numeric_notation)
 		  // mode?: number | string
 		mode = opts.mode || null;
+
+		encrypt = opts.encrypted || false;
+		encrypted = opts.encrypted || false;
 	}
 
 	toString() {
@@ -42,7 +45,12 @@ export class Asset {
 	}
 
 	async encrypt() {
-
+		if (this.encrypted) return { this.content, this.key };
+		let { encrypted, key } = await encryptFile(this.path);
+		this.content = encrypted;
+		this.key = key;
+		this.encrypted = true;
+		return { encrypted, key };
 	}
 
 	// load data from local path (if exists) or IPFS
@@ -52,8 +60,11 @@ export class Asset {
 	}
 
 	// load file from local path
-	getFile() {
-		return fs.readFileSync(this.path);
+	async getFile() {
+		if (this.encrypt)
+			return await this.encrypt();
+		else
+			return fs.readFileSync(this.path)
 	}
 
 	// load data from IPFS
@@ -66,20 +77,14 @@ export class Asset {
     // it gives us URIs with descriptive filenames in them e.g.
     // 'ipfs://QmaNZ2FCgvBPqnxtkbToVVbK2Nes6xk5K4Ns6BsmkPucAM/cat-pic.png' instead of
     // 'ipfs://QmaNZ2FCgvBPqnxtkbToVVbK2Nes6xk5K4Ns6BsmkPucAM'
-    async upload(encrypt=false) {
+    async upload() {
 
         if (!fileExists(this.path)) throw "incorrect asset path";
         // merge this into above check?
 		if (fs.lstatSync(this.path).isDirectory())
 			throw "found folder instead of file";
 
-		let content, key;
-		if (encrypt) {
-			let { encrypted, key } = await encryptFile(this.path);
-			content = encrypted;
-		}
-		else
-			content = fs.readFileSync(this.path)
+		const content = await this.getFile();
 
         const file = { 
             name: path.basename(this.path).replace(/\/[^a-z0-9\s]\//gi, '_'),
@@ -89,16 +94,17 @@ export class Asset {
         const { metadataCID, metadataURI } = await IPFS.add(file);
         this.cid = metadataCID;
         this.uri = metadataURI;
-        return { metadataCID, metadataURI, key };
+        return { metadataCID, metadataURI, this.key };
         // const assetURI = IPFS.ensureIpfsUriPrefix(assetCID) + '/' + basename;        
     }
 
     // should innately replace metadata[key] values with the cid
-    static async uploadAssets(metadata, schema="default", encrypt=false) {
+    static async uploadAssets(metadata, schema="default") {
     	for (const asset of Asset.getAssets(metadata, schema)) {
-            const { metadataCID, metadataURI, key } = await asset.upload(encrypt);
+            const { metadataCID, metadataURI, key } = await asset.upload();
             metadata[asset.name] = metadataCID;
-            metadata[asset.name+"_key"] = key;
+            if (key)
+	            metadata[asset.name+"_key"] = key;
         }
     }
 

@@ -85,9 +85,9 @@
 	**1.3.2 : 4-20-2025**
 	- review & check in
 	- project cleanup
-**1.3.3 : 4-21-2025**
-- project update to es6 to fix import error for kubo
-- updated packages
+	**1.3.3 : 4-21-2025**
+	- project update to es6 to fix import error for kubo
+	- updated packages
 **1.3.4 : 4-22-2025**
 - cleanup exports in packages.json
 - beginning sync with ContentNFTs
@@ -95,13 +95,12 @@
 ------------------------------------------------------------------------
 
 - finish integrating with ContentNFTs and LoveBoat
+- finish added asset.js class & interactions w/ testing for retrieving asset objects
+- write tests for asset class
+- write tests new multiple asset upload process
+- test scripts in ContentNFTs to test asset / nft / ipfs classes
 
 
-
-
-
-- finish added asset.js class & interactions w/ testing for retrieving asset objects --> finish what?
-- test new multiple asset upload process --> how?
 
 -- fix ipfs uploads / adds --> not appearing in ipfs client
 --- was this fixed in the webgui fix in 1.3.1?
@@ -109,18 +108,8 @@
 
 - update project to sync with LoveBoat, FreeWilly, and ContentNFTs
 -- must be able to upload: content data --> IPFS
--- must be able to mint: content token --> loveboat TBA | content wallet TBA
--- must be able to mint: king token --> loveboat TBA | content wallet TBA (| or other project wallet TBA)
-
-what is uploaded? how?
-- content data is uploaded
-- content object is uploaded that points to content data
---------------------------------
-either custom fx here or via contentNFTs:
-- content is added to contract
-- token is minted
-- content is minted
-
+-- must be able to mint: king token --> loveboat TBA | content wallet TBA
+-- must be able to mint: content token --> loveboat TBA | content wallet TBA (| or other project wallet TBA)
 
 # TODO
 

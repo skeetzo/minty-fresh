@@ -11,14 +11,7 @@ import * as path from "path";
 import Ajv from "ajv"
 // const { ErrorObject } = require("ajv");
 
-// const JSONschemaDefaults = require('json-schema-defaults');
 import JSONschemaDefaults from 'json-schema-defaults';
-// import * as JSONschemaDefaults2 from 'json-schema-defaults';
-// console.log(JSONschemaDefaults2)
-// import pkg from 'json-schema-defaults';
-// const { JSONschemaDefaults } = pkg;
-
-// console.log(pkg)
 
 const ajv = new Ajv(); // options can be passed, e.g. {allErrors: true}
 

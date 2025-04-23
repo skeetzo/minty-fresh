@@ -29,6 +29,22 @@ export class NFT {
         this._initialized = false;
     }
 
+    toJSON() {
+        return {
+            name: this.name,
+            schema: this.schema,
+            // TODO: add a toString for Assets or do something here with it better
+            assets: this.assets,
+            metadata: this.metadata,
+            metadataCID: this.metadataCID,
+            metadataURI: this.metadataURI,
+            tokenId: this.tokenId ? parseInt(this.tokenId) : this.tokenId,
+            owner: this.owner,
+            standard: parseInt(this.standard)
+        }
+    }
+
+    // for backwards compatability until its removed
     toString() {
         return {
             name: this.name,
@@ -126,7 +142,7 @@ export class NFT {
         // upload each asset
 
         // TODO: decide if this is the best spot to start the encryption true/false process
-        await Asset.uploadAssets(this.metadata, this.schema, config.encrypt || false);
+        await Asset.uploadAssets(this.metadata, this.schema);
         
         // upload the final metadata containing each uploaded assets' cids
         await this.uploadMetadata();
