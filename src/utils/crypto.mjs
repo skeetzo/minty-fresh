@@ -21,10 +21,10 @@ export async function encryptFile(file) {
       Buffer.from(ebuff, 'utf8')
     ])
 
-    console.log('ENCRYPTION --------')
-    console.log('key:', key, 'iv:', iv, 'ekey:', ekey.length)
-    console.log('contents:', buff.length, 'encrypted:', ebuff.length)
-    console.log(' ')
+    // console.log('ENCRYPTION --------')
+    // console.log('key:', key, 'iv:', iv, 'ekey:', ekey.length)
+    // console.log('contents:', buff.length, 'encrypted:', ebuff.length)
+    // console.log(' ')
 
     return { content, key, name };
   } catch (err) {
@@ -55,11 +55,11 @@ export async function decryptFile(file_data) {
     const econtent = edata.slice(700).toString('utf8')
     const ebuf = Buffer.from(econtent, 'hex')
     const content = decryptAES(ebuf, key, iv)
-    console.log(' ')
-    console.log('DECRYPTION --------')
-    console.log('key:', key, 'iv:', iv)
-    console.log('contents:', content.length, 'encrypted:', econtent.length)
-    console.log('downloaded:', edata.length)
+    // console.log(' ')
+    // console.log('DECRYPTION --------')
+    // console.log('key:', key, 'iv:', iv)
+    // console.log('contents:', content.length, 'encrypted:', econtent.length)
+    // console.log('downloaded:', edata.length)
     return content
   } catch (err) {
     console.log(err)

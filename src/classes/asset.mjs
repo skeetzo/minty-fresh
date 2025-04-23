@@ -47,16 +47,16 @@ export class Asset {
 		}
 	}
 
-	async encrypt() {
+	async encryptFile() {
 		if (this.encrypted) {
 			let content = this.content, key = this.key;
 			return { content, key };
 		}
-		let { encrypted, key } = await encryptFile(this.path);
-		this.content = encrypted;
+		let { content, key } = await encryptFile(this.path);
+		this.content = content;
 		this.key = key;
 		this.encrypted = true;
-		return { encrypted, key };
+		return { content, key };
 	}
 
 	// async getData() {
@@ -66,10 +66,11 @@ export class Asset {
 
 	// load file from local path
 	async getFile() {
+        // if (!fileExists(this.path)) throw "incorrect asset path";
 		if (this.encrypt)
-			return await this.encrypt();
+			return await this.encryptFile();
 		else
-			return fs.readFileSync(this.path)
+			return { content: fs.readFileSync(this.path), key: "" }
 	}
 
 	// load data from IPFS
@@ -84,12 +85,10 @@ export class Asset {
     // 'ipfs://QmaNZ2FCgvBPqnxtkbToVVbK2Nes6xk5K4Ns6BsmkPucAM'
     async upload() {
 
-        if (!fileExists(this.path)) throw "incorrect asset path";
-        // merge this into above check?
 		if (fs.lstatSync(this.path).isDirectory())
 			throw "found folder instead of file";
 
-		const content = await this.getFile();
+		const { content, key } = await this.getFile();
 
         const file = { 
             name: path.basename(this.path).replace(/\/[^a-z0-9\s]\//gi, '_'),
@@ -99,7 +98,6 @@ export class Asset {
         const { metadataCID, metadataURI } = await IPFS.add(file);
         this.cid = metadataCID;
         this.uri = metadataURI;
-        let key = this.key;
         return { metadataCID, metadataURI, key };
         // const assetURI = IPFS.ensureIpfsUriPrefix(assetCID) + '/' + basename;        
     }
@@ -155,7 +153,10 @@ export class Asset {
 
 	// TODO
 	// return the asset types for the schema1
-	static async loadAssetsForSchema(schema) {return []}
+	static loadAssetsForSchema(schema) {
+		// TODO: update this to some how dynamically return "assets" which are basically files that could be many different things or groups of things
+		return []
+	}
 
 }
 
