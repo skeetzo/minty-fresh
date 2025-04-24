@@ -115,7 +115,7 @@ export class Asset {
 	// TODO
 	// what is this even meant to do?
 	static getAsset(metadata, assetName) {
-		const newAsset = Asset({
+		const newAsset = new Asset({
 			name: assetName,
 			// cid: 
 			// uri: 

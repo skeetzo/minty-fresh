@@ -15,7 +15,7 @@ import JSONschemaDefaults from 'json-schema-defaults';
 
 const ajv = new Ajv(); // options can be passed, e.g. {allErrors: true}
 
-const SCHEMA_PATH = "./schemas";
+const SCHEMA_PATH = path.join(__dirname, "../../config/schemas");
 
 export function fromSchema(schema) {return JSONschemaDefaults(schema)}
 
@@ -24,16 +24,16 @@ export function loadSchemaFromFile(schema) {
     function _parseTemplate(t) {return JSON.parse(fs.readFileSync(`${SCHEMA_PATH}/${t}.json`))}
     // get list of template files from available files in available /schema directories
     const templates = [];
-    const localPath = path.join(__dirname, "../../config", SCHEMA_PATH); // path local to this script
+    // const localPath = path.join(__dirname, "../../config", SCHEMA_PATH); // path local to this script
           // addonPath = path.join(process.env.PWD, SCHEMA_PATH);// path to where the cwd is
     const files = [];
-    if (fs.existsSync(localPath))
-        files.push(...fs.readdirSync(localPath));
+    if (fs.existsSync(SCHEMA_PATH))
+        files.push(...fs.readdirSync(SCHEMA_PATH));
     console.log(files)
     let defaultIndex = 0;
     for (let i=0;i<files.length;i++) {
         const filename = files[i].replace(".json","");
-        console.log(filename)
+        // console.log(filename)
         if (filename === schema) return _parseTemplate(filename);
         templates.indexOf(filename) === -1 ? templates.push(filename) : console.debug(`duplicate template found: ${filename}`)
         // set simple.json to default template
@@ -43,6 +43,7 @@ export function loadSchemaFromFile(schema) {
 }
 
 export function validate(metadata, schema, schemaJSON) {
+    // console.log(metadata)
     console.debug(`validating NFT schema: ${schema}...`);
     // replace empty values with null for flagging validation
     for (const [key, value] of Object.entries(metadata))

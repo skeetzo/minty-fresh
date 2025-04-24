@@ -94,17 +94,18 @@
 **1.3.5 : 4-23-2025**
 - write basic tests for asset class
 - updated asset.js for retrieving asset objects
-- finish asset tests
+- finished asset tests
+- finished added asset.js class & interactions w/ testing for retrieving asset objects
+- added basic tests for nft class
 
 ------------------------------------------------------------------------
 
-asset tests are finished but they're not really saving the right data in IPFS ?
-- fix asset IPFS tests
-and then this will be done:
-- finish added asset.js class & interactions w/ testing for retrieving asset objects
+
+- finish debugging nft pin test after adding a pinning service
 
 - write tests for new multiple asset upload process
-also think of something that would require multiple assets
+
+
 
 -- fix ipfs uploads / adds --> not appearing in ipfs client
 --- was this fixed in the webgui fix in 1.3.1?

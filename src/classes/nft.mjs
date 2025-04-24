@@ -17,7 +17,7 @@ export class NFT {
         this.metadata = opts.metadata || {};
         this.schema = opts.schema || "default";
         this.schemaJSON = {};
-        this.tokenId = opts.tokenId ? parseInt(opts.tokenId) : null;
+        this.tokenId = parseInt(opts.tokenId);
         this.owner = opts.owner || null;
 
         this.metadataCID = opts.metadataCID || null;
@@ -122,10 +122,10 @@ export class NFT {
         if (this.metadataURI === null) await this.upload();
         const assetURIs = [];
         // pin each asset first
-        for (const [key, filePathOrCID] of Object.entries(this.getAssets())) {
-            console.debug(`Pinning ${key} data for token id ${this.tokenId}....`);
-            await IPFS.pin(filePathOrCID);
-            assetURIs.push(filePathOrCID);
+        for (const asset of this.getAssets()) {
+            console.debug(`Pinning ${asset.name} data for token id ${this.tokenId}....`);
+            await IPFS.pin(asset.cid);
+            assetURIs.push(asset.uri);
         }
         console.debug(`Pinning metadata for token id ${this.tokenId}...`);
         await IPFS.pin(this.metadataURI);
@@ -136,7 +136,8 @@ export class NFT {
     async unpin() {}
 
     async upload() {
-        if (!this._initialized) await this.init();
+        // if (!this._initialized) await this.init();
+
         validate(this.metadata, this.schema, this.schemaJSON);
         
         // upload each asset
