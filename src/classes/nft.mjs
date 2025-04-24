@@ -146,6 +146,8 @@ export class NFT {
         // TODO: decide if this is the best spot to start the encryption true/false process
         await Asset.uploadAssets(this.metadata, this.schema);
 
+        console.log(this.metadata)
+
         validate(this.metadata, this.schema, this.schemaJSON);
         
         // upload the final metadata containing each uploaded assets' cids
