@@ -145,7 +145,6 @@ export class NFT {
         console.log(this.metadata)
         console.log(this.schema)
 
-        // TODO: decide if this is the best spot to start the encryption true/false process
         await Asset.uploadAssets(this.metadata, this.schema);
 
         console.log(this.metadata)
