@@ -97,14 +97,12 @@
 - finished asset tests
 - finished added asset.js class & interactions w/ testing for retrieving asset objects
 - added basic tests for nft class
+**1.3.6 : 4-24-2025**
+- finished debugging nft pin test after adding local pinning service
 
 ------------------------------------------------------------------------
 
-
-- finish debugging nft pin test after adding a pinning service
-
 - write tests for new multiple asset upload process
-
 
 
 -- fix ipfs uploads / adds --> not appearing in ipfs client

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import * as config from "getconfig";
+import * as getconfig from "getconfig";
 import * as path from "path";
 import { Command } from 'commander';
 
@@ -16,6 +16,8 @@ import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+const config = getconfig.default;
 
 async function main() {
 

@@ -1,5 +1,5 @@
 
-import * as config from "getconfig";
+import * as getconfig from "getconfig";
 import { CID } from 'multiformats/cid'
 import all from 'it-all'
 
@@ -7,6 +7,8 @@ import { concat, toString } from 'uint8arrays';
 const uint8ArrayConcat = concat;
 const uint8ArrayToString = toString;
 // import { uint8ArrayToString } from 'uint8arrays/to-string';
+
+const config = getconfig.default;
 
 import { create } from "kubo-rpc-client";
 const IPFS_CLIENT = create(config.ipfsApiUrl);
@@ -145,6 +147,8 @@ export class IPFS {
      * @returns {Promise<void>}
      */
     static async pin(cidOrURI) {
+        console.log(cidOrURI)
+        console.log(cidOrURI)
         const cid = IPFS.extractCID(cidOrURI);
         // Make sure IPFS is set up to use our preferred pinning service.
         await IPFS._configurePinningService();
@@ -171,6 +175,9 @@ export class IPFS {
             service: config.pinningService.name,
             cid: [cid], // ls expects an array of cids
         };
+
+        console.log(opts.cid)
+
         if (opts.service == "local") // local daemon
             for await (const result of IPFS_CLIENT.pin.ls(opts)) {
                 return true;
@@ -267,7 +274,7 @@ export class IPFS {
         const cidString = IPFS.stripIpfsUriPrefix(cidOrURI).split('/')[0];
         // console.log("cidString:",cidString)
         try {
-            return new CID(cidString);
+            return CID.parse(cidString);
         }
         catch (err) {
             // console.error(err.message);

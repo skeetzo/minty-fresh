@@ -1,11 +1,13 @@
 
-import * as config from "getconfig";
+import * as getconfig from "getconfig";
 import * as fs from 'fs';
 import * as path from "path";
 
 import { fileExists } from '../utils/helpers.mjs';
 import { IPFS } from './ipfs.mjs';
 import { encryptFile } from "../utils/crypto.mjs";
+
+const config = getconfig.default;
 
 // meant to model basic expected FileObject from 
 // https://github.com/ipfs/js-ipfs/blob/master/docs/core-api/FILES.md#ipfsfileswritepath-content-options
