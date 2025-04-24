@@ -147,8 +147,6 @@ export class IPFS {
      * @returns {Promise<void>}
      */
     static async pin(cidOrURI) {
-        console.log(cidOrURI)
-        console.log(cidOrURI)
         const cid = IPFS.extractCID(cidOrURI);
         // Make sure IPFS is set up to use our preferred pinning service.
         await IPFS._configurePinningService();
@@ -175,9 +173,6 @@ export class IPFS {
             service: config.pinningService.name,
             cid: [cid], // ls expects an array of cids
         };
-
-        console.log(opts.cid)
-
         if (opts.service == "local") // local daemon
             for await (const result of IPFS_CLIENT.pin.ls(opts)) {
                 return true;
