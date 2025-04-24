@@ -105,6 +105,9 @@
 
 ------------------------------------------------------------------------
 
+- updated asset/nft classes to properly update metadata values for upload
+
+
 - write tests for new multiple asset upload process
 - test scripts in ContentNFTs to test asset / nft / ipfs classes
 - finish integrating with ContentNFTs and LoveBoat

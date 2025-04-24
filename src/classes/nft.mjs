@@ -142,12 +142,7 @@ export class NFT {
         // validate(this.metadata, this.schema, this.schemaJSON);
         
         // upload each asset
-        console.log(this.metadata)
-        console.log(this.schema)
-
         await Asset.uploadAssets(this.metadata, this.schema);
-
-        console.log(this.metadata)
 
         validate(this.metadata, this.schema, this.schemaJSON);
         

@@ -282,11 +282,11 @@ export class IPFS {
     static validateCIDString(possibleCIDString) {
         // console.debug("validating cid:", possibleCIDString);
         try {
-            const cid = new CID(possibleCIDString);
-            return CID.isCID(cid);
+            const cid = CID.parse(possibleCIDString);
+            return cid;
         }
         catch (err) {
-            // console.error(err.message);
+            console.error(err.message);
         }
         return false;
     }

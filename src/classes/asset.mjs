@@ -147,9 +147,11 @@ export class Asset {
 
                 	if (value) {
                 		// cid uri or path
-                		let thing = IPFS.extractCID(value);
-                		if (IPFS.validateCIDString(thing)) asset.cid = thing;
-		                else asset.path = thing;
+                		console.log("value:", value)
+                		// let thing = IPFS.extractCID(value);
+                		// console.log(thing)
+                		if (IPFS.validateCIDString(value)) asset.cid = value;
+		                else asset.path = value;
                 	}
                 	console.log("asset:", asset);
                 	assets.push(asset);
