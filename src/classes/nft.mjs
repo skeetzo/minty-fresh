@@ -71,6 +71,7 @@ export class NFT {
             this.schemaJSON = await loadSchemaFromFile(this.schema);
 
         this.metadata = fromSchema(this.schemaJSON);
+        // this.metadata.name = this.name;
 
         this._initialized = true;
     }
@@ -138,12 +139,14 @@ export class NFT {
     async upload() {
         // if (!this._initialized) await this.init();
 
-        validate(this.metadata, this.schema, this.schemaJSON);
+        // validate(this.metadata, this.schema, this.schemaJSON);
         
         // upload each asset
 
         // TODO: decide if this is the best spot to start the encryption true/false process
         await Asset.uploadAssets(this.metadata, this.schema);
+
+        validate(this.metadata, this.schema, this.schemaJSON);
         
         // upload the final metadata containing each uploaded assets' cids
         await this.uploadMetadata();

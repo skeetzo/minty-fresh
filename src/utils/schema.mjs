@@ -29,7 +29,7 @@ export function loadSchemaFromFile(schema) {
     const files = [];
     if (fs.existsSync(SCHEMA_PATH))
         files.push(...fs.readdirSync(SCHEMA_PATH));
-    console.log(files)
+    // console.log(files)
     let defaultIndex = 0;
     for (let i=0;i<files.length;i++) {
         const filename = files[i].replace(".json","");
