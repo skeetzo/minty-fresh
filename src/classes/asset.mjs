@@ -139,15 +139,20 @@ export class Asset {
 
         for (const key of unique)
             for (const [_key, value] of Object.entries(metadata))
-                if (key == _key)
-                	assets.push(new Asset({
-                		'name': key,
-                		'cid': metadata['cid'],
-                		'uri': metadata['uri'],
-                		'content': metadata['content'],
-                		'path': metadata['path'],
-                		'encrypt': metadata['encrypt'],
-                	}));
+                if (key == _key) { 
+
+					const asset = new Asset({
+                		'name': key
+                	});
+
+                	if (value) {
+                		// cid uri or path
+                		let thing = IPFS.extractCID(value);
+                		if (validateCIDString(thing)) asset.cid = thing;
+		                else asset.path = thing;
+                	}
+                	assets.push(asset);
+                }
 
         // this must return an array of Asset objects
         return assets;

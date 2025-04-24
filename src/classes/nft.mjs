@@ -142,6 +142,8 @@ export class NFT {
         // validate(this.metadata, this.schema, this.schemaJSON);
         
         // upload each asset
+        console.log(this.metadata)
+        console.log(this.schema)
 
         // TODO: decide if this is the best spot to start the encryption true/false process
         await Asset.uploadAssets(this.metadata, this.schema);
