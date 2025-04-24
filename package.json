@@ -11,8 +11,10 @@
   },
   "exports": {
     ".": "./src/index.mjs",
+    "./asset": "./src/classes/asset.mjs",
     "./ipfs": "./src/classes/ipfs.mjs",
     "./nft": "./src/classes/nft.mjs",
+    "./minty": "./src/classes/minty.mjs",
     "./actions": "./src/utils/actions.mjs",
     "./crypto": "./src/utils/crypto.mjs",
     "./helpers": "./src/utils/helpers.mjs",

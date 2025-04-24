@@ -88,28 +88,24 @@
 	**1.3.3 : 4-21-2025**
 	- project update to es6 to fix import error for kubo
 	- updated packages
-**1.3.4 : 4-22-2025**
-- cleanup exports in packages.json
-- beginning sync with ContentNFTs
-**1.3.5 : 4-23-2025**
-- write basic tests for asset class
-- updated asset.js for retrieving asset objects
-- finished asset tests
-- finished added asset.js class & interactions w/ testing for retrieving asset objects
-- added basic tests for nft class
+	**1.3.4 : 4-22-2025**
+	- cleanup exports in packages.json
+	- beginning sync with ContentNFTs
+	**1.3.5 : 4-23-2025**
+	- write basic tests for asset class
+	- updated asset.js for retrieving asset objects
+	- finished asset tests
+	- finished added asset.js class & interactions w/ testing for retrieving asset objects
+	- added basic tests for nft class
 **1.3.6 : 4-24-2025**
 - finished debugging nft pin test after adding local pinning service
+-- fix ipfs uploads / adds --> not appearing in ipfs client
+--- was this fixed in the webgui fix in 1.3.1?
+--- yes it was?
 
 ------------------------------------------------------------------------
 
 - write tests for new multiple asset upload process
-
-
--- fix ipfs uploads / adds --> not appearing in ipfs client
---- was this fixed in the webgui fix in 1.3.1?
-
-
-
 
 - test scripts in ContentNFTs to test asset / nft / ipfs classes
 - finish integrating with ContentNFTs and LoveBoat
