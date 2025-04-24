@@ -30,11 +30,11 @@
             "type": "string",
             "description": "The file extension"
         },
-        "cid": {
+        "content": {
             "type": "string",
-            "description": "The URI for this asset"
+            "description": "The content for this asset"
         },
-        "encrypt": {
+        "encrypted": {
             "type": "boolean",
             "description": "Whether or not the content is encrypted"
         },
@@ -43,5 +43,5 @@
             "description": "The encryption key for this content"
         }
     },
-    "required": ["name", "cid", "encrypted"]
+    "required": ["name", "content"]
 }
