@@ -106,7 +106,6 @@
 ------------------------------------------------------------------------
 
 - write tests for new multiple asset upload process
-
 - test scripts in ContentNFTs to test asset / nft / ipfs classes
 - finish integrating with ContentNFTs and LoveBoat
 
