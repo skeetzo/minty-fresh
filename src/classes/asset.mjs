@@ -103,7 +103,8 @@ export class Asset {
 
         const file = { 
             name: path.basename(this.path).replace(/\/[^a-z0-9\s]\//gi, '_'),
-            path: `/${this.name}s/${path.basename(this.path)}`.replace(/\/[^a-z0-9\s]\//gi, '_'),
+            // path: `/${this.name}s/${path.basename(this.path)}`.replace(/\/[^a-z0-9\s]\//gi, '_'),
+            path: `/assets/${this.name}s/`.replace(/\/[^a-z0-9\s]\//gi, '_'),
             content
         };
         const { metadataCID, metadataURI } = await IPFS.add(file, this.base_uri);

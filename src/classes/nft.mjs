@@ -167,8 +167,8 @@ export class NFT {
     // upload to ipfs
     async uploadMetadata() {
         const file = { 
-            name: `${this.metadata.name}.json`,
-            path: `/metadata/${this.metadata.name}.json`,
+            name: `${this.name}.json`,
+            path: `/metadata/${this.name}.json`,
             content: JSON.stringify(this.metadata)
         };
         const { metadataCID, metadataURI } = await IPFS.add(file, this.base_uri);
