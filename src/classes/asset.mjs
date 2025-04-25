@@ -103,7 +103,7 @@ export class Asset {
 
         const file = { 
             name: path.basename(this.path).replace(/\/[^a-z0-9\s]\//gi, '_'),
-            path: `/${this.name}s/${path.basename(this.path).split(".")[0]}`.replace(/\/[^a-z0-9\s]\//gi, '_'),
+            path: `/assets/${this.name}s/${path.basename(this.path)}`.replace(/\/[^a-z0-9\s]\//gi, '_'),
             // path: `/assets/${this.name}s`.replace(/\/[^a-z0-9\s]\//gi, '_'),
             content
         };
