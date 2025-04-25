@@ -104,7 +104,7 @@ describe("Asset", () => {
         // opts["content"] = content;
         metadata["key"] = key;
         await Asset.uploadAssets(metadata, schema);
-        console.log(metadata)
+        // console.log(metadata)
         expect(metadata["image"]).to.equal(CID) // or URI?
         // expect(metadata["image"]).to.equal(opts["cid"]) // or URI?
 
@@ -112,13 +112,15 @@ describe("Asset", () => {
 
     it("can upload assets encrypted", async () => {
     	const asset = new Asset(optsEncrypted);
-        console.log(asset)
+        // console.log(asset)
         const { content, key } = await asset.getFile();
+        // console.log("key:", key);
         // opts["content"] = content;
-        // metadata["key"] = key;
+        // TODO: double check if this is done right
+        metadata["key"] = key;
     	// opts["encrypt"] = true;
         await Asset.uploadAssets(metadata, schema);
-        console.log(metadata)
+        // console.log(metadata)
         expect(metadata["image"]).to.not.equal(opts["cid"]);
         expect(metadata["key"]).to.be.ok;
     })

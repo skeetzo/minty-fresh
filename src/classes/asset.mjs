@@ -116,6 +116,7 @@ export class Asset {
     static async uploadAssets(metadata, schema="default") {
     	for (const asset of Asset.getAssets(metadata, schema)) {
             const { metadataCID, metadataURI, key } = await asset.upload();
+            // console.log("key:", key)
             metadata[asset.name] = metadataCID;
             if (key)
 	            metadata["key"] = key;
@@ -146,25 +147,24 @@ export class Asset {
         const assetTypes = [...default_asset_types, ...Asset.loadAssetsForSchema(schema)];
         const unique = [...new Set(assetTypes)];
 
+		const asset = new Asset(metadata);
+
         for (const key of unique)
             for (const [_key, value] of Object.entries(metadata)) {
-
-				const asset = new Asset(metadata);
 
                 if (key == _key) { 
             		asset.name = key;
 
-
                 	if (value) {
                 		// cid uri or path
-                		console.log("value:", value)
+                		// console.log("value:", value)
                 		// let thing = IPFS.extractCID(value);
                 		// console.log(thing)
                 		if (Buffer.isBuffer(value)) asset.content = value;
                 		else if (IPFS.validateCIDString(value)) asset.cid = value;
 		                else asset.path = value;
                 	}
-                	console.log("asset:", asset);
+                	// console.log("asset:", asset);
                 	assets.push(asset);
                 }
             }
