@@ -15,6 +15,8 @@ const IPFS_CLIENT = create(config.ipfsApiUrl);
 
 // ipfs.add parameters for more deterministic CIDs
 
+// const BASE_URI = "ipfs://";
+
 export class IPFS {
     
     ipfsAddOptions = {
@@ -41,10 +43,10 @@ export class IPFS {
     }
 
     // file must have: name, path, and content
-    static async add(file) {
+    static async add(file, baseUri="ipfs://") {
         console.debug(`adding IPFS path: ${file.path}`);
         const { cid: metadataCID } = await IPFS_CLIENT.add(file, IPFS.ipfsAddOptions);
-        const metadataURI = IPFS.ensureIpfsUriPrefix(metadataCID) + "/" + file.name;
+        const metadataURI = IPFS.ensureIpfsUriPrefix(metadataCID, baseUri) + "/" + file.name;
         // TODO
         // can use the ls check to prevent duplicates
         // possibly add dialogue to confirm y/n to overwrite existing?
@@ -226,19 +228,19 @@ export class IPFS {
      * @param {string} cidOrURI either a CID string, or a URI string of the form `ipfs://${cid}`
      * @returns the input string with the `ipfs://` prefix stripped off
      */
-    static stripIpfsUriPrefix(cidOrURI) {
+    static stripIpfsUriPrefix(cidOrURI, baseUri="ipfs://") {
         // TODO
         // possibly add a check here for whether or not to strip
-        if (cidOrURI.startsWith(`ipfs://`)) {
-            return cidOrURI.slice(`ipfs://`.length);
+        if (cidOrURI.startsWith(baseUri)) {
+            return cidOrURI.slice(baseUri.length);
         }
         return cidOrURI;
     }
 
-    static ensureIpfsUriPrefix(cidOrURI) {
+    static ensureIpfsUriPrefix(cidOrURI, baseUri="ipfs://") {
         let uri = cidOrURI.toString()
-        if (!uri.startsWith(`ipfs://`)) {
-            uri = `ipfs://` + cidOrURI;
+        if (!uri.startsWith(baseUri)) {
+            uri = baseUri + cidOrURI;
         }
         // Avoid the Nyan Cat bug (https://github.com/ipfs/go-ipfs/pull/7930)
         if (uri.startsWith(`ipfs://ipfs/`)) {

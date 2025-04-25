@@ -38,6 +38,7 @@ export class Asset {
 		this.encrypt = opts.encrypt || false;
 		this.encrypted = opts.encrypted || false;
 		this.key = opts.key || "";
+		this.base_uri = opts.base_uri || "ipfs://";
 	}
 
 	toString() {
@@ -105,7 +106,7 @@ export class Asset {
             path: `/${this.name}s/${path.basename(this.path)}`.replace(/\/[^a-z0-9\s]\//gi, '_'),
             content
         };
-        const { metadataCID, metadataURI } = await IPFS.add(file);
+        const { metadataCID, metadataURI } = await IPFS.add(file, this.base_uri);
         this.cid = metadataCID;
         this.uri = metadataURI;
         return { metadataCID, metadataURI, key };
