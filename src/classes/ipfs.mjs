@@ -241,7 +241,7 @@ export class IPFS {
     static ensureIpfsUriPrefix(cidOrURI, baseUri="ipfs://") {
         let uri = cidOrURI.toString()
         if (!uri.startsWith(baseUri)) {
-            uri = path.join(baseUri,cidOrURI);
+            uri = path.join(baseUri, uri);
         }
         // Avoid the Nyan Cat bug (https://github.com/ipfs/go-ipfs/pull/7930)
         if (uri.startsWith(`ipfs://ipfs/`)) {
