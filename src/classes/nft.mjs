@@ -139,15 +139,26 @@ export class NFT {
     async upload() {
         // if (!this._initialized) await this.init();
 
+        // this should be done after because its only fully fleshed out and can pass validation after everythings uploaded? or do i validate the metadata before its uploaded?
+        // i think after
         // validate(this.metadata, this.schema, this.schemaJSON);
-        
-        // upload each asset
+
+        await this.uploadAssets();
+
+        // upload each asset detected in metadata
         await Asset.uploadAssets(this.metadata, this.schema);
 
         validate(this.metadata, this.schema, this.schemaJSON);
         
         // upload the final metadata containing each uploaded assets' cids
         await this.uploadMetadata();
+    }
+
+    async uploadAssets() {
+        for (const asset of this.assets) {
+            const { metadataCID, metadataURI, key } = await asset.upload();
+            // TODO: do something with this?
+        }
     }
 
     // upload to ipfs

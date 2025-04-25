@@ -23,6 +23,8 @@ export class Asset {
 		this.cid = opts.cid || null;
 		// URI on IPFS
 		this.uri = opts.uri || null;
+		if (this.cid)
+			this.uri = IPFS.makeGatewayURL(this.cid);
 		// (base64) data stored on IPFS 
 		this.content = opts.content || null;
 		// path to local file
@@ -45,7 +47,9 @@ export class Asset {
 			uri: this.uri,
 			content: this.content,
 			path: this.path,
-			mode: this.mode
+			mode: this.mode,
+			encrypt: this.encrypt,
+			encrypted: this.encrypted
 		}
 	}
 
@@ -68,6 +72,7 @@ export class Asset {
 
 	// load file from local path
 	async getFile() {
+		if (this.content) return { content: this.content, key: this.key };
         // if (!fileExists(this.path)) throw "incorrect asset path";
 		if (this.encrypt)
 			return await this.encryptFile();
@@ -86,9 +91,12 @@ export class Asset {
     // 'ipfs://QmaNZ2FCgvBPqnxtkbToVVbK2Nes6xk5K4Ns6BsmkPucAM/cat-pic.png' instead of
     // 'ipfs://QmaNZ2FCgvBPqnxtkbToVVbK2Nes6xk5K4Ns6BsmkPucAM'
     async upload() {
-
-		if (fs.lstatSync(this.path).isDirectory())
+    	if (this.cid) return { metadataCID: this.cid, metadataURI: this.uri, key: this.key }
+    	// console.log(this)
+		if (this.path && fs.lstatSync(this.path).isDirectory())
 			throw "found folder instead of file";
+		if (!this.path && !this.content)
+			throw "missing content for upload";
 
 		const { content, key } = await this.getFile();
 
@@ -110,7 +118,8 @@ export class Asset {
             const { metadataCID, metadataURI, key } = await asset.upload();
             metadata[asset.name] = metadataCID;
             if (key)
-	            metadata[asset.name+"_key"] = key;
+	            metadata["key"] = key;
+	            // metadata[asset.name+"_key"] = key;
         }
     }
 
@@ -138,24 +147,27 @@ export class Asset {
         const unique = [...new Set(assetTypes)];
 
         for (const key of unique)
-            for (const [_key, value] of Object.entries(metadata))
-                if (key == _key) { 
+            for (const [_key, value] of Object.entries(metadata)) {
 
-					const asset = new Asset({
-                		'name': key
-                	});
+				const asset = new Asset(metadata);
+
+                if (key == _key) { 
+            		asset.name = key;
+
 
                 	if (value) {
                 		// cid uri or path
                 		console.log("value:", value)
                 		// let thing = IPFS.extractCID(value);
                 		// console.log(thing)
-                		if (IPFS.validateCIDString(value)) asset.cid = value;
+                		if (Buffer.isBuffer(value)) asset.content = value;
+                		else if (IPFS.validateCIDString(value)) asset.cid = value;
 		                else asset.path = value;
                 	}
                 	console.log("asset:", asset);
                 	assets.push(asset);
                 }
+            }
 
         // this must return an array of Asset objects
         return assets;

@@ -120,10 +120,10 @@ describe("NFT", () => {
     })
 
     // this is handled in the asset test
-    // it("can upload", async () => {
-        // const nft = new NFT(opts);
-        // nft.upload
-    // })
+    it("can upload", async () => {
+        const nft = new NFT(opts);
+        nft.upload
+    })
 
     it("can upload metadata", async () => {
         const nft = new NFT(opts);
