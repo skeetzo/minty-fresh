@@ -102,21 +102,21 @@
 -- fix ipfs uploads / adds --> not appearing in ipfs client
 --- was this fixed in the webgui fix in 1.3.1?
 --- yes it was?
+- finished debugging asset tests
+- updated asset/nft classes to properly update metadata values for upload
+- tested scripts in ContentNFTs to test asset / nft / ipfs classes
+- finished integrating with ContentNFTs and LoveBoat
+- finished beginning sync with LoveBoat & ContentNFTs
 
 ------------------------------------------------------------------------
 
-
-- finish debugging asset tests
-
-- updated asset/nft classes to properly update metadata values for upload
-
+- cleanup / figure out how ipfs upload paths work
 
 - write tests for new multiple asset upload process
-- test scripts in ContentNFTs to test asset / nft / ipfs classes
-- finish integrating with ContentNFTs and LoveBoat
 
-- update project to sync with LoveBoat, FreeWilly, and ContentNFTs
+- update project to mint for LoveBoat, FreeWilly, ContentNFTs, etc
 -- must be able to upload: content data --> IPFS
+--- can upload content data to IPFS
 -- must be able to mint: king token --> loveboat TBA | content wallet TBA
 -- must be able to mint: content token --> loveboat TBA | content wallet TBA (| or other project wallet TBA)
 
