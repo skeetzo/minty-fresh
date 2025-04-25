@@ -26,6 +26,9 @@ export class NFT {
         // is there a need for tracking ERC token standard? perhaps check at function call when doing specific checks?
         this.standard = opts.standard || 0;
 
+        // TODO: cleanup how this is implemented
+        this.base_uri = opts.base_uri || "ipfs://";
+
         this._initialized = false;
     }
 
@@ -168,7 +171,7 @@ export class NFT {
             path: `/metadata/${this.metadata.name}.json`,
             content: JSON.stringify(this.metadata)
         };
-        const { metadataCID, metadataURI } = await IPFS.add(file);
+        const { metadataCID, metadataURI } = await IPFS.add(file, this.base_uri);
         this.metadataCID = metadataCID;
         this.metadataURI = metadataURI;
     }
