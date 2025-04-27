@@ -42,7 +42,7 @@
     "ajv": "^8.11.0",
     "chalk": "^4.1.2",
     "commander": "^9.4.0",
-    "getconfig": "^4.5.0",
+    "getconfig": "github:skeetzo/getconfig",
     "inquirer": "^12.5.2",
     "it-all": "^3.0.7",
     "json-colorizer": "^3.0.1",
