@@ -107,6 +107,9 @@
 - tested scripts in ContentNFTs to test asset / nft / ipfs classes
 - finished integrating with ContentNFTs and LoveBoat
 - finished beginning sync with LoveBoat & ContentNFTs
+**1.3.7 : 4-26-2025**
+- added getconfig fork w/ update to ESM
+-- npm i getconfig@skeetzo/getconfig --save
 
 ------------------------------------------------------------------------
 
@@ -152,4 +155,5 @@ https://reactjs.org/docs/introducing-jsx.html
 # Dev
 
 npm link
-npm install --save @drizzle/store
+npm i @drizzle/store --save
+npm i getconfig@skeetzo/getconfig --save
