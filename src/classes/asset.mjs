@@ -162,12 +162,14 @@ export class Asset {
         const assetTypes = [...default_asset_types, ...Asset.loadAssetsForSchema(schema)];
         const unique = [...new Set(assetTypes)];
 
-		const asset = new Asset(metadata);
+		const asset = new Asset({});
 
         for (const key of unique)
             for (const [_key, value] of Object.entries(metadata)) {
 
                 if (key == _key) { 
+                	console.log("found asset:", key)
+
             		asset.name = key;
 
                 	if (value) {

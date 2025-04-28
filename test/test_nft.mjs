@@ -112,6 +112,7 @@ describe("NFT", () => {
         const nft = new NFT(opts);
         // nft.pin
         const {assetURIs, metadataURI} = await nft.pin();
+        // TODO: add checks
     })
     it("can unpin", async () => {
         const nft = new NFT(opts);

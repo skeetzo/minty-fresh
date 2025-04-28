@@ -2,7 +2,7 @@
 import * as getconfig from "getconfig";
 import { CID } from 'multiformats/cid'
 import all from 'it-all'
-import * as path from "path";
+// import * as path from "path";
 
 import { concat, toString } from 'uint8arrays';
 const uint8ArrayConcat = concat;
@@ -31,7 +31,7 @@ export class IPFS {
       'hashAlg': 'sha2-256',
       'create':true,
       'parents':true,
-      // 'wrapWithDirectory':true
+      'wrapWithDirectory':true
     }
 
     constructor(opts={}) {
@@ -242,7 +242,7 @@ export class IPFS {
     static ensureIpfsUriPrefix(cidOrURI, baseUri="ipfs://") {
         let uri = cidOrURI.toString()
         if (!uri.startsWith(baseUri)) {
-            uri = path.join(baseUri, uri);
+            uri = baseUri + uri;
         }
         // Avoid the Nyan Cat bug (https://github.com/ipfs/go-ipfs/pull/7930)
         if (uri.startsWith(`ipfs://ipfs/`)) {

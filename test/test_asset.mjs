@@ -9,8 +9,8 @@ const IMAGE_SOURCE_TEST = "./test/helpers/mintyfresh";
 // const IMAGE_SOURCE_TEST_E = "./test/helpers/mintyfreshe";
 // const EKEY = "82c26f7233f846adf8aa040b74976530";
 
-const CID = "QmPEx5zdQroQ6XvvPD8MkqQyBp8845QsdxdC1kL7Tbk7L5";
-const URI = "ipfs://QmPEx5zdQroQ6XvvPD8MkqQyBp8845QsdxdC1kL7Tbk7L5/minty-fresh.png";
+const CID = "QmXT4ms33ghdfpkidWBx72fDHYALn7apBGsNiaDHVhZe3U";
+const URI = "ipfs://QmXT4ms33ghdfpkidWBx72fDHYALn7apBGsNiaDHVhZe3U/minty-fresh.png";
 // const KEY = "";
 
 const opts = {
