@@ -45,6 +45,7 @@ export class IPFS {
 
     // file must have: name, path, and content
     static async add(file, baseUri="ipfs://") {
+        console.log(file)
         console.debug(`adding IPFS path: ${file.path}`);
         const { cid: metadataCID } = await IPFS_CLIENT.add(file, IPFS.ipfsAddOptions);
         const metadataURI = IPFS.ensureIpfsUriPrefix(metadataCID, baseUri) + "/" + file.name;
