@@ -60,5 +60,5 @@
 
 
     },
-    "required": ["name", "uri"]
+    "required": ["title", "uri", "performers", "key"]
 }
