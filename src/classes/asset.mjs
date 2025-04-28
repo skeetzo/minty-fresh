@@ -166,7 +166,8 @@ export class Asset {
 
         for (const key of unique)
             for (const [_key, value] of Object.entries(metadata)) {
-
+            	console.log(key)
+            	console.log(_key)
                 if (key == _key) { 
                 	console.log("found asset:", key)
 
@@ -193,6 +194,7 @@ export class Asset {
 	// TODO
 	// return the asset types for the schema1
 	static loadAssetsForSchema(schema) {
+		console.log("loading assets for schema:", schema);
 		if (schema == "content")
 			return ["uri"];
 		// TODO: update this to some how dynamically return "assets" which are basically files that could be many different things or groups of things
