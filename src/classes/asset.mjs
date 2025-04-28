@@ -41,6 +41,19 @@ export class Asset {
 		this.base_uri = opts.base_uri || "ipfs://";
 	}
 
+	toJSON() {
+		return {
+			name: this.name,
+			cid: this.cid,
+			uri: this.uri,
+			content: this.content,
+			path: this.path,
+			mode: this.mode,
+			encrypt: this.encrypt,
+			encrypted: this.encrypted
+		}
+	}
+
 	toString() {
 		return {
 			name: this.name,

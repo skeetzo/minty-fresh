@@ -113,6 +113,8 @@
 
 ------------------------------------------------------------------------
 
+- cleanup private/public.pem process for key for encrypting files
+
 - cleanup / figure out how ipfs upload paths work
 
 - write tests for new multiple asset upload process
