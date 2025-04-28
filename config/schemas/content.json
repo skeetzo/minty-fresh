@@ -31,7 +31,7 @@
             "description": "The beneficiary content splitter"
         },
         "fee": {
-            "type": "string",
+            "type": "integer",
             "description": "The royalty fee"
         },
         "max": {
