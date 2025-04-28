@@ -160,6 +160,7 @@ export class NFT {
     async uploadAssets() {
         for (const asset of this.assets) {
             const { metadataCID, metadataURI, key } = await asset.upload();
+            this.metadata[asset.name] = metadataCID;
             // TODO: do something with this?
         }
     }
