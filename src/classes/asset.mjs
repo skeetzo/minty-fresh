@@ -132,7 +132,7 @@ export class Asset {
     	for (const asset of Asset.getAssets(metadata, schema)) {
             const { metadataCID, metadataURI, key } = await asset.upload();
             // console.log("key:", key)
-            metadata[asset.name] = metadataCID;
+            // metadata[asset.name] = metadataCID;
             if (key)
 	            metadata["key"] = key;
 	            // metadata[asset.name+"_key"] = key;
@@ -166,10 +166,10 @@ export class Asset {
 
         for (const key of unique)
             for (const [_key, value] of Object.entries(metadata)) {
-            	console.log(key)
-            	console.log(_key)
+            	// console.log(key)
+            	// console.log(_key)
                 if (key == _key) { 
-                	console.log("found asset:", key)
+                	// console.log("found asset:", key)
 
             		asset.name = key;
 
@@ -194,7 +194,7 @@ export class Asset {
 	// TODO
 	// return the asset types for the schema1
 	static loadAssetsForSchema(schema) {
-		console.log("loading assets for schema:", schema);
+		// console.log("loading assets for schema:", schema);
 		if (schema == "content")
 			return ["uri"];
 		// TODO: update this to some how dynamically return "assets" which are basically files that could be many different things or groups of things
