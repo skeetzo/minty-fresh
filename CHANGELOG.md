@@ -110,12 +110,16 @@
 **1.3.7 : 4-26-2025**
 - added getconfig fork w/ update to ESM
 -- npm i getconfig@skeetzo/getconfig --save
+**1.3.8 : 4-28-2025**
+- updates /fixes to asset upload process 
+- updated tests
 
 ------------------------------------------------------------------------
 
-- cleanup private/public.pem process for key for encrypting files
-
+NEEDS TO BE DONE:
 - cleanup / figure out how ipfs upload paths work
+
+- cleanup private/public.pem process for key for encrypting files
 
 - write tests for new multiple asset upload process
 
