@@ -43,8 +43,8 @@ export function loadSchemaFromFile(schema) {
 }
 
 export function validate(metadata, schema, schemaJSON) {
-    // console.log(metadata)
     console.debug(`validating NFT schema: ${schema}...`);
+    console.debug(metadata)
     // replace empty values with null for flagging validation
     for (const [key, value] of Object.entries(metadata))
         if (value === "") metadata[key] = null;
