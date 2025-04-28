@@ -113,11 +113,11 @@
 **1.3.8 : 4-28-2025**
 - updates /fixes to asset upload process 
 - updated tests
+- cleanup / testing how ipfs upload paths work, might remove all base paths for now
 
 ------------------------------------------------------------------------
 
-NEEDS TO BE DONE:
-- cleanup / figure out how ipfs upload paths work
+- need to figure out how to signal to encrypt an asset better
 
 - cleanup private/public.pem process for key for encrypting files
 
