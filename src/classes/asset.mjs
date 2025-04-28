@@ -131,11 +131,9 @@ export class Asset {
     static async uploadAssets(metadata, schema="default") {
     	for (const asset of Asset.getAssets(metadata, schema)) {
             const { metadataCID, metadataURI, key } = await asset.upload();
+            metadata[asset.name] = metadataCID;
             // console.log("key:", key)
-            // metadata[asset.name] = metadataCID;
-            if (key)
-	            metadata["key"] = key;
-	            // metadata[asset.name+"_key"] = key;
+            if (key) metadata["key"] = key;
         }
     }
 
