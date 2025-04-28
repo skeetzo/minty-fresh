@@ -140,7 +140,7 @@ export class NFT {
     async unpin() {}
 
     async upload() {
-        // if (!this._initialized) await this.init();
+        if (!this._initialized) await this.init();
 
         // upload all asset objects
         await this.uploadAssets();
