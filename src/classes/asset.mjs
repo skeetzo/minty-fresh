@@ -192,7 +192,7 @@ export class Asset {
 	// return the asset types for the schema1
 	static loadAssetsForSchema(schema) {
 		if (schema == "content")
-			return ["content"];
+			return ["uri"];
 		// TODO: update this to some how dynamically return "assets" which are basically files that could be many different things or groups of things
 		return []
 	}

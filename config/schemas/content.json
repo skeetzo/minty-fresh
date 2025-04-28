@@ -2,9 +2,51 @@
     "title": "Content Metadata",
     "type": "object",
     "properties": {
-        "name": {
+
+        "title": {
             "type": "string",
-            "description": "The filename"
+            "description": "The content title or filename"
+        },
+        "description": {
+            "type": "string",
+            "description": "The content description"
+        },
+        "uri": {
+            "type": "string",
+            "description": "The content for this asset"
+        },
+        "key": {
+            "type": "string",
+            "default": "",
+            "description": "The encryption key for this content"
+        },
+
+
+        "cost": {
+            "type": "string",
+            "description": "The cost of the content in USD"
+        },
+        "beneficiary": {
+            "type": "string",
+            "description": "The beneficiary content splitter"
+        },
+        "fee": {
+            "type": "string",
+            "description": "The royalty fee"
+        },
+        "max": {
+            "type": "integer",
+            "description": "The max number of times the content may be minted"
+        },
+
+
+        "performers": {
+            "type": "array",
+            "description": "The token ids of the performers in the content"
+        },
+        "signatures": {
+            "type": "array",
+            "description": "The signatures of the performers in the content"
         },
         "director": {
             "type": "string",
@@ -13,35 +55,10 @@
         "producer": {
             "type": "string",
             "description": "The content producer"
-        },
-        "performers": {
-            "type": "array",
-            "description": "The token ids of the performers in the content"
-        },
-        "consentors": {
-            "type": "array",
-            "description": "The signatures of the performers in the content"
-        },
-        "max": {
-            "type": "integer",
-            "description": "The max number of times the content may be minted"
-        },
-        "format": {
-            "type": "string",
-            "description": "The file extension"
-        },
-        "content": {
-            "type": "string",
-            "description": "The content for this asset"
-        },
-        "encrypted": {
-            "type": "boolean",
-            "description": "Whether or not the content is encrypted"
-        },
-        "key": {
-            "type": "string",
-            "description": "The encryption key for this content"
         }
+
+
+
     },
-    "required": ["name", "content"]
+    "required": ["name", "uri"]
 }
