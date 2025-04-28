@@ -169,8 +169,8 @@ export class Asset {
             	// console.log(_key)
                 if (key == _key) { 
                 	// console.log("found asset:", key)
-
             		asset.name = key;
+                	asset.encrypt = true;
 
                 	if (value) {
                 		// cid uri or path
