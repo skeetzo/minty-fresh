@@ -2,7 +2,7 @@
 import { Asset } from './asset.mjs';
 import { IPFS } from './ipfs.mjs';
 
-import { promptSchema } from '../utils/prompt.mjs';
+import { promptSchema, promptMetadata } from '../utils/prompt.mjs';
 import { fromSchema, loadSchemaFromFile, validate } from '../utils/schema.mjs';
 
 // const ERC20_interfaceId = "0x36372b07",
@@ -67,17 +67,25 @@ export class NFT {
         if (this._initialized) {
             return;
         }
+
     
-        if (process.env.cli)
-            this.schemaJSON = await promptSchema([this.schema]);
+        if (process.env.cli) {
+            // if (!this.schema)
+                // this.schema = await promptSchema();
+            const schema, metadata = await promptMetadata(this.metadata);
+            this.schemaJSON = schema;
+            this.metadata = metadata;
+        }
         else
             this.schemaJSON = await loadSchemaFromFile(this.schema);
 
         console.log("schemaJSON:", this.schemaJSON);
+        console.log("metadata:", this.metadata);
 
         // const defaults = fromSchema(this.schemaJSON);
         // this.metadata.name = this.name;
         this.metadata = {...this.metadata, ...fromSchema(this.schemaJSON)}
+        console.log("metadata:", this.metadata);
 
         this._initialized = true;
     }
