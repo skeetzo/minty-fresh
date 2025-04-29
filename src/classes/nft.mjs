@@ -69,7 +69,7 @@ export class NFT {
         }
     
         if (process.env.cli)
-            this.schemaJSON = await promptSchema(this.schema);
+            this.schemaJSON = await promptSchema([this.schema]);
         else
             this.schemaJSON = await loadSchemaFromFile(this.schema);
 
