@@ -1,13 +1,13 @@
 import * as fs from 'fs';
 import inquirer from 'inquirer';
-import { NFT } from "../classes/nft.mjs";
+import { loadSchemaFromFile, fromSchema } from "./schema.mjs";
 
 // TODO
 // possibly add type from schema into message for entering inputs
 export async function promptMetadata(options) {
-    const schema = await NFT.loadSchemaFromFile(options.schema);
+    const schema = await loadSchemaFromFile(options.schema);
     // determine metadata base
-    const metadata = await NFT.fromSchema(options.schema, options);
+    const metadata = await fromSchema(options.schema, options);
     console.debug("metadata:");
     console.debug(metadata);
     const questions = [];
