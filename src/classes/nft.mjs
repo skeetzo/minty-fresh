@@ -72,7 +72,7 @@ export class NFT {
         if (process.env.cli) {
             // if (!this.schema)
                 // this.schema = await promptSchema();
-            const schema, metadata = await promptMetadata(this.metadata);
+            const { schema, metadata } = await promptMetadata(this.metadata);
             this.schemaJSON = schema;
             this.metadata = metadata;
         }
