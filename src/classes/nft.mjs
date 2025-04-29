@@ -73,6 +73,8 @@ export class NFT {
         else
             this.schemaJSON = await loadSchemaFromFile(this.schema);
 
+        console.log("schemaJSON:", this.schemaJSON);
+
         // const defaults = fromSchema(this.schemaJSON);
         // this.metadata.name = this.name;
         this.metadata = {...this.metadata, ...fromSchema(this.schemaJSON)}
