@@ -1,5 +1,6 @@
 import * as fs from 'fs';
 import inquirer from 'inquirer';
+import { NFT } from "../classes/nft.mjs";
 
 // TODO
 // possibly add type from schema into message for entering inputs
