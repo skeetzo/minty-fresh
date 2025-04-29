@@ -68,6 +68,12 @@ export class NFT {
             return;
         }
 
+
+        // TODO: figure out the proper sequence to accomplish the behavior:
+        // - create a default object from the schema
+        // - copy all the provided metadata values to the default schema
+        // - if cli, prompt to fill in missing values
+
     
         if (process.env.cli) {
             // if (!this.schema)

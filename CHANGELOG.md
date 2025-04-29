@@ -117,6 +117,8 @@
 
 ------------------------------------------------------------------------
 
+- finish updates to prompt sequence
+
 - need to figure out how to signal to encrypt an asset better
 
 - cleanup private/public.pem process for key for encrypting files
