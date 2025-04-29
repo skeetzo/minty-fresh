@@ -21,12 +21,12 @@ export async function promptMetadata(options) {
     // prompt for missing details if not provided as cli args
     await promptForMissing(options, questions);    
     // prompt to add additional properties & attributes
-    await promptAdditionalProperties(options);
+    await promptAdditionalProperties(metadata);
     if (schema.hasOwnProperty("attributes") || Object.keys(schema).length == 0) // or if schema is 'blank'
-        await promptAdditionalAttributes(options);
+        await promptAdditionalAttributes(metadata);
     return {
         schema: schema,
-        metadata: options
+        metadata: metadata
     }
 }
 
