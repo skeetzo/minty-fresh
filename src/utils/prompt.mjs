@@ -7,9 +7,9 @@ import { loadSchemaFromFile, fromSchema } from "./schema.mjs";
 export async function promptMetadata(options) {
     const schema = await loadSchemaFromFile(options.schema);
     // determine metadata base
-    const metadata = await fromSchema(options.schema, options);
-    console.debug("metadata:");
-    console.debug(metadata);
+    const metadata = await fromSchema(options.schema);
+    // console.debug("metadata:");
+    // console.debug(metadata);
     const questions = [];
     if (schema.hasOwnProperty("properties"))
         for (const [key, value] of Object.entries(schema.properties))
@@ -21,12 +21,12 @@ export async function promptMetadata(options) {
     // prompt for missing details if not provided as cli args
     await promptForMissing(options, questions);    
     // prompt to add additional properties & attributes
-    await promptAdditionalProperties(metadata);
+    await promptAdditionalProperties(options);
     if (schema.hasOwnProperty("attributes") || Object.keys(schema).length == 0) // or if schema is 'blank'
-        await promptAdditionalAttributes(metadata);
+        await promptAdditionalAttributes(options);
     return {
         schema: schema,
-        metadata: metadata
+        metadata: options
     }
 }
 
@@ -107,6 +107,7 @@ async function promptAdditionalAttributes(metadata) {
 // verify this actually does what it used to do still
 let defaultAttributes = false;
 async function promptForMissing(cliOptions, prompts) {
+    console.log("cliOptions:", cliOptions);
     const questions = []
     for (const prompt of prompts) {
         // prompt.name = name;
