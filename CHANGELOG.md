@@ -97,25 +97,29 @@
 	- finished asset tests
 	- finished added asset.js class & interactions w/ testing for retrieving asset objects
 	- added basic tests for nft class
-**1.3.6 : 4-24-2025**
-- finished debugging nft pin test after adding local pinning service
--- fix ipfs uploads / adds --> not appearing in ipfs client
---- was this fixed in the webgui fix in 1.3.1?
---- yes it was?
-- finished debugging asset tests
-- updated asset/nft classes to properly update metadata values for upload
-- tested scripts in ContentNFTs to test asset / nft / ipfs classes
-- finished integrating with ContentNFTs and LoveBoat
-- finished beginning sync with LoveBoat & ContentNFTs
-**1.3.7 : 4-26-2025**
-- added getconfig fork w/ update to ESM
--- npm i getconfig@skeetzo/getconfig --save
+	**1.3.6 : 4-24-2025**
+	- finished debugging nft pin test after adding local pinning service
+	-- fix ipfs uploads / adds --> not appearing in ipfs client
+	--- was this fixed in the webgui fix in 1.3.1?
+	--- yes it was?
+	- finished debugging asset tests
+	- updated asset/nft classes to properly update metadata values for upload
+	- tested scripts in ContentNFTs to test asset / nft / ipfs classes
+	- finished integrating with ContentNFTs and LoveBoat
+	- finished beginning sync with LoveBoat & ContentNFTs
+	**1.3.7 : 4-26-2025**
+	- added getconfig fork w/ update to ESM
+	-- npm i getconfig@skeetzo/getconfig --save
 **1.3.8 : 4-28-2025**
 - updates /fixes to asset upload process 
 - updated tests
 - cleanup / testing how ipfs upload paths work, might remove all base paths for now
+**1.3.9 : 4-29-2025**
+- debugging prompt sequence
 
 ------------------------------------------------------------------------
+
+- finish updating getconfig
 
 - finish updates to prompt sequence
 

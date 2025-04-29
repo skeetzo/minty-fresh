@@ -51,9 +51,7 @@ const config = {
     ipfsGatewayUrl: 'http://localhost:8080/ipfs',
 
     // key, value pairs of schemas w/ their IPFS schema .json
-    schemasIPFS: {
-
-    },
+    // schemasIPFS: {},
 
     SCHEMA_PATH: "config/schemas"
 }

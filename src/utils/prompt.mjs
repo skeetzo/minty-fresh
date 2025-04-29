@@ -4,29 +4,31 @@ import { loadSchemaFromFile, fromSchema } from "./schema.mjs";
 
 // TODO
 // possibly add type from schema into message for entering inputs
-export async function promptMetadata(options) {
-    const schema = await loadSchemaFromFile(options.schema);
+export async function promptMetadata(metadata, schema) {
+
     // determine metadata base
-    const metadata = await fromSchema(options.schema);
-    // console.debug("metadata:");
-    // console.debug(metadata);
+    const schemaJSON = await loadSchemaFromFile(schema);
+
     const questions = [];
-    if (schema.hasOwnProperty("properties"))
-        for (const [key, value] of Object.entries(schema.properties))
+    if (schemaJSON.hasOwnProperty("properties"))
+        for (const [key, value] of Object.entries(schemaJSON.properties))
             questions.push({
                 'type': 'input',
                 'name': key,
                 'message': `${value["description"]}: ${key} =`
             });
+
     // prompt for missing details if not provided as cli args
-    await promptForMissing(options, questions);    
+    await promptForMissing(metadata, questions);    
+
     // prompt to add additional properties & attributes
-    await promptAdditionalProperties(metadata);
-    if (schema.hasOwnProperty("attributes") || Object.keys(schema).length == 0) // or if schema is 'blank'
-        await promptAdditionalAttributes(metadata);
+    const properties = await fromSchema(schema);
+    await promptAdditionalProperties(properties);
+    if (schemaJSON.hasOwnProperty("attributes") || Object.keys(schemaJSON).length == 0) // or if schema is 'blank'
+        await promptAdditionalAttributes(properties);
     return {
-        schema: schema,
-        metadata: metadata
+        schemaJSON,
+        properties
     }
 }
 

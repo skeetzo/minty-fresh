@@ -3,7 +3,7 @@ import { Asset } from './asset.mjs';
 import { IPFS } from './ipfs.mjs';
 
 import { promptSchema, promptMetadata } from '../utils/prompt.mjs';
-import { fromSchema, loadSchemaFromFile, validate } from '../utils/schema.mjs';
+import { fromSchema, loadSchemaFromFile, loadTemplates, validate } from '../utils/schema.mjs';
 
 // const ERC20_interfaceId = "0x36372b07",
       // ERC721_interfaceId = "0x80ac58cd";
@@ -74,24 +74,21 @@ export class NFT {
         // - copy all the provided metadata values to the default schema
         // - if cli, prompt to fill in missing values
 
-    
         if (process.env.cli) {
-            // if (!this.schema)
-                // this.schema = await promptSchema();
-            this.metadata.schema = this.schema;
-            const { schema, metadata } = await promptMetadata(this.metadata);
-            this.schemaJSON = schema;
-            this.metadata = metadata;
+            if (!this.schema)
+                this.schema = await promptSchema(loadTemplates());
+
+            // this.metadata is updated by the prompt function
+            const { schemaJSON, properties } = await promptMetadata(this.metadata, this.schema);
+            this.schemaJSON = schemaJSON;
+            this.metadata = {...this.metadata, ...properties}
         }
-        else
+        else {
             this.schemaJSON = await loadSchemaFromFile(this.schema);
+            this.metadata = {...this.metadata, ...fromSchema(this.schemaJSON)}
+        }
 
-        console.log("schemaJSON:", this.schemaJSON);
-        console.log("metadata:", this.metadata);
-
-        // const defaults = fromSchema(this.schemaJSON);
-        // this.metadata.name = this.name;
-        this.metadata = {...this.metadata, ...fromSchema(this.schemaJSON)}
+        // console.log("schemaJSON:", this.schemaJSON);
         console.log("metadata:", this.metadata);
 
         this._initialized = true;

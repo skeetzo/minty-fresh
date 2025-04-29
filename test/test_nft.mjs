@@ -41,7 +41,7 @@ const opts = {
 	name: "nftname",
     assets: [],
     metadata,
-	schema: "content",
+	schema: "blank",
     schemaJSON: {},
     tokenId: 0,
     owner: null,

@@ -42,6 +42,17 @@ export function loadSchemaFromFile(schema) {
     return _parseTemplate(templates[defaultIndex]);
 }
 
+export function loadTemplates() {
+    // const templates = [];
+    const files = [];
+    if (fs.existsSync(SCHEMA_PATH))
+        files.push(...fs.readdirSync(SCHEMA_PATH));
+    // for (let i=0;i<files.length;i++)
+        // templates.push(files[i].replace(".json",""));
+    return files.map((file) => file.replace(".json",""))
+    // return templates;
+}
+
 export function validate(metadata, schema, schemaJSON) {
     console.debug(`validating NFT schema: ${schema}...`);
     console.debug(metadata)

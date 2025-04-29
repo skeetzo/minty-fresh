@@ -1,5 +1,5 @@
 
-import * as getconfig from "getconfig";
+import * as config from "getconfig";
 import { CID } from 'multiformats/cid'
 import all from 'it-all'
 // import * as path from "path";
@@ -9,14 +9,16 @@ const uint8ArrayConcat = concat;
 const uint8ArrayToString = toString;
 // import { uint8ArrayToString } from 'uint8arrays/to-string';
 
-const config = getconfig.default;
-
 import { create } from "kubo-rpc-client";
 const IPFS_CLIENT = create(config.ipfsApiUrl);
 
 // ipfs.add parameters for more deterministic CIDs
 
 // const BASE_URI = "ipfs://";
+
+// config.default()
+console.log(config)
+console.log(config.default())
 
 export class IPFS {
     
