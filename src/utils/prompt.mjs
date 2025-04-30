@@ -120,11 +120,11 @@ async function promptForMissing(cliOptions, prompts) {
                 defaultAttributes = true;
                 return false;
             }
-            if (cliOptions[prompt.name]) {
+            if (prompt.name in cliOptions) {
+                cliOptions[prompt.name] = answers[prompt.name]
                 // answers[prompt.name] = cliOptions[prompt.name]
                 return false
             }
-            cliOptions[prompt.name] = answers[prompt.name]
             console.log(cliOptions)
             return true
         }
