@@ -136,5 +136,6 @@ async function promptForMissing(cliOptions, prompts) {
     let thing = await inquirer.prompt(questions);
     console.log(thing)
     // await thing();
-    return {...cliOptions, ...returned};
+    // return {...cliOptions, ...returned};
+    return thing;
 }
