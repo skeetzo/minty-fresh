@@ -117,11 +117,12 @@
 **1.3.9 : 4-29-2025**
 - debugging prompt sequence
 - finished updating getconfig
+**1.3.10 : 4-30-2025**
+- finished updates to prompt sequence
 
 ------------------------------------------------------------------------
 
-
-- finish updates to prompt sequence
+- need to add better validation steps for prompting input, problem when everything becomes a string: strings -> integer
 
 - need to figure out how to signal to encrypt an asset better
 

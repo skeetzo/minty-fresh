@@ -5,10 +5,9 @@ import { loadSchemaFromFile, fromSchema } from "./schema.mjs";
 // TODO
 // possibly add type from schema into message for entering inputs
 export async function promptMetadata(metadata, schema) {
-
     // determine metadata base
     const schemaJSON = await loadSchemaFromFile(schema);
-
+    // create prompt questions for each property
     const questions = [];
     if (schemaJSON.hasOwnProperty("properties"))
         for (const [key, value] of Object.entries(schemaJSON.properties))
@@ -17,15 +16,14 @@ export async function promptMetadata(metadata, schema) {
                 'name': key,
                 'message': `${value["description"]}: ${key} =`
             });
-
     // prompt for missing details if not provided as cli args
     metadata = await promptForMissing(metadata, questions);    
-
     // prompt to add additional properties & attributes
     const properties = await fromSchema(schema);
     await promptAdditionalProperties(properties);
     if (schemaJSON.hasOwnProperty("attributes") || Object.keys(schemaJSON).length == 0) // or if schema is 'blank'
         await promptAdditionalAttributes(properties);
+    // combine any new properties
     metadata = {...metadata, ...properties};
     return {
         metadata,
@@ -110,32 +108,20 @@ async function promptAdditionalAttributes(metadata) {
 // verify this actually does what it used to do still
 let defaultAttributes = false;
 async function promptForMissing(cliOptions, prompts) {
-    // console.log("cliOptions:", cliOptions);
     const questions = []
-    let returned = {};
     for (const prompt of prompts) {
-        // console.log(prompt)
-        // prompt.name = name;
         prompt.when = (answers) => {
-            console.log(answers)
             if (prompt.name == "attributes" && !defaultAttributes) {
                 defaultAttributes = true;
                 return false;
             }
             if (cliOptions[prompt.name]) {
-                // cliOptions[prompt.name] = answers[prompt.name]
                 answers[prompt.name] = cliOptions[prompt.name]
                 return false
             }
-            console.log(cliOptions)
-            returned = {...returned, ...answers}
             return true
         }
         questions.push(prompt);
     }
-    let thing = await inquirer.prompt(questions);
-    console.log(thing)
-    // await thing();
-    // return {...cliOptions, ...returned};
-    return thing;
+    return await inquirer.prompt(questions);
 }
