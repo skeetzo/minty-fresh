@@ -19,7 +19,7 @@ export async function promptMetadata(metadata, schema) {
             });
 
     // prompt for missing details if not provided as cli args
-    await promptForMissing(metadata, questions);    
+    metadata = await promptForMissing(metadata, questions);    
 
     // prompt to add additional properties & attributes
     const properties = await fromSchema(schema);
@@ -133,5 +133,5 @@ async function promptForMissing(cliOptions, prompts) {
         questions.push(prompt);
     }
     await inquirer.prompt(questions);
-    cliOptions = {...cliOptions, ...returned}
+    return {...cliOptions, ...returned};
 }
