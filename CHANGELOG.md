@@ -116,10 +116,10 @@
 - cleanup / testing how ipfs upload paths work, might remove all base paths for now
 **1.3.9 : 4-29-2025**
 - debugging prompt sequence
+- finished updating getconfig
 
 ------------------------------------------------------------------------
 
-- finish updating getconfig
 
 - finish updates to prompt sequence
 

@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
-import * as config from "getconfig";
+import * as getconfig from "getconfig";
+const config = getconfig.default;
 import * as path from "path";
 import { Command } from 'commander';
 
@@ -10,7 +11,6 @@ import { alignOutput, colorizeOptions, fileExists } from './utils/helpers.mjs';
 // the .env variable to use to reference the path for a minty "addon"
 // const MINTY_ADDON_KEY = config.mintyAddonKey || "MINTY_ADDON";
 process.env.cli = true;
-
 
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';

@@ -1,4 +1,4 @@
-const config = {
+export const config = {
 
     encrypt: true,
 
@@ -55,5 +55,3 @@ const config = {
 
     SCHEMA_PATH: "config/schemas"
 }
-
-module.exports = config

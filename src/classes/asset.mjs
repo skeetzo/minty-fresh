@@ -1,5 +1,6 @@
 
-import * as config from "getconfig";
+import * as getconfig from "getconfig";
+const config = getconfig.default;
 import * as fs from 'fs';
 import * as path from "path";
 

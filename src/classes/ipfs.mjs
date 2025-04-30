@@ -1,5 +1,6 @@
 
-import * as config from "getconfig";
+import * as getconfig from "getconfig";
+const config = getconfig.default;
 import { CID } from 'multiformats/cid'
 import all from 'it-all'
 // import * as path from "path";
@@ -17,8 +18,6 @@ const IPFS_CLIENT = create(config.ipfsApiUrl);
 // const BASE_URI = "ipfs://";
 
 // config.default()
-console.log(config)
-console.log(config.default())
 
 export class IPFS {
     

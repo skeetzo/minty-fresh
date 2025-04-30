@@ -6,6 +6,7 @@
   "scripts": {
     "test": "mocha --exit"
   },
+  "type": "module",
   "bin": {
     "minty": "src/index.mjs"
   },
@@ -20,7 +21,6 @@
     "./helpers": "./src/utils/helpers.mjs",
     "./schema": "./src/utils/schema.mjs"
   },
-  "type": "commonjs",
   "keywords": [
     "nft",
     "cli"
