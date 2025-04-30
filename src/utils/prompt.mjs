@@ -112,8 +112,10 @@ async function promptForMissing(cliOptions, prompts) {
     // console.log("cliOptions:", cliOptions);
     const questions = []
     for (const prompt of prompts) {
+        console.log(prompt)
         // prompt.name = name;
         prompt.when = (answers) => {
+            console.log(answers)
             if (prompt.name == "attributes" && !defaultAttributes) {
                 defaultAttributes = true;
                 return false;
