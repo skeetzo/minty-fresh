@@ -79,9 +79,9 @@ export class NFT {
                 this.schema = await promptSchema(loadTemplates());
 
             // this.metadata is updated by the prompt function
-            const { schemaJSON, properties } = await promptMetadata(this.metadata, this.schema);
+            const { metadata, schemaJSON } = await promptMetadata(this.metadata, this.schema);
+            this.metadata = metadata;
             this.schemaJSON = schemaJSON;
-            this.metadata = {...this.metadata, ...properties}
         }
         else {
             this.schemaJSON = await loadSchemaFromFile(this.schema);

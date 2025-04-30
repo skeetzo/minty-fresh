@@ -26,9 +26,10 @@ export async function promptMetadata(metadata, schema) {
     await promptAdditionalProperties(properties);
     if (schemaJSON.hasOwnProperty("attributes") || Object.keys(schemaJSON).length == 0) // or if schema is 'blank'
         await promptAdditionalAttributes(properties);
+    metadata = {...metadata, ...properties};
     return {
-        schemaJSON,
-        properties
+        metadata,
+        schemaJSON
     }
 }
 
