@@ -132,6 +132,6 @@ async function promptForMissing(cliOptions, prompts) {
         }
         questions.push(prompt);
     }
-    inquirer.prompt(questions);
+    await inquirer.prompt(questions);
     cliOptions = {...cliOptions, ...returned}
 }
