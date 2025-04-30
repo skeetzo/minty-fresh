@@ -123,6 +123,7 @@ async function promptForMissing(cliOptions, prompts) {
                 cliOptions[prompt.name] = answers[prompt.name]
                 return false
             }
+            console.log(cliOptions)
             return true
         }
         questions.push(prompt);
