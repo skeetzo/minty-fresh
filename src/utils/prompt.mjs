@@ -133,6 +133,8 @@ async function promptForMissing(cliOptions, prompts) {
         }
         questions.push(prompt);
     }
-    await inquirer.prompt(questions);
+    let thing = await inquirer.prompt(questions);
+    console.log(thing)
+    // await thing();
     return {...cliOptions, ...returned};
 }
