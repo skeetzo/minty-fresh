@@ -120,14 +120,13 @@ async function promptForMissing(cliOptions, prompts) {
                 defaultAttributes = true;
                 return false;
             }
-            if (cliOptions[prompt.name]) {
+            // if (cliOptions[prompt.name]) {
                 // answers[prompt.name] = cliOptions[prompt.name]
-                // cliOptions[prompt.name] = answers[prompt.name]
+                cliOptions[prompt.name] = answers[prompt.name]
                 return false
-            }
-            cliOptions = {...prompt, ...cliOptions}
-            console.log(cliOptions)
-            return true
+            // }
+            // console.log(cliOptions)
+            // return true
         }
         questions.push(prompt);
     }
