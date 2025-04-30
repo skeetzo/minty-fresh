@@ -109,7 +109,7 @@ async function promptAdditionalAttributes(metadata) {
 // verify this actually does what it used to do still
 let defaultAttributes = false;
 async function promptForMissing(cliOptions, prompts) {
-    console.log("cliOptions:", cliOptions);
+    // console.log("cliOptions:", cliOptions);
     const questions = []
     for (const prompt of prompts) {
         // prompt.name = name;
@@ -119,7 +119,8 @@ async function promptForMissing(cliOptions, prompts) {
                 return false;
             }
             if (cliOptions[prompt.name]) {
-                answers[prompt.name] = cliOptions[prompt.name]
+                // answers[prompt.name] = cliOptions[prompt.name]
+                cliOptions[prompt.name] = answers[prompt.name]
                 return false
             }
             return true
