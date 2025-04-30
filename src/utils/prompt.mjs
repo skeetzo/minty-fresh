@@ -111,6 +111,7 @@ let defaultAttributes = false;
 async function promptForMissing(cliOptions, prompts) {
     // console.log("cliOptions:", cliOptions);
     const questions = []
+    const returned = {};
     for (const prompt of prompts) {
         // console.log(prompt)
         // prompt.name = name;
@@ -126,10 +127,11 @@ async function promptForMissing(cliOptions, prompts) {
                 return false
             }
             console.log(cliOptions)
+            returned = {...returned, ...answers}
             return true
         }
         questions.push(prompt);
     }
     inquirer.prompt(questions);
-    cliOptions = {...cliOptions, ...answers}
+    cliOptions = {...cliOptions, ...returned}
 }
