@@ -31,11 +31,11 @@
             "description": "The beneficiary content splitter"
         },
         "fee": {
-            "type": "string",
+            "type": "integer",
             "description": "The royalty fee"
         },
         "max": {
-            "type": "string",
+            "type": "integer",
             "description": "The max number of times the content may be minted"
         },
 
