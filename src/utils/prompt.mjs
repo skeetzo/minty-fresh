@@ -4,7 +4,7 @@ import { loadSchemaFromFile, fromSchema } from "./schema.mjs";
 
 // TODO
 // possibly add type from schema into message for entering inputs
-export async function promptMetadata(metadata, schema) {
+export async function promptMetadata(metadata, schema, opts={"skipAttributes":false,"skipProperties":false}) {
     // determine metadata base
     const schemaJSON = await loadSchemaFromFile(schema);
     // create prompt questions for each property
@@ -20,9 +20,11 @@ export async function promptMetadata(metadata, schema) {
     metadata = await promptForMissing(metadata, questions);    
     // prompt to add additional properties & attributes
     const properties = await fromSchema(schema);
-    await promptAdditionalProperties(properties);
-    if (schemaJSON.hasOwnProperty("attributes") || Object.keys(schemaJSON).length == 0) // or if schema is 'blank'
-        await promptAdditionalAttributes(properties);
+    if (!opts.skipProperties)
+        await promptAdditionalProperties(properties);
+    if (!opts.skipAttributes)
+        if (schemaJSON.hasOwnProperty("attributes") || Object.keys(schemaJSON).length == 0) // or if schema is 'blank'
+            await promptAdditionalAttributes(properties);
     // combine any new properties
     metadata = {...metadata, ...properties};
     return {

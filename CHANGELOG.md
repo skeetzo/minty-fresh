@@ -78,7 +78,7 @@
 	- tested new changes to interacting with a contract on a network
 	- removed the "default" values from simple.json schema; added test schema (duh)
 	-- ALL TESTS SUCCESSFUL (sorta) --
-**1.3.1 : 8/9/2022**
+	**1.3.1 : 8/9/2022**
 	- added Asset class for tracking ipfs FileObjects better
 	- added complicated-test.json schema for testing multiple asset uploads later
 	- "fixed" ipfs webgui bug; need to finish asset.js before recontinuing ipfs tests
@@ -119,6 +119,8 @@
 - finished updating getconfig
 **1.3.10 : 4-30-2025**
 - finished updates to prompt sequence
+**1.3.11 : 7-9-2025**
+- added: skipAttributes & skipProperties to further optionally skip cli processes
 
 ------------------------------------------------------------------------
 
