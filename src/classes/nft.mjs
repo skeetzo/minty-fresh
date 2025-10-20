@@ -2,6 +2,7 @@
 import { Asset } from './asset.mjs';
 import { IPFS } from './ipfs.mjs';
 
+import { readMetadata, writeMetadata } from "../utils/exiftool.js";
 import { promptSchema, promptMetadata } from '../utils/prompt.mjs';
 import { fromSchema, loadSchemaFromFile, loadTemplates, validate } from '../utils/schema.mjs';
 
@@ -91,9 +92,16 @@ export class NFT {
         }
 
         // console.log("schemaJSON:", this.schemaJSON);
-        console.log("metadata:", this.metadata);
+        // console.debug("metadata:", this.metadata);
 
         this._initialized = true;
+    }
+
+    static async createFromFile(filePath, schema) {
+        const nft = new NFT({schema});
+        await nft.readMetadataFromFile(filePath);
+        await nft.init();
+        return nft;
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -190,6 +198,16 @@ export class NFT {
         const { metadataCID, metadataURI } = await IPFS.add(file, this.base_uri);
         this.metadataCID = metadataCID;
         this.metadataURI = metadataURI;
+    }
+
+    async writeMetadataToFile(filePath) {
+        console.log("writing metadata to file...");
+        await writeMetadata(filePath, this.metadata)
+    }
+
+
+    async readMetadataFromFile(filePath) {
+        this.metadata = await readMetadata(filePath);
     }
 
 }
