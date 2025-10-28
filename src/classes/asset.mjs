@@ -160,6 +160,7 @@ export class Asset {
 
 		const asset = new Asset({});
 
+		console.log(metadata)
         for (const key of unique)
             for (const [_key, value] of Object.entries(metadata)) {
             	if (_key == "encrypt" && value) {
