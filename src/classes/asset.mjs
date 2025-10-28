@@ -127,6 +127,7 @@ export class Asset {
 
     // should innately replace metadata[key] values with the cid
     static async uploadAssets(metadata, schema="default") {
+    	console.log(metadata)
     	for (const asset of Asset.getAssets(metadata, schema)) {
             const { metadataCID, metadataURI, key } = await asset.upload();
             metadata[asset.name] = metadataCID;
@@ -160,16 +161,8 @@ export class Asset {
 
 		const asset = new Asset({});
 
-		console.log(metadata)
         for (const key of unique)
             for (const [_key, value] of Object.entries(metadata)) {
-            	if (_key == "encrypt" && value) {
-            		asset.encrypt = true;
-            		console.log("thing")
-            		console.log("thing")
-            		console.log("thing")
-            		console.log("thing")
-            	}
             	// console.log(key)
             	// console.log(_key)
                 if (key == _key) { 
