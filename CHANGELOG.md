@@ -121,14 +121,20 @@
 - finished updates to prompt sequence
 **1.3.11 : 7-9-2025**
 - added: skipAttributes & skipProperties to further optionally skip cli processes
+**1.3.12 : 10-27-2025**
+- updates to encryption process; passes through from asset instead of via metadata
 
 ------------------------------------------------------------------------
+
+- update encryption process to be able to set the private key doing the encrypting
+- cleanup private/public.pem process for key for encrypting files
+
+
 
 - need to add better validation steps for prompting input, problem when everything becomes a string: strings -> integer
 
 - need to figure out how to signal to encrypt an asset better
 
-- cleanup private/public.pem process for key for encrypting files
 
 - write tests for new multiple asset upload process
 

@@ -16,6 +16,11 @@
             "description": "The content for this asset"
         },
 
+        "key": {
+            "type": "string",
+            "description": "The key for this asset"
+        },
+
 
         "cost": {
             "type": "integer",

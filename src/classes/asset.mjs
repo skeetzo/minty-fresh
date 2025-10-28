@@ -130,7 +130,6 @@ export class Asset {
     	for (const asset of Asset.getAssets(metadata, schema, encrypt)) {
             const { metadataCID, metadataURI, key } = await asset.upload();
             metadata[asset.name] = metadataCID;
-            // console.log("key:", key)
             if (key) metadata["key"] = key;
         }
     }
