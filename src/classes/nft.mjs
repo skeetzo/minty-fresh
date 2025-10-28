@@ -85,12 +85,11 @@ export class NFT {
             const { metadata, schemaJSON } = await promptMetadata(this.metadata, this.schema, {"skipAttributes":this.skipAttributes,"skipProperties":this.skipProperties});
             this.metadata = metadata;
             this.schemaJSON = schemaJSON;
+            console.log(this.metadata)
         }
         else {
-            console.log("m:",this.metadata)
             this.schemaJSON = await loadSchemaFromFile(this.schema);
             this.metadata = {...this.metadata, ...fromSchema(this.schemaJSON)}
-            console.log(this.metadata)
         }
 
         // console.log("schemaJSON:", this.schemaJSON);
