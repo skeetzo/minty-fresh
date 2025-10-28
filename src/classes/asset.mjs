@@ -126,9 +126,9 @@ export class Asset {
     }
 
     // should innately replace metadata[key] values with the cid
-    static async uploadAssets(metadata, schema="default") {
+    static async uploadAssets(metadata, schema="default", encrypt) {
     	console.log(metadata)
-    	for (const asset of Asset.getAssets(metadata, schema)) {
+    	for (const asset of Asset.getAssets(metadata, schema, encrypt)) {
             const { metadataCID, metadataURI, key } = await asset.upload();
             metadata[asset.name] = metadataCID;
             // console.log("key:", key)
@@ -153,7 +153,7 @@ export class Asset {
 
 	// TODO
 	// return the known asset keys found within the provided metadata
-	static getAssets(metadata, schema) {
+	static getAssets(metadata, schema, encrypt) {
         const assets = [];
 
         const assetTypes = [...default_asset_types, ...Asset.loadAssetsForSchema(schema)];
