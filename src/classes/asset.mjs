@@ -67,10 +67,7 @@ export class Asset {
 	}
 
 	async encryptFile() {
-		if (this.encrypted) {
-			let content = this.content, key = this.key;
-			return { content, key };
-		}
+		if (this.encrypted) return { content:this.content, key:this.key };
 		let { content, key } = await encryptFile(this.path);
 		this.content = content;
 		this.key = key;
@@ -165,6 +162,13 @@ export class Asset {
 
         for (const key of unique)
             for (const [_key, value] of Object.entries(metadata)) {
+            	if (_key == "encrypt" && value) {
+            		asset.encrypt = true;
+            		console.log("thing")
+            		console.log("thing")
+            		console.log("thing")
+            		console.log("thing")
+            	}
             	// console.log(key)
             	// console.log(_key)
                 if (key == _key) { 

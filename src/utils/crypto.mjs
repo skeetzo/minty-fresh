@@ -6,7 +6,7 @@ import * as crypto from "crypto";
 generateKeys()
 
 export async function encryptFile(file) {
-  // console.log("encrypting file:", file)
+  console.log("encrypting file:", file)
   try {
     const name = path.basename(file);
     const buff = fs.readFileSync(file);
