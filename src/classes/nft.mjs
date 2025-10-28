@@ -20,6 +20,7 @@ export class NFT {
         this.schemaJSON = {};
         this.tokenId = parseInt(opts.tokenId);
         this.owner = opts.owner || null;
+        this.encrypt = opts.encrypt || false;
 
         this.metadataCID = opts.metadataCID || null;
         this.metadataURI = opts.metadataURI || null;
@@ -85,7 +86,6 @@ export class NFT {
             const { metadata, schemaJSON } = await promptMetadata(this.metadata, this.schema, {"skipAttributes":this.skipAttributes,"skipProperties":this.skipProperties});
             this.metadata = metadata;
             this.schemaJSON = schemaJSON;
-            console.log("m:",this.metadata)
         }
         else {
             this.schemaJSON = await loadSchemaFromFile(this.schema);
@@ -172,7 +172,7 @@ export class NFT {
         await this.uploadAssets();
 
         // upload each asset detected in metadata
-        await Asset.uploadAssets(this.metadata, this.schema);
+        await Asset.uploadAssets(this.metadata, this.schema, this.encrypt);
 
         validate(this.metadata, this.schema, this.schemaJSON);
         
