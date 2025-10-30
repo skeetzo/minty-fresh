@@ -26,7 +26,7 @@ export async function encryptFile(file) {
     // console.log('contents:', buff.length, 'encrypted:', ebuff.length)
     // console.log(' ')
 
-    return { content, ekey, name };
+    return { content, key:ekey, name };
   } catch (err) {
     console.log(err)
     throw err;
