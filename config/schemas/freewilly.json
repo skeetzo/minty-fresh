@@ -1,0 +1,19 @@
+{
+    "title": "FreeWilly Metadata",
+    "type": "object",
+    "properties": {
+        "title": {
+            "type": "string",
+            "description": "The token title or filename"
+        },
+        "description": {
+            "type": "string",
+            "description": "The token description"
+        },
+        "uri": {
+            "type": "string",
+            "description": "The image for this token"
+        }
+    },
+    "required": ["title", "description", "uri"]
+}

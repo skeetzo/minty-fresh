@@ -123,6 +123,9 @@
 - added: skipAttributes & skipProperties to further optionally skip cli processes
 **1.3.12 : 10-27-2025**
 - updates to encryption process; passes through from asset instead of via metadata
+**1.3.13 : 10-30-2025**
+- more encryption key debugging
+
 
 ------------------------------------------------------------------------
 

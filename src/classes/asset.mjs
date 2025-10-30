@@ -71,8 +71,8 @@ export class Asset {
 		if (this.encrypted) return { content:this.content, key:this.key };
 		let { content, key } = await encryptFile(this.path);
 		this.content = content;
-		// if (this.publicKey)
-			// key = "0x"+await encryptPublicKey(key, this.publicKey);
+		if (this.publicKey)
+			key = "0x"+await encryptPublicKey(key, this.publicKey);
 		this.key = key;
 		this.encrypted = true;
 		return { content, key };

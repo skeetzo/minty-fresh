@@ -73,7 +73,6 @@ export class NFT {
             return;
         }
 
-
         // TODO: figure out the proper sequence to accomplish the behavior:
         // - create a default object from the schema
         // - copy all the provided metadata values to the default schema
