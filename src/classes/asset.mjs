@@ -6,7 +6,7 @@ import * as path from "path";
 
 import { fileExists } from '../utils/helpers.mjs';
 import { IPFS } from './ipfs.mjs';
-import { encryptFile } from "../utils/crypto.mjs";
+import { encryptFile, encryptPublicKey } from "../utils/crypto.mjs";
 
 // meant to model basic expected FileObject from 
 // https://github.com/ipfs/js-ipfs/blob/master/docs/core-api/FILES.md#ipfsfileswritepath-content-options
@@ -36,6 +36,7 @@ export class Asset {
 
 		this.encrypt = opts.encrypt || false;
 		this.encrypted = opts.encrypted || false;
+		this.publicKey = opts.publicKey || null;
 		this.key = opts.key || "";
 		this.base_uri = opts.base_uri || "ipfs://";
 	}
@@ -70,6 +71,8 @@ export class Asset {
 		if (this.encrypted) return { content:this.content, key:this.key };
 		let { content, key } = await encryptFile(this.path);
 		this.content = content;
+		// if (this.publicKey)
+			// key = "0x"+await encryptPublicKey(key, this.publicKey);
 		this.key = key;
 		this.encrypted = true;
 		return { content, key };
@@ -126,8 +129,8 @@ export class Asset {
     }
 
     // should innately replace metadata[key] values with the cid
-    static async uploadAssets(metadata, schema="default", encrypt) {
-    	for (const asset of Asset.getAssets(metadata, schema, encrypt)) {
+    static async uploadAssets(metadata, schema="default", encrypt, publicKey) {
+    	for (const asset of Asset.getAssets(metadata, schema, encrypt, publicKey)) {
             const { metadataCID, metadataURI, key } = await asset.upload();
             metadata[asset.name] = metadataCID;
             if (key) metadata["key"] = key;
@@ -151,13 +154,13 @@ export class Asset {
 
 	// TODO
 	// return the known asset keys found within the provided metadata
-	static getAssets(metadata, schema, encrypt) {
+	static getAssets(metadata, schema, encrypt, publicKey) {
         const assets = [];
 
         const assetTypes = [...default_asset_types, ...Asset.loadAssetsForSchema(schema)];
         const unique = [...new Set(assetTypes)];
 
-		const asset = new Asset({});
+		const asset = new Asset({encrypt, publicKey});
 
         for (const key of unique)
             for (const [_key, value] of Object.entries(metadata)) {
@@ -167,7 +170,7 @@ export class Asset {
                 	// console.log("found asset:", key)
             		asset.name = key;
 
-                	asset.encrypt = encrypt; // TODO: this needs to be moved somewhere else
+                	// asset.encrypt = encrypt; // TODO: this needs to be moved somewhere else
 
                 	if (value) {
                 		// cid uri or path

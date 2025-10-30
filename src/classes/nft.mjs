@@ -21,6 +21,7 @@ export class NFT {
         this.tokenId = parseInt(opts.tokenId);
         this.owner = opts.owner || null;
         this.encrypt = opts.encrypt || false;
+        this.publicKey = opts.publicKey || null;
 
         this.metadataCID = opts.metadataCID || null;
         this.metadataURI = opts.metadataURI || null;
@@ -172,7 +173,7 @@ export class NFT {
         await this.uploadAssets();
 
         // upload each asset detected in metadata
-        await Asset.uploadAssets(this.metadata, this.schema, this.encrypt);
+        await Asset.uploadAssets(this.metadata, this.schema, this.encrypt, this.publicKey);
 
         validate(this.metadata, this.schema, this.schemaJSON);
         

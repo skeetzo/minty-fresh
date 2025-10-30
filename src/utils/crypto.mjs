@@ -26,7 +26,7 @@ export async function encryptFile(file) {
     // console.log('contents:', buff.length, 'encrypted:', ebuff.length)
     // console.log(' ')
 
-    return { content, key, name };
+    return { content, ekey, name };
   } catch (err) {
     console.log(err)
     throw err;
@@ -135,4 +135,45 @@ async function toArray(asyncIterator) {
     arr.push(i); 
   }
   return arr;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////
+
+import EthCrypto from 'eth-crypto';
+
+export const checkSigner = async (decryptedPayload, signerAddress) => {
+    // checks signature
+    const senderAddress = EthCrypto.recover(
+        decryptedPayload.signature,
+        EthCrypto.hash.keccak256(decryptedPayload.message)
+    );
+    console.log("sender address:", senderAddress);
+    console.log("signer address:", signerAddress);
+    return senderAddress == signerAddress;
+}
+
+export const encryptPublicKey = async (payload, publicKey) => {
+    const encrypted = await EthCrypto.encryptWithPublicKey(publicKey.slice(2), payload);
+    console.debug("encrypted:", encrypted);
+    const encryptedString = EthCrypto.cipher.stringify(encrypted);
+    console.debug("encryptedString:", encryptedString);
+    return encryptedString;
+}
+
+export const decryptString = async (encryptedString, privateKey) => {
+    if (!(encryptedString instanceof Uint8Array)) {
+        console.error("incorrect public key format!");
+        return {};
+    }
+    if (!privateKey) {
+        console.error("missing private key!");
+        return {};
+    }
+    console.log("private key:", privateKey)
+    console.log("encryptedString:", encryptedString)
+    const encryptedObject = EthCrypto.cipher.parse(encryptedString.replace("\"", ""));
+    console.log("encryptedObject:", encryptedObject);
+    const decrypted = await EthCrypto.decryptWithPrivateKey(privateKey, encryptedObject);
+    console.debug("decrypted:", decrypted);
+    return JSON.parse(decrypted);
 }
