@@ -5,7 +5,7 @@ const exiftool = new ExifTool({ exiftoolEnv: { EXIFTOOL_HOME: path.resolve("./co
 
 export async function writeMetadata(imagePath, metadata, opts={"verbose":false, "keep":false}) {
   try {
-    await exiftool.write(imagePath, metadata);
+    await exiftool.write(imagePath, metadata, ['-overwrite_original']);
     console.debug("metadata added successfully");
   } catch (error) {
     if (opts.verbose)
@@ -35,7 +35,7 @@ export async function readMetadata(imagePath, opts={"verbose":false, "keep":fals
 
 export async function writeAndReadMetadata(imagePath, metadata) {
   try {
-    await exiftool.write(imagePath, metadata);
+    await exiftool.write(imagePath, metadata, ['-overwrite_original']);
     const tags = await exiftool.read(imagePath);
     const str = JSON.stringify(tags);
     return parseJSON(str);

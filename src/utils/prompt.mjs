@@ -11,7 +11,7 @@ export async function promptMetadata(metadata, schema, opts={"skipAttributes":fa
     const questions = [];
     if (schemaJSON.hasOwnProperty("properties"))
         for (const [key, value] of Object.entries(schemaJSON.properties))
-            if (key != "key")
+            if (key != "key" && key != "iv")
                 questions.push({
                     'type': 'input',
                     'name': key,

@@ -21,6 +21,11 @@
             "description": "The key for this asset"
         },
 
+        "iv": {
+            "type": "string",
+            "description": "The iv for this asset"
+        },
+
 
         "cost": {
             "type": "integer",

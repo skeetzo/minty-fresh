@@ -69,13 +69,23 @@ export class Asset {
 
 	async encryptFile() {
 		if (this.encrypted) return { content:this.content, key:this.key };
-		let { content, key } = await encryptFile(this.path);
+		let { content, key, iv } = await encryptFile(this.path);
 		this.content = content;
 		if (this.publicKey)
 			key = "0x"+await encryptPublicKey(key, this.publicKey);
 		this.key = key;
+		this.iv = iv;
 		this.encrypted = true;
-		return { content, key };
+
+		fs.writeFile("/home/skeetzo/Downloads/encrypted.bin", content, (err) => {
+		  if (err) {
+		    console.error('Error writing file:', err);
+		  } else {
+		    console.log('Local file written successfully!');
+		  }
+		});
+
+		return { content, key, iv };
 	}
 
 	// async getData() {
@@ -90,7 +100,7 @@ export class Asset {
 		if (this.encrypt)
 			return await this.encryptFile();
 		else
-			return { content: fs.readFileSync(this.path), key: "" }
+			return { content: fs.readFileSync(this.path), key: "", iv: "" }
 	}
 
 	// load data from IPFS
@@ -111,7 +121,9 @@ export class Asset {
 		if (!this.path && !this.content)
 			throw "missing content for upload";
 
-		const { content, key } = await this.getFile();
+		console.log("uploading asset...")
+
+		const { content, key, iv } = await this.getFile();
 
         const file = { 
             name: path.basename(this.path).replace(/\/[^a-z0-9\s]\//gi, '_'),
@@ -124,16 +136,17 @@ export class Asset {
         const { metadataCID, metadataURI } = await IPFS.add(file, this.base_uri);
         this.cid = metadataCID;
         this.uri = metadataURI;
-        return { metadataCID, metadataURI, key };
+        return { metadataCID, metadataURI, key, iv };
         // const assetURI = IPFS.ensureIpfsUriPrefix(assetCID) + '/' + basename;        
     }
 
     // should innately replace metadata[key] values with the cid
     static async uploadAssets(metadata, schema="default", encrypt, publicKey) {
     	for (const asset of Asset.getAssets(metadata, schema, encrypt, publicKey)) {
-            const { metadataCID, metadataURI, key } = await asset.upload();
+            const { metadataCID, metadataURI, key, iv } = await asset.upload();
             metadata[asset.name] = metadataCID;
             if (key) metadata["key"] = key;
+            if (iv) metadata["iv"] = iv;
         }
     }
 
