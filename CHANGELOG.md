@@ -125,22 +125,24 @@
 - updates to encryption process; passes through from asset instead of via metadata
 **1.3.13 : 10-30-2025**
 - more encryption key debugging
+**1.3.14 : 11-3-2025**
+- successfuly encryption debugging
 
 
 ------------------------------------------------------------------------
 
+(encryption)
 - update encryption process to be able to set the private key doing the encrypting
 - cleanup private/public.pem process for key for encrypting files
-
+- need to figure out how to signal to encrypt an asset better
+- clean up encryption debugging process
 
 
 - need to add better validation steps for prompting input, problem when everything becomes a string: strings -> integer
 
-- need to figure out how to signal to encrypt an asset better
-
-
 - write tests for new multiple asset upload process
 
+(project syncs)
 - update project to mint for LoveBoat, FreeWilly, ContentNFTs, etc
 -- must be able to upload: content data --> IPFS
 --- can upload content data to IPFS

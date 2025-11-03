@@ -15,15 +15,15 @@ export async function encryptFile(file) {
     const ekey = encryptRSA(key); // 32 chars -> 684 chars
     const ebuff = encryptAES(buff, key, iv);
 
-    // const content = Buffer.concat([ // headers: encrypted key and IV (len: 700=684+16)
-    //   // Buffer.from(ekey, 'utf8'),   // char length: 684
-    //   // Buffer.from(iv, 'utf8'),     // char length: 16
-    //   Buffer.from(ebuff, 'utf8')
-    // ])
+    const content = Buffer.concat([ // headers: encrypted key and IV (len: 700=684+16)
+      Buffer.from(ekey, 'utf8'),   // char length: 684
+      Buffer.from(iv, 'utf8'),     // char length: 16
+      Buffer.from(ebuff, 'utf8')
+    ])
 
-    console.log(new Uint8Array(buff))
-
-    const content = Buffer.from(ebuff, 'utf8');
+    // console.log(new Uint8Array(buff))
+    // const content = Buffer.from(ebuff, 'utf8');
+    // console.log(content)
 
     console.log('ENCRYPTION --------')
     console.log('key:', key, 'iv:', iv, 'ekey:', ekey.length)
