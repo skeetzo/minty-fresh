@@ -33,7 +33,7 @@ export async function encryptFile(file) {
     // console.log(content)
     // console.log(ebuff)
 
-    return { content, key, name, iv };
+    return { content };
   } catch (err) {
     console.log(err)
     throw err;

@@ -127,7 +127,7 @@
 - more encryption key debugging
 **1.3.14 : 11-3-2025**
 - successfuly encryption debugging
-
+- removed iv & key
 
 ------------------------------------------------------------------------
 

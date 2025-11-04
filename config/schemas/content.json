@@ -2,7 +2,6 @@
     "title": "Content Metadata",
     "type": "object",
     "properties": {
-
         "title": {
             "type": "string",
             "description": "The content title or filename"
@@ -15,18 +14,6 @@
             "type": "string",
             "description": "The content for this asset"
         },
-
-        "key": {
-            "type": "string",
-            "description": "The key for this asset"
-        },
-
-        "iv": {
-            "type": "string",
-            "description": "The iv for this asset"
-        },
-
-
         "cost": {
             "type": "integer",
             "description": "The cost of the content in USD"
@@ -43,8 +30,6 @@
             "type": "integer",
             "description": "The max number of times the content may be minted"
         },
-
-
         "performers": {
             "type": "array",
             "description": "The token ids of the performers in the content"
@@ -60,10 +45,11 @@
         "producer": {
             "type": "string",
             "description": "The content producer"
+        },
+        "encrypted": {
+            "type": "boolean",
+            "description": "Whether or not the content is encrypted"
         }
-
-
-
     },
     "required": ["title", "uri", "performers"]
 }

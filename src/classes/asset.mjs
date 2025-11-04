@@ -36,8 +36,6 @@ export class Asset {
 
 		this.encrypt = opts.encrypt || false;
 		this.encrypted = opts.encrypted || false;
-		this.publicKey = opts.publicKey || null;
-		this.key = opts.key || "";
 		this.base_uri = opts.base_uri || "ipfs://";
 	}
 
@@ -68,24 +66,21 @@ export class Asset {
 	}
 
 	async encryptFile() {
-		if (this.encrypted) return { content:this.content, key:this.key };
-		let { content, key, iv } = await encryptFile(this.path);
+		if (this.encrypted) return { content:this.content };
+		let { content } = await encryptFile(this.path);
 		this.content = content;
-		if (this.publicKey)
-			key = "0x"+await encryptPublicKey(key, this.publicKey);
-		this.key = key;
-		this.iv = iv;
 		this.encrypted = true;
 
-		fs.writeFile("/home/skeetzo/Downloads/encrypted.bin", content, (err) => {
-		  if (err) {
-		    console.error('Error writing file:', err);
-		  } else {
-		    console.log('Local file written successfully!');
-		  }
-		});
+		// for debugging
+		// fs.writeFile("/home/skeetzo/Downloads/encrypted.bin", content, (err) => {
+		//   if (err) {
+		//     console.error('Error writing file:', err);
+		//   } else {
+		//     console.log('Local file written successfully!');
+		//   }
+		// });
 
-		return { content, key, iv };
+		return { content };
 	}
 
 	// async getData() {
@@ -95,12 +90,12 @@ export class Asset {
 
 	// load file from local path
 	async getFile() {
-		if (this.content) return { content: this.content, key: this.key };
+		if (this.content) return { content: this.content };
         // if (!fileExists(this.path)) throw "incorrect asset path";
 		if (this.encrypt)
 			return await this.encryptFile();
 		else
-			return { content: fs.readFileSync(this.path), key: "", iv: "" }
+			return { content: fs.readFileSync(this.path) }
 	}
 
 	// load data from IPFS
@@ -114,7 +109,7 @@ export class Asset {
     // 'ipfs://QmaNZ2FCgvBPqnxtkbToVVbK2Nes6xk5K4Ns6BsmkPucAM/cat-pic.png' instead of
     // 'ipfs://QmaNZ2FCgvBPqnxtkbToVVbK2Nes6xk5K4Ns6BsmkPucAM'
     async upload() {
-    	if (this.cid) return { metadataCID: this.cid, metadataURI: this.uri, key: this.key }
+    	if (this.cid) return { metadataCID: this.cid, metadataURI: this.uri }
     	// console.log(this)
 		if (this.path && fs.lstatSync(this.path).isDirectory())
 			throw "found folder instead of file";
@@ -123,7 +118,7 @@ export class Asset {
 
 		console.log("uploading asset...")
 
-		const { content, key, iv } = await this.getFile();
+		const { content } = await this.getFile();
 
         const file = { 
             name: path.basename(this.path).replace(/\/[^a-z0-9\s]\//gi, '_'),
@@ -136,17 +131,15 @@ export class Asset {
         const { metadataCID, metadataURI } = await IPFS.add(file, this.base_uri);
         this.cid = metadataCID;
         this.uri = metadataURI;
-        return { metadataCID, metadataURI, key, iv };
+        return { metadataCID, metadataURI };
         // const assetURI = IPFS.ensureIpfsUriPrefix(assetCID) + '/' + basename;        
     }
 
     // should innately replace metadata[key] values with the cid
-    static async uploadAssets(metadata, schema="default", encrypt, publicKey) {
-    	for (const asset of Asset.getAssets(metadata, schema, encrypt, publicKey)) {
-            const { metadataCID, metadataURI, key, iv } = await asset.upload();
+    static async uploadAssets(metadata, schema="default", encrypt) {
+    	for (const asset of Asset.getAssets(metadata, schema, encrypt)) {
+            const { metadataCID, metadataURI } = await asset.upload();
             metadata[asset.name] = metadataCID;
-            if (key) metadata["key"] = key;
-            if (iv) metadata["iv"] = iv;
         }
     }
 
@@ -167,13 +160,13 @@ export class Asset {
 
 	// TODO
 	// return the known asset keys found within the provided metadata
-	static getAssets(metadata, schema, encrypt, publicKey) {
+	static getAssets(metadata, schema, encrypt) {
         const assets = [];
 
         const assetTypes = [...default_asset_types, ...Asset.loadAssetsForSchema(schema)];
         const unique = [...new Set(assetTypes)];
 
-		const asset = new Asset({encrypt, publicKey});
+		const asset = new Asset({encrypt});
 
         for (const key of unique)
             for (const [_key, value] of Object.entries(metadata)) {
