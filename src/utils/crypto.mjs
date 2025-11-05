@@ -6,7 +6,7 @@ import * as crypto from "crypto";
 generateKeys()
 
 export async function encryptFile(file) {
-  console.log("encrypting file:", file)
+  console.debug("encrypting file:", file)
   try {
     const name = path.basename(file);
     const buff = fs.readFileSync(file);
@@ -21,31 +21,31 @@ export async function encryptFile(file) {
       Buffer.from(ebuff, 'utf8')
     ])
 
-    // console.log(new Uint8Array(buff))
+    // console.debug(new Uint8Array(buff))
     // const content = Buffer.from(ebuff, 'utf8');
-    // console.log(content)
+    // console.debug(content)
 
-    console.log('ENCRYPTION --------')
-    console.log('key:', key, 'iv:', iv, 'ekey:', ekey.length)
-    console.log('contents:', buff.length, 'buff:', buff.length)
-    console.log('content:', content.length, 'ebuff:', ebuff.length)
-    console.log(' ')
-    // console.log(content)
-    // console.log(ebuff)
+    console.debug('ENCRYPTION --------')
+    console.debug('key:', key, 'iv:', iv, 'ekey:', ekey.length)
+    console.debug('contents:', buff.length, 'buff:', buff.length)
+    console.debug('content:', content.length, 'ebuff:', ebuff.length)
+    console.debug(' ')
+    // console.debug(content)
+    // console.debug(ebuff)
 
     return { content };
   } catch (err) {
-    console.log(err)
+    console.debug(err)
     throw err;
   }
 }
 
 export async function encryptFolder(folderPath) {
-  // console.log("encrypting folder:", folderPath);
+  // console.debug("encrypting folder:", folderPath);
   const files = fs.readdirSync(folderPath);
   const encryptedFiles = [];
   for (const file of files) {
-    // console.log("file:", file)
+    // console.debug("file:", file)
     encryptedFiles.push(await encryptFile(path.join(folderPath, file)));
   }
   return encryptedFiles;
@@ -62,14 +62,14 @@ export async function decryptFile(file_data) {
     const econtent = edata.slice(700).toString('utf8')
     const ebuf = Buffer.from(econtent, 'hex')
     const content = decryptAES(ebuf, key, iv)
-    // console.log(' ')
-    // console.log('DECRYPTION --------')
-    // console.log('key:', key, 'iv:', iv)
-    // console.log('contents:', content.length, 'encrypted:', econtent.length)
-    // console.log('downloaded:', edata.length)
+    // console.debug(' ')
+    // console.debug('DECRYPTION --------')
+    // console.debug('key:', key, 'iv:', iv)
+    // console.debug('contents:', content.length, 'encrypted:', econtent.length)
+    // console.debug('downloaded:', edata.length)
     return content
   } catch (err) {
-    console.log(err)
+    console.debug(err)
     throw err;
   }
 }
@@ -91,7 +91,7 @@ function decryptAES(buffer, secretKey, iv) {
 }
 
 function generateKeys() {
-  if (fs.existsSync('private.pem') && fs.existsSync('public.pem'))
+  if (fs.existsSync('keys/private.pem') && fs.existsSync('keys/public.pem'))
     return;
   
   const { privateKey, publicKey } = crypto.generateKeyPairSync('rsa', {
@@ -108,11 +108,11 @@ function generateKeys() {
     },
   })
 
-  fs.writeFileSync('private.pem', privateKey)
-  fs.writeFileSync('public.pem', publicKey)
+  fs.writeFileSync('keys/private.pem', privateKey)
+  fs.writeFileSync('keys/public.pem', publicKey)
 }
 
-function encryptRSA(toEncrypt, pubkeyPath='public.pem') {
+function encryptRSA(toEncrypt, pubkeyPath='keys/public.pem') {
   const absolutePath = path.resolve(pubkeyPath)
   const publicKey = fs.readFileSync(absolutePath, 'utf8')
   const buffer = Buffer.from(toEncrypt, 'utf8')
@@ -120,7 +120,7 @@ function encryptRSA(toEncrypt, pubkeyPath='public.pem') {
   return encrypted.toString('base64')
 }
 
-function decryptRSA(toDecrypt, privkeyPath='private.pem') {
+function decryptRSA(toDecrypt, privkeyPath='keys/private.pem') {
   const absolutePath = path.resolve(privkeyPath)
   const privateKey = fs.readFileSync(absolutePath, 'utf8')
   const buffer = Buffer.from(toDecrypt, 'base64')
@@ -154,8 +154,8 @@ export const checkSigner = async (decryptedPayload, signerAddress) => {
         decryptedPayload.signature,
         EthCrypto.hash.keccak256(decryptedPayload.message)
     );
-    console.log("sender address:", senderAddress);
-    console.log("signer address:", signerAddress);
+    console.debug("sender address:", senderAddress);
+    console.debug("signer address:", signerAddress);
     return senderAddress == signerAddress;
 }
 
@@ -176,10 +176,10 @@ export const decryptString = async (encryptedString, privateKey) => {
         console.error("missing private key!");
         return {};
     }
-    console.log("private key:", privateKey)
-    console.log("encryptedString:", encryptedString)
+    console.debug("private key:", privateKey)
+    console.debug("encryptedString:", encryptedString)
     const encryptedObject = EthCrypto.cipher.parse(encryptedString.replace("\"", ""));
-    console.log("encryptedObject:", encryptedObject);
+    console.debug("encryptedObject:", encryptedObject);
     const decrypted = await EthCrypto.decryptWithPrivateKey(privateKey, encryptedObject);
     console.debug("decrypted:", decrypted);
     return JSON.parse(decrypted);
