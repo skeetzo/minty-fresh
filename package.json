@@ -4,7 +4,9 @@
   "description": "",
   "main": "src/index.mjs",
   "scripts": {
-    "test": "mocha --exit"
+    "test": "mocha --exit",
+    "start": "node app/app.js",
+    "dev": "node --watch app/app.js"
   },
   "type": "module",
   "bin": {

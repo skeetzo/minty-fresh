@@ -1,0 +1,62 @@
+<div className="App">
+  <h1>Content Editor</h1>
+  
+  <div>
+    <form action="/load" method="POST" enctype="multipart/form-data">
+      <label for="upload">Content: </label>
+      <input type="file" id="upload" name="upload" multiple></input>
+      <br></br>
+      <input type="submit" value="Load">
+    </form>
+
+    <img src="<%= file %>" width="500" height="600"> 
+
+    <form action="/submit" method="POST" enctype="multipart/form-data">
+      <label>Encrypt: </label>
+      <input id="encryptY" name="encryptY" type="radio" value="yes" checked></input>
+      <label for="encryptY">Yes</label>
+      <input id="encryptN" name="encryptN" type="radio" value="no"></input>
+      <label for="encryptN">No</label>
+      <br></br>
+
+      <label for="performers">Performers: </label>
+      <input type="text" id="performers" name="Performers" value="<%= Performers %>"></input>
+      <br></br>
+
+      <label for="title">Title: </label>
+      <input type="text" id="title" name="Title" value="<%= Title %>"></input>
+      <br></br>
+
+      <label for="description">Description: </label>
+      <input type="text" id="description" name="Description" value="<%= Description %>"></input>
+      <br></br>
+
+      <label for="cost">Cost: </label>
+      <input type="text" id="cost" name="Cost" value="<%= Cost %>"></input>
+      <br></br>
+
+      <label for="beneficiary">Beneficiary: </label>
+      <input type="text" id="beneficiary" name="Beneficiary" value="<%= Beneficiary %>"></input>
+      <br></br>
+
+      <label for="fee">Fee: </label>
+      <input type="text" id="fee" name="Fee" value="<%= Fee %>"></input>
+      <br></br>
+
+      <label for="max">Max: </label>
+      <input type="number" id="max" name="Max" value="<%= Max %>"></input>
+      <br></br>
+
+      <label for="director">Director: </label>
+      <input type="text" id="director" name="Director" value="<%= Director %>"></input>
+      <br></br>
+
+      <label for="producer">Producer: </label>
+      <input type="text" id="producer" name="Producer" value="<%= Producer %>"></input>
+      <br></br>
+
+      <input type="submit" value="Submit">
+    </form>
+  </div>
+
+</div>

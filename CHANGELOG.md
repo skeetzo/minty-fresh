@@ -136,10 +136,22 @@
 -- project syncs complete --
 - updated project to mint for LoveBoat, FreeWilly, ContentNFTs, etc
 - can upload (encrypted) content data --> IPFS
+**1.4.0 : 11-6-2025**
+- moved contentNFTs metadata writing server here
 
 ------------------------------------------------------------------------
 
+
 # TODO
+
+- update app/index to build off of schemas dynamically
+(app)
+- possibly update app w/ web3 database to pull from to get the Performer, director, producer IDs
+-- token id --> tba address --> did:address --> mix of private & public data of performer
+- update metadata client to read/write multiple files
+- update metadata client to match upload process to IPFS
+- add collection (batch/folder) tagging process to app
+-- finish adding / updating app for metadata handling --
 
 - write tests for new multiple asset upload process
 
