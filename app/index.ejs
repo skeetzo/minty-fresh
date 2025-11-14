@@ -9,16 +9,22 @@
       <input type="submit" value="Load">
     </form>
 
-    <img src="<%= file %>" width="500" height="600"> 
+    <ul>
+    <% for (let i = 0; i < files.length; i++) { %>
+      <li>
+        <img src="<%= files[i] %>" width="500" height="600"> 
+      </li>
+    <% } %>
+    </ul>
 
     <form action="/submit" method="POST" enctype="multipart/form-data">
-      <label>Encrypt: </label>
+<%#       <label>Encrypt: </label>
       <input id="encryptY" name="encryptY" type="radio" value="yes" checked></input>
       <label for="encryptY">Yes</label>
       <input id="encryptN" name="encryptN" type="radio" value="no"></input>
       <label for="encryptN">No</label>
       <br></br>
-
+ %>
       <label for="performers">Performers: </label>
       <input type="text" id="performers" name="Performers" value="<%= Performers %>"></input>
       <br></br>

@@ -138,6 +138,8 @@
 - can upload (encrypted) content data --> IPFS
 **1.4.0 : 11-6-2025**
 - moved contentNFTs metadata writing server here
+**1.4.1 : 11-13-2025**
+- updated metadata client to read/write multiple files
 
 ------------------------------------------------------------------------
 
@@ -146,9 +148,9 @@
 
 - update app/index to build off of schemas dynamically
 (app)
+
 - possibly update app w/ web3 database to pull from to get the Performer, director, producer IDs
--- token id --> tba address --> did:address --> mix of private & public data of performer
-- update metadata client to read/write multiple files
+-- token id of assigned loveboat token --> tba address --> did:address --> mix of private & public data of performer
 - update metadata client to match upload process to IPFS
 - add collection (batch/folder) tagging process to app
 -- finish adding / updating app for metadata handling --
