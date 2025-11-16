@@ -97,12 +97,12 @@ export class NFT {
         this._initialized = true;
     }
 
-    static async createFromFile(filePath, schema) {
-        const nft = new NFT({schema});
-        await nft.readMetadataFromFile(filePath);
-        await nft.init();
-        return nft;
-    }
+    // static async createFromFile(filePath, schema) {
+    //     const nft = new NFT({schema});
+    //     await nft.readMetadataFromFile(filePath);
+    //     await nft.init();
+    //     return nft;
+    // }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -212,19 +212,18 @@ export class NFT {
 
 }
 
-async function parseErrors(validationErrors) {
-    let errors = [];
-    validationErrors.forEach(error => {
-      errors.push({
-        param: error.params["missingProperty"],
-        key: error.keyword,
-        message: error.message,
-        property: (function() {
-          return error.keyword === 'minimum' ? error.dataPath : undefined
-        })() 
-      });
-    });
-
-    return errors;
-}
+// async function parseErrors(validationErrors) {
+//     let errors = [];
+//     validationErrors.forEach(error => {
+//       errors.push({
+//         param: error.params["missingProperty"],
+//         key: error.keyword,
+//         message: error.message,
+//         property: (function() {
+//           return error.keyword === 'minimum' ? error.dataPath : undefined
+//         })() 
+//       });
+//     });
+//     return errors;
+// }
 

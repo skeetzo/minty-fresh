@@ -145,6 +145,7 @@
 - debugged collection (batch/folder) tagging process for app
 - updated metadata client to organize uploads by collection
 - updated upload path for collections to ~/Pictures/collections
+- copied basic contract setup from contentNFTs/app for future use fetching performer data for writing metadata
 
 ------------------------------------------------------------------------
 
@@ -152,26 +153,24 @@
 # TODO
 
 (app)
-- update app/index to build off of schemas dynamically
-- possibly update app w/ web3 database to pull from to get the Performer, director, producer IDs
+- update w/ web3/ipfs database to pull from to get the Performer, director, producer IDs
 -- token id of assigned loveboat token --> tba address --> did:address --> mix of private & public data of performer
-- possibly update metadata client to match upload process to IPFS
 -- finish adding / updating app for metadata handling --
-
-- write tests for new multiple asset upload process
-
-- add ipns & updateable metadata (?) functionality
--- what?
 
 (smart contract stuff)
 - cleanup / isolate all smart contract operations vs IPFS operations
 - update minty.parseEvents as necessary for multiple transfer types / contracts
-- add back in hardhat w/ contract debugging stuff
 
+(cleanup)
+- remove unnecessary code
+- add tests for: nft.js, ipfs.js, maybe even asset.js
+- check tests
+- write tests for multiple asset upload process
 - update / add docstring comments
+
 (todo eventually)
-- possibly add tests for: nft.js, ipfs.js, maybe even asset.js
-- update "NFT"-centric design to more tokenized generality --> works for ERC20s, (specifically) ERC1155s
+- update app/index to build off of schemas dynamically and populate based on loaded schema
+- update contract interactions to work with other tokens --> ERC20s, ERC1155s
 - add ability to mint from schemas found already uploaded on IPFS aka add loading schemas from IPFS cid
 
 # BUGs
