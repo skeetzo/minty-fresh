@@ -7,6 +7,8 @@ import { promises as fs } from 'fs';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const uploadDir = path.join(__dirname, '../tmp');
+// const collectionsDir = path.join(uploadDir, "collections");
+const collectionsDir = "/home/skeetzo/Pictures/collections"
 
 import express from "express";
 import * as bodyParser_ from "body-parser";
@@ -17,6 +19,23 @@ import { readMetadata, writeMetadata, writeAndReadMetadata } from "../src/utils/
 const app = express()
 const port = 3000
 
+let files = [];
+
+function presets() {
+  return {encrypt:"", Title:"", Description:"", Performers:"", Cost:"", Beneficiary:"", Fee:"", Max:"", Director:"", Producer:"", Collection:""}
+}
+
+async function processFile(file) {
+  // console.log(file)
+  const filePath = path.join(uploadDir, file.name);
+  await fs.mkdir(uploadDir, { recursive: true });
+  await file.mv(filePath);
+  const metadata = await readMetadata(filePath, {"keep":true});
+  // console.log(metadata)
+  files.push(filePath);
+  return metadata;
+}
+
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(fileUpload());
 // app.use(express.static(path.join(__dirname, '../tmp'))); 
@@ -26,43 +45,23 @@ app.use("/tmp/", express.static(path.join(__dirname, '../tmp')));
 app.set('views', path.join(__dirname));
 app.set('view engine', 'ejs');
 
-let files = [];
 
 app.get('/', (req, res) => {
-  const encrypt="", Title="", Description="", Performers="", Cost="", Beneficiary="", Fee="", Max="", Director="", Producer="";
-  res.render("index", { encrypt, Title, Description, Performers, Cost, Beneficiary, Fee, Max, Director, Producer, files });
+  res.render("index", { ...presets(), files });
 });
-
-
-async function processFile(file) {
-  // const uploadObj = req.files.upload;
-  // console.log(file)
-  const filePath = path.join(uploadDir, file.name);
-  // Create the uploads directory if it doesn't exist
-  await fs.mkdir(uploadDir, { recursive: true });
-  // Move the file to the uploads directory
-  await file.mv(filePath);
-  const metadata = await readMetadata(filePath, {"keep":true});
-  // console.log(metadata)
-  // writeAndReadMetadata(filePath, {title, description});
-  // let { Title, Description, Performers, Cost, Beneficiary, Fee, Max, Director, Producer } = metadata;
-  files.push(filePath);
-  return metadata; 
-}
 
 app.post('/load', async (req, res) => {
   files = [];
   try {
     console.log(req.files.upload)
-    let metadata = {Title:"",Description:"",Performers:"",Cost:"",Beneficiary:"",Fee:"",Max:"",Director:"",Producer:""};
+    let metadata = {...presets()};
     if (req.files && req.files.upload && Array.isArray(req.files.upload)) 
       for (const file of req.files.upload)
         metadata = {...metadata, ...await processFile(file)}
-        // metadata = await readMetadata(filePath, {"keep":true});
     else
       metadata = {...metadata, ...await processFile(req.files.upload)}
     // console.log("files:", files);
-    res.render("index", {Title:metadata.Title, Description:metadata.Description, Performers:Array.from(metadata.Performers), Cost:parseInt(metadata.Cost), Beneficiary:metadata.Beneficiary, Fee:metadata.Fee, Max:metadata.Max, Director:metadata.Director, Producer:metadata.Producer, files});
+    res.render("index", {Title:metadata.Title, Description:metadata.Description, Performers:Array.from(metadata.Performers), Cost:parseInt(metadata.Cost), Beneficiary:metadata.Beneficiary, Fee:metadata.Fee, Max:metadata.Max, Director:metadata.Director, Producer:metadata.Producer, Collection:metadata.Collection, files});
    } catch (error) {
      console.error('Error processing request:', error);
      res.status(500).send('An error occurred while processing your request.');
@@ -71,16 +70,18 @@ app.post('/load', async (req, res) => {
 
 app.post('/submit', async (req, res) => {
   try {
-    // const { encryptY, encryptN, Title, Description, Performers, Cost, Beneficiary, Fee, Max, Director, Producer } = req.body;
-    const { Title, Description, Performers, Cost, Beneficiary, Fee, Max, Director, Producer } = req.body;
+    const { Title, Description, Performers, Cost, Beneficiary, Fee, Max, Director, Producer, Collection } = req.body;
     // console.log("request:", req.body)
 
-    // console.log('Encrypt:', encryptY || encryptN);
-    // console.log('Performers:', Performers);
-    for (const file of files)
-      await writeMetadata(file, { Title, Description, Performers, Cost, Beneficiary, Fee, Max, Director, Producer }, {"verbose":true,"keep":true});
-
-    res.render("index", { Title, Description, Performers, Cost, Beneficiary, Fee, Max, Director, Producer, files });
+    for (const file of files) {
+      await writeMetadata(file, { Title, Description, Performers, Cost, Beneficiary, Fee, Max, Director, Producer, Collection }, {"verbose":true,"keep":true});
+      if (Collection != "") {
+        await fs.mkdir(path.join(collectionsDir, Collection), { recursive: true });
+        fs.rename(file, path.join(collectionsDir, Collection, path.basename(file)))
+      }
+    }
+    files = []
+    res.render("index", { ...presets(), files });
   } catch (error) {
     console.error('Error processing request:', error);
     res.status(500).send('An error occurred while processing your request.');

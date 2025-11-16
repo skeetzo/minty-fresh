@@ -30,10 +30,9 @@
     NAMESPACE => { 'xxx' => 'http://ns.myname.com/xxx/1.0/' },
     WRITABLE => 'string', # (default to string-type tags)
 
+    Collection => { Writable => 'string' },
     Beneficiary => { Writable => 'string' },
-
     Performers => { List => 'integer' },
-
     Cost => { Writable => 'string' },
     Fee => { Writable => 'string' },
     Max => { Writable => 'integer' }
