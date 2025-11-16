@@ -140,6 +140,9 @@
 - moved contentNFTs metadata writing server here
 **1.4.1 : 11-13-2025**
 - updated metadata client to read/write multiple files
+**1.4.2 : 11-15-2025**
+- fixed metadata writing 
+- debugged collection (batch/folder) tagging process for app
 
 ------------------------------------------------------------------------
 
@@ -152,7 +155,7 @@
 - possibly update app w/ web3 database to pull from to get the Performer, director, producer IDs
 -- token id of assigned loveboat token --> tba address --> did:address --> mix of private & public data of performer
 - update metadata client to match upload process to IPFS
-- add collection (batch/folder) tagging process to app
+- update metadata client to overwrite the original files and not just the uploaded temporary ones
 -- finish adding / updating app for metadata handling --
 
 - write tests for new multiple asset upload process

@@ -12,7 +12,7 @@
     <ul>
     <% for (let i = 0; i < files.length; i++) { %>
       <li>
-        <img src="<%= files[i] %>" width="500" height="600"> 
+        <img src="<%= files[i].substring(files[i].indexOf("/tmp/")) %>" width="500" height="600"> 
       </li>
     <% } %>
     </ul>

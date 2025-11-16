@@ -1,0 +1,49 @@
+# Shortcut tags are used when extracting information to simplify
+# commonly used commands.  They can be used to represent groups
+# of tags, or to provide an alias for a tag name.
+%Image::ExifTool::UserDefined::Shortcuts = (
+    MyShortcut => ['exif:createdate','exposuretime','aperture'],
+    MyAlias => 'FocalLengthIn35mmFormat',
+);
+
+%Image::ExifTool::UserDefined = (
+
+    # new XMP namespaces (eg. xxx) must be added to the Main XMP table:
+    'Image::ExifTool::XMP::Main' => {
+        # namespace definition for examples 8 to 11
+        xxx => { # <-- must be the same as the NAMESPACE prefix
+            SubDirectory => {
+                TagTable => 'Image::ExifTool::UserDefined::xxx',
+                # (see the definition of this table below)
+            },
+        },
+    }
+);
+
+# This is a basic example of the definition for a new XMP namespace.
+# This table is referenced through a SubDirectory tag definition
+# in the %Image::ExifTool::UserDefined definition above.
+# The namespace prefix for these tags is 'xxx', which corresponds to
+# an ExifTool family 1 group name of 'XMP-xxx'.
+%Image::ExifTool::UserDefined::xxx = (
+    GROUPS => { 0 => 'XMP', 1 => 'XMP-xxx', 2 => 'Image' },
+    NAMESPACE => { 'xxx' => 'http://ns.myname.com/xxx/1.0/' },
+    WRITABLE => 'string', # (default to string-type tags)
+
+    Beneficiary => { Writable => 'string' },
+
+    Performers => { List => 'integer' },
+
+    Cost => { Writable => 'string' },
+    Fee => { Writable => 'string' },
+    Max => { Writable => 'integer' }
+);
+
+# the namespace may be registered so ExifTool generates the expected family 1
+# group names when reading if the UserDefined namespace uses a different prefix
+require Image::ExifTool::XMP;
+Image::ExifTool::XMP::RegisterNamespace(\%Image::ExifTool::UserDefined::xxx);
+
+
+#------------------------------------------------------------------------------
+1;  #end
