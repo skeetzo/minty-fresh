@@ -201,7 +201,6 @@ export class NFT {
     }
 
     async writeMetadataToFile(filePath) {
-        console.log("writing metadata to file:", filePath);
         await writeMetadata(filePath, this.metadata)
     }
 

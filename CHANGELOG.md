@@ -146,6 +146,8 @@
 - updated metadata client to organize uploads by collection
 - updated upload path for collections to ~/Pictures/collections
 - copied basic contract setup from contentNFTs/app for future use fetching performer data for writing metadata
+**1.4.3 : 11-27-2025**
+- updated app/index layout to match current content needs
 
 ------------------------------------------------------------------------
 
