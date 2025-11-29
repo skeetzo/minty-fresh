@@ -148,14 +148,17 @@
 - copied basic contract setup from contentNFTs/app for future use fetching performer data for writing metadata
 **1.4.3 : 11-27-2025**
 - updated app/index layout to match current content needs
+**1.4.4 : 11-28-2025**
+- updated to dropdown for content type
 
 ------------------------------------------------------------------------
+
 
 
 # TODO
 
 (app)
-- update w/ web3/ipfs database to pull from to get the Performer, director, producer IDs
+- update w/ web3/ipfs database to pull from to get the performer IDs
 -- token id of assigned loveboat token --> tba address --> did:address --> mix of private & public data of performer
 -- finish adding / updating app for metadata handling --
 

@@ -9,32 +9,27 @@
       <input type="submit" value="Load">
     </form>
 
-    <ul>
+    <ul style="display:flex;list-style:none">
     <% for (let i = 0; i < files.length; i++) { %>
       <li>
-        <img src="<%= files[i].substring(files[i].indexOf("/tmp/")) %>" width="500" height="600"> 
+        <img src="<%= files[i].substring(files[i].indexOf("/tmp/")) %>" width="250" height="250"> 
       </li>
     <% } %>
     </ul>
 
     <form action="/submit" method="POST" enctype="multipart/form-data">
-<%#       <label>Encrypt: </label>
-      <input id="encryptY" name="encryptY" type="radio" value="yes" checked></input>
-      <label for="encryptY">Yes</label>
-      <input id="encryptN" name="encryptN" type="radio" value="no"></input>
-      <label for="encryptN">No</label>
-      <br></br>
- %>
-      <label for="collection">Collection: </label>
-      <input type="text" id="collection" name="Collection" value="<%= Collection %>"></input>
-      <br></br>
       <%# who %>
       <label for="performers">Performers: </label>
       <input type="text" id="performers" name="Performers" value="<%= Performers %>"></input>
       <br></br>
       <%# what %>
       <label for="type">Type: </label>
-      <input type="text" id="type" name="Type" value="<%= Type %>"></input>
+      <select id="type" name="type">
+        <option disabled selected>Select a content type:</option>
+        <% contentTypes.forEach(function(option){ %>
+            <option value="<%= option %>" <% if (preselectedValue === option) { %>selected<% } %>><%= option %></option>
+        <% }); %>
+      </select>
       <br></br>
       <%# where %>
       <label for="location">Location: </label>
@@ -48,23 +43,22 @@
       <label for="cost">Cost: </label>
       <input type="text" id="cost" name="Cost" value="<%= Cost %>"></input>
       <br></br>
+      <%# Content Info %>
       <label for="fee">Fee: </label>
       <input type="text" id="fee" name="Fee" value="<%= Fee %>"></input>
       <br></br>
       <label for="max">Max: </label>
       <input type="number" id="max" name="Max" value="<%= Max %>"></input>
       <br></br>
-
       <label for="title">Title: </label>
       <input type="text" id="title" name="Title" value="<%= Title %>"></input>
       <br></br>
       <label for="description">Description: </label>
       <input type="text" id="description" name="Description" value="<%= Description %>"></input>
       <br></br>
-   
-
+      <label for="collection">Collection: </label>
+      <input type="text" id="collection" name="Collection" value="<%= Collection %>"></input>
       <input type="submit" value="Submit">
     </form>
   </div>
-
 </div>

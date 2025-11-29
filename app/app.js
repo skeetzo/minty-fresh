@@ -20,9 +20,10 @@ const app = express()
 const port = 3000
 
 let files = [];
+const contentTypes = ["Solo","BG","BGA","BGG","BGGG"];
 
 function presets() {
-  return {encrypt:"", Title:"", Description:"", Performers:"", Cost:"", Beneficiary:"", Fee:"", Max:"", Director:"", Producer:"", Collection:""}
+  return {preselectedValue:contentTypes[0], Location: "", Title:"", Description:"", Performers:"", Cost:"", Type:"", Fee:"", Max:"", Date_:"", Collection:"", contentTypes}
 }
 
 async function processFile(file) {
@@ -61,7 +62,7 @@ app.post('/load', async (req, res) => {
     else
       metadata = {...metadata, ...await processFile(req.files.upload)}
     // console.log("files:", files);
-    res.render("index", {Title:metadata.Title, Description:metadata.Description, Performers:Array.from(metadata.Performers), Cost:parseInt(metadata.Cost), Beneficiary:metadata.Beneficiary, Fee:metadata.Fee, Max:metadata.Max, Director:metadata.Director, Producer:metadata.Producer, Collection:metadata.Collection, files});
+    res.render("index", {contentTypes, Type:metadata.Type, Title:metadata.Title, Description:metadata.Description, Performers:Array.from(metadata.Performers), Cost:parseInt(metadata.Cost), Location:metadata.Location, Fee:metadata.Fee, Max:metadata.Max, Date_:metadata.Date_, Collection:metadata.Collection, files});
    } catch (error) {
      console.error('Error processing request:', error);
      res.status(500).send('An error occurred while processing your request.');
@@ -70,11 +71,11 @@ app.post('/load', async (req, res) => {
 
 app.post('/submit', async (req, res) => {
   try {
-    const { Title, Description, Performers, Cost, Beneficiary, Fee, Max, Director, Producer, Collection } = req.body;
+    const { Collection, Title, Description, Performers, Cost, Type, Fee, Max, Date_ } = req.body;
     // console.log("request:", req.body)
 
     for (const file of files) {
-      await writeMetadata(file, { Title, Description, Performers, Cost, Beneficiary, Fee, Max, Director, Producer, Collection }, {"verbose":true,"keep":true});
+      await writeMetadata(file, { Location, Title, Description, Performers, Cost, Beneficiary, Fee, Max, Director, Producer, Collection }, {"verbose":true,"keep":true});
       if (Collection != "") {
         await fs.mkdir(path.join(collectionsDir, Collection), { recursive: true });
         fs.rename(file, path.join(collectionsDir, Collection, path.basename(file)))
