@@ -150,6 +150,8 @@
 - updated app/index layout to match current content needs
 **1.4.4 : 11-28-2025**
 - updated to dropdown for content type
+**1.4.5 : 12-1-2025**
+- added ability to read date time from metadata
 
 ------------------------------------------------------------------------
 

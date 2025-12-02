@@ -18,6 +18,10 @@
             "type": "integer",
             "description": "The cost of the content in USD"
         },
+        "beneficiary": {
+            "type": "string",
+            "description": "The beneficiary content splitter"
+        },
         "fee": {
             "type": "integer",
             "description": "The royalty fee"
@@ -30,6 +34,10 @@
             "type": "array",
             "description": "The token ids of the performers in the content"
         },
+        "signatures": {
+            "type": "array",
+            "description": "The signatures of the performers in the content"
+        },
         "director": {
             "type": "string",
             "description": "The content director"
@@ -39,7 +47,7 @@
             "description": "The content producer"
         },
         "date": {
-            "type": "integer",
+            "type": "string",
             "description": "The date of the content"
         },
         "location": {

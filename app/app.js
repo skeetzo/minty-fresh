@@ -61,8 +61,15 @@ app.post('/load', async (req, res) => {
         metadata = {...metadata, ...await processFile(file)}
     else
       metadata = {...metadata, ...await processFile(req.files.upload)}
+
+    // Year, Month (0-indexed), Day, Hour, Minute, Second, Millisecond
+    metadata.Date_ = Math.floor(new Date(metadata.DateTimeOriginal.year, metadata.DateTimeOriginal.month, metadata.DateTimeOriginal.day, metadata.DateTimeOriginal.hour, metadata.DateTimeOriginal.minute, metadata.DateTimeOriginal.second).getTime() / 1000);
+    metadata.Date_ = metadata.DateTimeOriginal.rawValue;
+
+    // metadata.Date_ = metadata.CreateDate.rawValue;
+
     // console.log("files:", files);
-    res.render("index", {contentTypes, Type:metadata.Type, Title:metadata.Title, Description:metadata.Description, Performers:Array.from(metadata.Performers), Cost:parseInt(metadata.Cost), Location:metadata.Location, Fee:metadata.Fee, Max:metadata.Max, Date_:metadata.Date_, Collection:metadata.Collection, files});
+    res.render("index", {preselectedValue:contentTypes[0] ,contentTypes, Type:metadata.Type, Title:metadata.Title, Description:metadata.Description, Performers:Array.from(metadata.Performers), Cost:parseInt(metadata.Cost), Location:metadata.Location, Fee:metadata.Fee, Max:metadata.Max, Date_:metadata.Date_, Collection:metadata.Collection, files});
    } catch (error) {
      console.error('Error processing request:', error);
      res.status(500).send('An error occurred while processing your request.');
