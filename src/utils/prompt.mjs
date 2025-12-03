@@ -117,7 +117,8 @@ async function promptForMissing(cliOptions, prompts) {
                 defaultAttributes = true;
                 return false;
             }
-            if (cliOptions[prompt.name]) {
+            // doesn't work just checking for truthy because then int 0s fail
+            if (cliOptions[prompt.name] != null) {
                 answers[prompt.name] = cliOptions[prompt.name]
                 return false
             }

@@ -44,8 +44,12 @@
     "ajv": "^8.11.0",
     "chalk": "^4.1.2",
     "commander": "^9.4.0",
+    "ejs": "^3.1.10",
     "eth-crypto": "^3.1.0",
+    "ethers": "^6.13.5",
     "exiftool-vendored": "^30.3.0",
+    "express": "^5.1.0",
+    "express-fileupload": "^1.5.1",
     "getconfig": "github:skeetzo/getconfig",
     "inquirer": "^12.5.2",
     "it-all": "^3.0.7",
@@ -55,11 +59,7 @@
     "multiaddr": "^10.0.1",
     "multiformats": "^13.3.2",
     "prompt-sync": "^4.2.0",
-    "ejs": "^3.1.10",
-    "eth-crypto": "^3.1.0",
-    "ethers": "^6.13.5",
-    "express": "^5.1.0",
-    "express-fileupload": "^1.5.1"
+    "secp256k1": "^5.0.1"
   },
   "repository": "git@github.com:skeetzo/minty"
 }

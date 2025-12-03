@@ -116,7 +116,7 @@ export class Asset {
 		if (!this.path && !this.content)
 			throw "missing content for upload";
 
-		console.log("uploading asset...")
+		console.debug("uploading asset...")
 
 		const { content } = await this.getFile();
 

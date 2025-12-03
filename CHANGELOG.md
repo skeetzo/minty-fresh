@@ -152,6 +152,8 @@
 - updated to dropdown for content type
 **1.4.5 : 12-1-2025**
 - added ability to read date time from metadata
+**1.4.6 : 12-3-2025**
+- minor touchups to match contentnfts upload; quited logs more
 
 ------------------------------------------------------------------------
 

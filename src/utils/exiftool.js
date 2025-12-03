@@ -4,7 +4,7 @@ import path from "path";
 const exiftool = new ExifTool({ exiftoolEnv: { EXIFTOOL_HOME: path.resolve("./config") }})
 
 export async function writeMetadata(imagePath, metadata, opts={"verbose":false, "keep":false}) {
-  console.log("writing metadata to file:", imagePath);
+  console.debug("writing metadata to file:", imagePath);
   try {
     await exiftool.write(imagePath, metadata, ['-overwrite_original']);
     console.debug("metadata added successfully");
@@ -18,7 +18,7 @@ export async function writeMetadata(imagePath, metadata, opts={"verbose":false, 
 }
 
 export async function readMetadata(imagePath, opts={"verbose":false, "keep":false}) {
-  console.log("reading metadata from file:", imagePath);
+  console.debug("reading metadata from file:", imagePath);
   try {
     const tags = await exiftool.read(imagePath);
     console.debug("metadata read successfully");

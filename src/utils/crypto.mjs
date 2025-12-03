@@ -15,7 +15,7 @@ export async function encryptFile(file) {
     const ekey = encryptRSA(key); // 32 chars -> 684 chars
     const ebuff = encryptAES(buff, key, iv);
 
-    console.log("ekey:", ekey);
+    console.debug("ekey:", ekey);
 
     const content = Buffer.concat([ // headers: encrypted key and IV (len: 700=684+16)
       Buffer.from(ekey, 'utf8'),   // char length: 684
@@ -116,7 +116,7 @@ function generateKeys() {
 
 function encryptRSA(toEncrypt, pubkeyPath='keys/public.pem') {
   const absolutePath = path.resolve(pubkeyPath)
-  console.log(absolutePath)
+  // console.debug(absolutePath)
   const publicKey = fs.readFileSync(absolutePath, 'utf8')
   const buffer = Buffer.from(toEncrypt, 'utf8')
   const encrypted = crypto.publicEncrypt(publicKey, buffer)
@@ -125,7 +125,7 @@ function encryptRSA(toEncrypt, pubkeyPath='keys/public.pem') {
 
 function decryptRSA(toDecrypt, privkeyPath='keys/private.pem') {
   const absolutePath = path.resolve(privkeyPath)
-  console.log(absolutePath)
+  // console.debug(absolutePath)
   const privateKey = fs.readFileSync(absolutePath, 'utf8')
   const buffer = Buffer.from(toDecrypt, 'base64')
   const decrypted = crypto.privateDecrypt(

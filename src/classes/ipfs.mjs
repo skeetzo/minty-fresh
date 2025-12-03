@@ -2,6 +2,7 @@
 import * as getconfig from "getconfig";
 const config = getconfig.default;
 import { CID } from 'multiformats/cid'
+import { base64 } from 'multiformats/bases/base64';
 import all from 'it-all'
 // import * as path from "path";
 
@@ -103,7 +104,6 @@ export class IPFS {
      * @returns {Promise<Uint8Array>} - contents of the IPFS object
      */
     static async getIPFS(cidOrURI) {
-        // console.log(cidOrURI)
         const cid = IPFS.stripIpfsUriPrefix(cidOrURI);
         return uint8ArrayConcat(await all(IPFS_CLIENT.cat(cid)));
     }
@@ -287,11 +287,11 @@ export class IPFS {
     static validateCIDString(possibleCIDString) {
         // console.debug("validating cid:", possibleCIDString);
         try {
-            const cid = CID.parse(possibleCIDString);
+            const cid = CID.parse(possibleCIDString, base64.decoder);
             return cid;
         }
         catch (err) {
-            console.error(err.message);
+            console.debug(err.message);
         }
         return false;
     }
