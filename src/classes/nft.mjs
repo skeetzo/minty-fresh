@@ -167,6 +167,10 @@ export class NFT {
     async upload() {
         if (!this._initialized) await this.init();
 
+        // console.log(this.metadata)
+        // IPFS.list(this.metadata.title)
+        // return
+
         // upload all asset objects
         await this.uploadAssets();
 
@@ -206,7 +210,7 @@ export class NFT {
 
 
     async readMetadataFromFile(filePath) {
-        this.metadata = await readMetadata(filePath);
+        this.metadata = await readMetadata(filePath, {verbose:false});
     }
 
 }

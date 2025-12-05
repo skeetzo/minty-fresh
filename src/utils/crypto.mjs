@@ -5,16 +5,104 @@ import * as crypto from "crypto";
 
 generateKeys()
 
+
+function getFileSizeInBytes(filePath) {
+  try {
+    const stats = fs.statSync(filePath);
+    return stats.size; // Returns the file size in bytes
+  } catch (error) {
+    console.error(`Error getting file size: ${error.message}`);
+    return -1; // Or throw the error for handling upstream
+  }
+}
+
+async function encryptStream(file) {
+  let content;
+  await new Promise(resolve => {
+    encryptFileStream(file, (c) => {
+      content = c;
+      resolve(); // Resolve the Promise, allowing await to continue
+    });
+  });
+  return { content };
+}
+
+function encryptFileStream(file, cb) {
+  console.debug("encrypting file stream:", file)
+  try {
+
+    const readableStream = fs.createReadStream(file, { encoding: 'utf8', highWaterMark: 64 * 1024 }); // Read in 64KB chunks
+
+    const key = crypto.randomBytes(16).toString('hex'); // 16 bytes -> 32 chars
+    const iv = crypto.randomBytes(8).toString('hex');   // 8 bytes -> 16 chars
+    const ekey = encryptRSA(key); // 32 chars -> 684 chars
+    let ebuffs = [];
+    let i = 0;
+
+    readableStream.on('data', (chunk) => {
+      // 'chunk' is a Buffer object by default if no encoding is specified in createReadStream
+      // If encoding is specified in createReadStream, chunk will be a string
+      // console.log("buffering file...");
+      // process.stdout.write(".")
+      try {
+        ebuffs[i] += chunk.toString('utf8'); // Convert Buffer to string and append
+      }
+      catch (err) {
+        if (err.message.includes("Invalid string length")) {
+          i++;
+          ebuffs[i] += chunk.toString('utf8');
+        }
+        else
+          console.error(err.message);
+      }
+    });
+
+    readableStream.on('end', () => {
+      console.log("buffered file!");
+
+      const buffs = []
+      for (const buff of ebuffs)
+        buffs.push(Buffer.from(buff, "utf8"))
+
+      // TODO: figure out how to handle large buffers without crashing on a large file
+      
+      const content = Buffer.concat([ // headers: encrypted key and IV (len: 700=684+16)
+        Buffer.from(ekey, 'utf8'),   // char length: 684
+        Buffer.from(iv, 'utf8'),     // char length: 16
+        Buffer.from(Buffer.concat(buffs), 'utf8')
+      ])
+
+      console.debug('ENCRYPTION --------')
+      console.debug('key:', key, 'iv:', iv, 'ekey:', ekey.length)
+      console.debug('buffs:', buffs.length)
+      console.debug('content:', content.length, 'ebuffs:', ebuffs.length)
+      console.debug(' ')
+
+      // return { content };
+      cb(content)
+
+    });
+
+    readableStream.on('error', (err) => {
+      console.error('Error reading stream:', err);
+    });
+  }
+  catch (err) {
+
+  }
+}
+
 export async function encryptFile(file) {
   console.debug("encrypting file:", file)
+  const filesize = getFileSizeInBytes(file);
+  console.debug("file size:", filesize);
+  if (filesize >= 500000000) return await encryptStream(file);
   try {
-    const name = path.basename(file);
     const buff = fs.readFileSync(file);
     const key = crypto.randomBytes(16).toString('hex'); // 16 bytes -> 32 chars
     const iv = crypto.randomBytes(8).toString('hex');   // 8 bytes -> 16 chars
     const ekey = encryptRSA(key); // 32 chars -> 684 chars
     const ebuff = encryptAES(buff, key, iv);
-
     console.debug("ekey:", ekey);
 
     const content = Buffer.concat([ // headers: encrypted key and IV (len: 700=684+16)
@@ -37,6 +125,9 @@ export async function encryptFile(file) {
 
     return { content };
   } catch (err) {
+    if (err.message.includes("Cannot create a string longer than 0x1fffffe8 characters")) {
+      return await encryptStream(file);
+    }
     console.debug(err)
     throw err;
   }

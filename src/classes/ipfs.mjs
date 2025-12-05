@@ -12,7 +12,7 @@ const uint8ArrayToString = toString;
 // import { uint8ArrayToString } from 'uint8arrays/to-string';
 
 import { create } from "kubo-rpc-client";
-const IPFS_CLIENT = create(config.ipfsApiUrl);
+const IPFS_CLIENT = create({url:config.ipfsApiUrl,timeout:'10m'});
 
 // ipfs.add parameters for more deterministic CIDs
 
@@ -55,7 +55,7 @@ export class IPFS {
         // can use the ls check to prevent duplicates
         // possibly add dialogue to confirm y/n to overwrite existing?
         // for await (const filee of IPFS_CLIENT.ls(metadataCID)) {
-          // console.log(filee.path)
+          // console.log(filee)
         // }
         // will fail if the MFS is written poorly / incorrectly
 
@@ -139,6 +139,13 @@ export class IPFS {
     static async getIPFSJSON(cidOrURI) {
         const str = await IPFS.getIPFSString(cidOrURI);
         return JSON.parse(str);
+    }
+
+    static async list(path) {
+        // console.debug("file:", file);
+        console.debug(`listing files: ${path}`);
+        const files = await IPFS_CLIENT.list(path);
+        console.log(files)
     }
 
     //////////////////////////////////////////////

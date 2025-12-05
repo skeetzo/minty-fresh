@@ -14,6 +14,39 @@ import { encryptFile, encryptPublicKey } from "../utils/crypto.mjs";
 
 const default_asset_types = ["image","video"];
 
+const cachePath = "./cache.txt";
+
+// check local file cache for filepath
+function checkCache(filepath) {
+  try {
+    const fileContent = fs.readFileSync(cachePath, 'utf8');
+    const lines = fileContent.split(/\r?\n/); // Split by LF or CRLF
+    for (const line of lines) {
+      if (line.includes(filepath)) {
+		console.debug("cache:", filepath);
+      	return JSON.parse(line);
+      }
+    }
+  } catch (err) {
+    console.error('Error reading file:', err);
+  }
+  return false;
+}
+
+function saveToCache(saveme) {
+	fs.appendFile(cachePath, saveme+"\n", (err) => {
+		console.debug("cached:", saveme);
+		if (err) {
+			console.error('Error appending to file:', err);
+			return;
+		}
+	});
+}
+
+
+
+
+
 export class Asset {
 	
 	constructor(opts) {
@@ -116,6 +149,12 @@ export class Asset {
 		if (!this.path && !this.content)
 			throw "missing content for upload";
 
+
+		// check if asset has been uploaded recently already; return it if it has
+		const cached = checkCache(path.basename(this.path));
+		if (cached) return {metadataCID:cached.cid,metadataURI:cached.uri};
+
+
 		console.debug("uploading asset...")
 
 		const { content } = await this.getFile();
@@ -131,6 +170,11 @@ export class Asset {
         const { metadataCID, metadataURI } = await IPFS.add(file, this.base_uri);
         this.cid = metadataCID;
         this.uri = metadataURI;
+
+
+        saveToCache(JSON.stringify({path:file.path,name:file.name,cid:metadataCID,uri:metadataURI}));
+
+
         return { metadataCID, metadataURI };
         // const assetURI = IPFS.ensureIpfsUriPrefix(assetCID) + '/' + basename;        
     }
