@@ -68,20 +68,10 @@ export class NFT {
     }
 
     async init() {
-        if (this._initialized) {
-            return;
-        }
-
-        // TODO: figure out the proper sequence to accomplish the behavior:
-        // - create a default object from the schema
-        // - copy all the provided metadata values to the default schema
-        // - if cli, prompt to fill in missing values
-
+        if (this._initialized) return;
         if (process.env.cli) {
             if (!this.schema)
                 this.schema = await promptSchema(loadTemplates());
-
-            // this.metadata is updated by the prompt function
             const { metadata, schemaJSON } = await promptMetadata(this.metadata, this.schema, {"skipAttributes":this.skipAttributes,"skipProperties":this.skipProperties});
             this.metadata = metadata;
             this.schemaJSON = schemaJSON;
@@ -90,54 +80,19 @@ export class NFT {
             this.schemaJSON = await loadSchemaFromFile(this.schema);
             this.metadata = {...this.metadata, ...fromSchema(this.schemaJSON)}
         }
-
-        // console.log("schemaJSON:", this.schemaJSON);
-        // console.debug("metadata:", this.metadata);
-
         this._initialized = true;
     }
 
-    // static async createFromFile(filePath, schema) {
-    //     const nft = new NFT({schema});
-    //     await nft.readMetadataFromFile(filePath);
-    //     await nft.init();
-    //     return nft;
-    // }
-
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    // TODO
-    // act as enum?
-    // or interface with contract.methods.supportsInterface or whatever the function is
-    // static getStandard() {}
-
-    // return schema as an IPFS cid if available
-    // static _getSchemaCID(schema) {
-    //     for (const [key, value] in config.schemasIPFS)
-    //         if (key == schema) return config.schemasIPFS[key];
-    //     return null;
-    // }
-
-    // // TODO
-    // // return config.schemasIPFS if available
-    // static _getSchemasCID() {
-    //     return config.schemasIPFS || null;
-    // }
-
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    getAsset(asset="image") {
-        return Asset.getAsset(this.metadata, asset);
+    static async createFromFile(filePath, opts) {
+        const nft = new NFT(opts);
+        await nft.readMetadataFromFile(filePath);
+        await nft.init();
+        return nft;
     }
 
-    // this will return Asset classes
-    getAssets() {
-        return Asset.getAssets(this.metadata, this.schema);
-    }
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     /**
      * Pins all IPFS data associated with the given tokend id to the remote pinning service.
@@ -151,7 +106,7 @@ export class NFT {
         if (this.metadataURI === null) await this.upload();
         const assetURIs = [];
         // pin each asset first
-        for (const asset of this.getAssets()) {
+        for (const asset of Asset.getAssets(this.metadata, this.schema)) {
             console.debug(`Pinning ${asset.name} data for token id ${this.tokenId}....`);
             await IPFS.pin(asset.cid);
             assetURIs.push(asset.uri);
@@ -210,7 +165,7 @@ export class NFT {
 
 
     async readMetadataFromFile(filePath) {
-        this.metadata = await readMetadata(filePath, {verbose:false});
+        this.metadata = {...this.metadata, ...await readMetadata(filePath, {verbose:false})};
     }
 
 }

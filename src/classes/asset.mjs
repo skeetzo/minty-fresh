@@ -16,6 +16,9 @@ const default_asset_types = ["image","video"];
 
 const cachePath = "./cache.txt";
 
+const REMOVE_ON_UPLOAD = false;
+const REMOVE_TMP_ON_UPLOAD = true;
+
 // check local file cache for filepath
 function checkCache(filepath) {
   try {
@@ -100,20 +103,10 @@ export class Asset {
 
 	async encryptFile() {
 		if (this.encrypted) return { content:this.content };
-		let { content } = await encryptFile(this.path);
+		const content = await encryptFile(this.path);
 		this.content = content;
 		this.encrypted = true;
-
-		// for debugging
-		// fs.writeFile("/home/skeetzo/Downloads/encrypted.bin", content, (err) => {
-		//   if (err) {
-		//     console.error('Error writing file:', err);
-		//   } else {
-		//     console.log('Local file written successfully!');
-		//   }
-		// });
-
-		return { content };
+		return content;
 	}
 
 	// async getData() {
@@ -123,12 +116,9 @@ export class Asset {
 
 	// load file from local path
 	async getFile() {
-		if (this.content) return { content: this.content };
-        // if (!fileExists(this.path)) throw "incorrect asset path";
-		if (this.encrypt)
-			return await this.encryptFile();
-		else
-			return { content: fs.readFileSync(this.path) }
+		if (this.content) return this.content;
+		if (this.encrypt) return await this.encryptFile();
+		else return fs.readFileSync(this.path);
 	}
 
 	// load data from IPFS
@@ -143,40 +133,39 @@ export class Asset {
     // 'ipfs://QmaNZ2FCgvBPqnxtkbToVVbK2Nes6xk5K4Ns6BsmkPucAM'
     async upload() {
     	if (this.cid) return { metadataCID: this.cid, metadataURI: this.uri }
-    	// console.log(this)
 		if (this.path && fs.lstatSync(this.path).isDirectory())
 			throw "found folder instead of file";
-		if (!this.path && !this.content)
+		if (!this.path)
 			throw "missing content for upload";
-
-
+		// TODO: add config or runtime toggle to skip cache check
 		// check if asset has been uploaded recently already; return it if it has
 		const cached = checkCache(path.basename(this.path));
 		if (cached) return {metadataCID:cached.cid,metadataURI:cached.uri};
-
-
 		console.debug("uploading asset...")
-
-		const { content } = await this.getFile();
-
+		const content = await this.getFile();
         const file = { 
+            content,
             name: path.basename(this.path).replace(/\/[^a-z0-9\s]\//gi, '_'),
-            // path: `/assets/${this.name}s/${path.basename(this.path)}`.replace(/\/[^a-z0-9\s]\//gi, '_'),
             path: `/${path.basename(this.path)}`.replace(/\/[^a-z0-9\s]\//gi, '_'),
             // path: `/${this.name}s/${path.basename(this.path)}`.replace(/\/[^a-z0-9\s]\//gi, '_'),
+            // path: `/assets/${this.name}s/${path.basename(this.path)}`.replace(/\/[^a-z0-9\s]\//gi, '_'),
             // path: `/assets/${this.name}s`.replace(/\/[^a-z0-9\s]\//gi, '_'),
-            content
         };
         const { metadataCID, metadataURI } = await IPFS.add(file, this.base_uri);
         this.cid = metadataCID;
         this.uri = metadataURI;
-
-
         saveToCache(JSON.stringify({path:file.path,name:file.name,cid:metadataCID,uri:metadataURI}));
 
+	    try {
+	    	// removes temporary upload location
+	    	if (REMOVE_TMP_ON_UPLOAD && typeof content === 'string')
+		    	fs.unlinkSync(content);
+		    // removes original upload location
+		    if (REMOVE_ON_UPLOAD)
+		    	fs.unlinkSync(this.path);
+	    } catch (err) {}
 
         return { metadataCID, metadataURI };
-        // const assetURI = IPFS.ensureIpfsUriPrefix(assetCID) + '/' + basename;        
     }
 
     // should innately replace metadata[key] values with the cid
@@ -187,46 +176,19 @@ export class Asset {
         }
     }
 
-	// TODO
-	// what is this even meant to do?
-	static getAsset(metadata, assetName) {
-		const newAsset = new Asset({
-			name: assetName,
-			// cid: 
-			// uri: 
-			// content: 
-			// path: 
-			// data: 
-			// mode: 
-		})
-		return newAsset;
-	}
-
-	// TODO
+	// TODO: add more asset types / double check the implementation works at all
 	// return the known asset keys found within the provided metadata
 	static getAssets(metadata, schema, encrypt) {
         const assets = [];
-
         const assetTypes = [...default_asset_types, ...Asset.loadAssetsForSchema(schema)];
         const unique = [...new Set(assetTypes)];
-
 		const asset = new Asset({encrypt});
-
         for (const key of unique)
             for (const [_key, value] of Object.entries(metadata)) {
-            	// console.log(key)
-            	// console.log(_key)
                 if (key == _key) { 
-                	// console.log("found asset:", key)
             		asset.name = key;
-
-                	// asset.encrypt = encrypt; // TODO: this needs to be moved somewhere else
-
                 	if (value) {
                 		// cid uri or path
-                		// console.log("value:", value)
-                		// let thing = IPFS.extractCID(value);
-                		// console.log(thing)
                 		if (Buffer.isBuffer(value)) asset.content = value;
                 		else if (IPFS.validateCIDString(value)) asset.cid = value;
 		                else asset.path = value;

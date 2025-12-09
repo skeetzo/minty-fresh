@@ -157,12 +157,17 @@
 - updated encryptFile to account for larger file sizes
 **1.4.7 : 12-8-2025**
 - file stream debugging
+**1.4.8 : 12-9-2025**
+- finished debugging piping file stream with encryption + front prepended data 
 
 ------------------------------------------------------------------------
 
 
 
 # TODO
+
+- possibly update encryption scheme to minimize data size doubling due to conversion to hex
+
 
 (app)
 - update w/ web3/ipfs database to pull from to get the performer IDs

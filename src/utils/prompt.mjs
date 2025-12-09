@@ -11,11 +11,12 @@ export async function promptMetadata(metadata, schema, opts={"skipAttributes":fa
     const questions = [];
     if (schemaJSON.hasOwnProperty("properties"))
         for (const [key, value] of Object.entries(schemaJSON.properties))
-            questions.push({
-                'type': 'input',
-                'name': key,
-                'message': `${value["description"]}: ${key} =`
-            });
+            if (key != "uri")
+                questions.push({
+                    'type': 'input',
+                    'name': key,
+                    'message': `${value["description"]}: ${key} =`
+                });
     // prompt for missing details if not provided as cli args
     metadata = await promptForMissing(metadata, questions);    
     // prompt to add additional properties & attributes
