@@ -155,6 +155,8 @@
 **1.4.6 : 12-3-2025**
 - minor touchups to match contentnfts upload; quited logs more
 - updated encryptFile to account for larger file sizes
+**1.4.7 : 12-8-2025**
+- file stream debugging
 
 ------------------------------------------------------------------------
 
