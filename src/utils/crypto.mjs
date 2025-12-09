@@ -2,7 +2,7 @@
 import * as fs from 'fs';
 import * as path from "path";
 import * as crypto from "crypto";
-import { Readable, Transform } from 'stream';
+import { Readable, Transform, pipeline } from 'stream';
 
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
@@ -15,13 +15,30 @@ const __dirname = path.dirname(__filename);
 // await StreamPromises.pipeline(sourceStream, destinationStream);
 
 
-
 generateKeys()
+
+
+function bitsToMB(bits) {
+  // const bytes = bits / 8;
+  const megabytes = bits / (1024 * 1024);
+  return megabytes;
+}
+
+function bitsToGB(bits) {
+  // const bytes = bits / 8;
+  const gigabytes = bits / (1024 * 1024 * 1024);
+  return gigabytes;
+}
+
+
 
 
 function getFileSizeInBytes(filePath) {
   try {
     const stats = fs.statSync(filePath);
+    console.debug("file size:", stats.size);
+    console.debug("- mb:", bitsToMB(stats.size));
+    console.debug("- gb:", bitsToGB(stats.size));
     return stats.size; // Returns the file size in bytes
   } catch (error) {
     console.error(`Error getting file size: ${error.message}`);
@@ -31,21 +48,22 @@ function getFileSizeInBytes(filePath) {
 
 async function encryptStream(file) {
 
-  // let content = encryptFileStream(file);
-  // return { content };
-
-
-  let content;
-  await new Promise(async resolve => {
-    await encryptFileStream(file, (c) => {
-      content = c;
-      resolve(); // Resolve the Promise, allowing await to continue
-    });
-  });
+  let { content } = await encryptFileStream(file);
+  console.log(content)
   return { content };
+
+
+  // let content;
+  // await new Promise(async resolve => {
+  //   await encryptFileStream(file, (c) => {
+  //     content = c;
+  //     resolve(); // Resolve the Promise, allowing await to continue
+  //   });
+  // });
+  // return { content };
 }
 
-async function encryptFileStream(file, cb) {
+async function encryptFileStream(file) {
   console.debug("encrypting file stream:", file)
   try {
     const key = crypto.randomBytes(16).toString('hex'); // 16 bytes -> 32 chars
@@ -54,41 +72,56 @@ async function encryptFileStream(file, cb) {
 
     const content = path.join(__dirname, "../../tmp/encryptions/", path.basename(file));
     console.log("content:", content);
+    fs.unlinkSync(content);
 
-    // const readableStream = fs.createReadStream(file, { encoding: 'utf8', highWaterMark: 64 * 1024 }); // Read in 64KB chunks
-    const readStream = fs.createReadStream(file, { encoding: 'utf8', highWaterMark: 64 * 1024 });
-    const writeStream = fs.createWriteStream(content);
+    await new Promise(async resolve => {
 
-    const frontBuffer = Buffer.concat([ // headers: encrypted key and IV (len: 700=684+16)
-      Buffer.from(ekey, 'utf8'),   // char length: 684
-      Buffer.from(iv, 'utf8'),     // char length: 16
-    ])
+      // const readableStream = fs.createReadStream(file, { encoding: 'utf8', highWaterMark: 64 * 1024 }); // Read in 64KB chunks
+      const readStream = fs.createReadStream(file, { encoding: 'utf8', highWaterMark: 64 * 1024 });
+      const writeStream = fs.createWriteStream(content);
 
-    const frontStream = new Readable();
-    frontStream.push(frontBuffer);
-    frontStream.push(null);
+      // const frontBuffer = Buffer.concat([ // headers: encrypted key and IV (len: 700=684+16)
+      //   Buffer.from(ekey, 'utf8'),   // char length: 684
+      //   Buffer.from(iv, 'utf8'),     // char length: 16
+      // ])
 
-    const encryptionTransformer = new Transform({
-      transform(chunk, encoding, callback) {
-        // Perform your transformation here
-        // 'chunk' is a Buffer containing the data
-        // 'encoding' is the encoding of the chunk (e.g., 'utf8')
-        // 'callback' is a function to call when the transformation is complete
+      // const frontStream = new Readable();
+      // frontStream.push(frontBuffer);
+      // frontStream.push(null);
 
-        // Example: Convert to uppercase
-        // const transformedData = chunk.toString().toUpperCase();
-        const transformedData = encryptAES(chunk, key, iv);
+      const encryptionTransformer = new Transform({
+        transform(chunk, encoding, callback) {
+          // Perform your transformation here
+          // 'chunk' is a Buffer containing the data
+          // 'encoding' is the encoding of the chunk (e.g., 'utf8')
+          // 'callback' is a function to call when the transformation is complete
+          // console.log("transforming...")
 
-        // Push the transformed data to the readable side of the transform stream
-        this.push(transformedData);
+          // Example: Convert to uppercase
+          // const transformedData = chunk.toString().toUpperCase();
+          const transformedData = encryptAES(chunk, key, iv);
+          // console.log(chunk.length+"\n"+transformedData.length+"\n")
 
-        // Call the callback to signal completion and allow the next chunk to be processed
-        callback();
-      }
+          // Push the transformed data to the readable side of the transform stream
+          this.push(transformedData);
+
+          // Call the callback to signal completion and allow the next chunk to be processed
+          callback();
+        }
+      });
+
+      readStream.pipe(encryptionTransformer).pipe(writeStream);
+
+      writeStream.on('finish', () => {
+        console.log('Piping finished: All data written to '+content);
+        getFileSizeInBytes(content);
+        resolve(); // Resolve the Promise, allowing await to continue
+      });
+
     });
 
+
     // readStream.pipe(myTransformer).pipe(writeStream);
-    await readStream.pipe(frontStream).pipe(encryptionTransformer).pipe(writeStream);
 
     console.debug('ENCRYPTION --------')
     console.debug('key:', key, 'iv:', iv, 'ekey:', ekey.length)
@@ -98,13 +131,8 @@ async function encryptFileStream(file, cb) {
 
     // TODO: figure out why this is finishing early
 
-    writeStream.on('finish', () => {
-      console.log('Piping finished: All data written to '+content);
-      const filesize = getFileSizeInBytes(content);
-      console.debug("file size:", filesize);
-      cb(content)
 
-    });
+    return { content }
 
     // return { content };
     // return { content };
@@ -117,7 +145,6 @@ async function encryptFileStream(file, cb) {
 export async function encryptFile(file) {
   console.debug("encrypting file:", file)
   const filesize = getFileSizeInBytes(file);
-  console.debug("file size:", filesize);
   // if (filesize >= 500000000) return await encryptStream(file);
   return await encryptStream(file);
   try {
@@ -196,7 +223,8 @@ function encryptAES(buffer, secretKey, iv) {
   const cipher = crypto.createCipheriv('aes-256-ctr', secretKey, iv);
   const data = cipher.update(buffer);
   const encrypted = Buffer.concat([data, cipher.final()]);
-  return encrypted.toString('hex')
+  // return encrypted.toString('hex')
+  return encrypted.toString('utf8')
 }
 
 function decryptAES(buffer, secretKey, iv) {
