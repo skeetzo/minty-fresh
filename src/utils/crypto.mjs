@@ -2,6 +2,19 @@
 import * as fs from 'fs';
 import * as path from "path";
 import * as crypto from "crypto";
+import { Readable, Transform } from 'stream';
+
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+
+// import * as StreamPromises from "stream/promises";
+
+// await StreamPromises.pipeline(sourceStream, destinationStream);
+
+
 
 generateKeys()
 
@@ -17,9 +30,14 @@ function getFileSizeInBytes(filePath) {
 }
 
 async function encryptStream(file) {
+
+  // let content = encryptFileStream(file);
+  // return { content };
+
+
   let content;
-  await new Promise(resolve => {
-    encryptFileStream(file, (c) => {
+  await new Promise(async resolve => {
+    await encryptFileStream(file, (c) => {
       content = c;
       resolve(); // Resolve the Promise, allowing await to continue
     });
@@ -27,65 +45,69 @@ async function encryptStream(file) {
   return { content };
 }
 
-function encryptFileStream(file, cb) {
+async function encryptFileStream(file, cb) {
   console.debug("encrypting file stream:", file)
   try {
-
-    const readableStream = fs.createReadStream(file, { encoding: 'utf8', highWaterMark: 64 * 1024 }); // Read in 64KB chunks
-
     const key = crypto.randomBytes(16).toString('hex'); // 16 bytes -> 32 chars
     const iv = crypto.randomBytes(8).toString('hex');   // 8 bytes -> 16 chars
     const ekey = encryptRSA(key); // 32 chars -> 684 chars
-    let ebuffs = [];
-    let i = 0;
 
-    readableStream.on('data', (chunk) => {
-      // 'chunk' is a Buffer object by default if no encoding is specified in createReadStream
-      // If encoding is specified in createReadStream, chunk will be a string
-      // console.log("buffering file...");
-      // process.stdout.write(".")
-      try {
-        ebuffs[i] += chunk.toString('utf8'); // Convert Buffer to string and append
-      }
-      catch (err) {
-        if (err.message.includes("Invalid string length")) {
-          i++;
-          ebuffs[i] += chunk.toString('utf8');
-        }
-        else
-          console.error(err.message);
+    const content = path.join(__dirname, "../../tmp/encryptions/", path.basename(file));
+    console.log("content:", content);
+
+    // const readableStream = fs.createReadStream(file, { encoding: 'utf8', highWaterMark: 64 * 1024 }); // Read in 64KB chunks
+    const readStream = fs.createReadStream(file, { encoding: 'utf8', highWaterMark: 64 * 1024 });
+    const writeStream = fs.createWriteStream(content);
+
+    const frontBuffer = Buffer.concat([ // headers: encrypted key and IV (len: 700=684+16)
+      Buffer.from(ekey, 'utf8'),   // char length: 684
+      Buffer.from(iv, 'utf8'),     // char length: 16
+    ])
+
+    const frontStream = new Readable();
+    frontStream.push(frontBuffer);
+    frontStream.push(null);
+
+    const encryptionTransformer = new Transform({
+      transform(chunk, encoding, callback) {
+        // Perform your transformation here
+        // 'chunk' is a Buffer containing the data
+        // 'encoding' is the encoding of the chunk (e.g., 'utf8')
+        // 'callback' is a function to call when the transformation is complete
+
+        // Example: Convert to uppercase
+        // const transformedData = chunk.toString().toUpperCase();
+        const transformedData = encryptAES(chunk, key, iv);
+
+        // Push the transformed data to the readable side of the transform stream
+        this.push(transformedData);
+
+        // Call the callback to signal completion and allow the next chunk to be processed
+        callback();
       }
     });
 
-    readableStream.on('end', () => {
-      console.log("buffered file!");
+    // readStream.pipe(myTransformer).pipe(writeStream);
+    await readStream.pipe(frontStream).pipe(encryptionTransformer).pipe(writeStream);
 
-      const buffs = []
-      for (const buff of ebuffs)
-        buffs.push(Buffer.from(buff, "utf8"))
+    console.debug('ENCRYPTION --------')
+    console.debug('key:', key, 'iv:', iv, 'ekey:', ekey.length)
+    // console.debug('contents:', buff.length, 'buff:', buff.length)
+    // console.debug('content:', content.length, 'ebuff:', ebuff.length)
+    console.debug(' ')
 
-      // TODO: figure out how to handle large buffers without crashing on a large file
-      
-      const content = Buffer.concat([ // headers: encrypted key and IV (len: 700=684+16)
-        Buffer.from(ekey, 'utf8'),   // char length: 684
-        Buffer.from(iv, 'utf8'),     // char length: 16
-        Buffer.from(Buffer.concat(buffs), 'utf8')
-      ])
+    // TODO: figure out why this is finishing early
 
-      console.debug('ENCRYPTION --------')
-      console.debug('key:', key, 'iv:', iv, 'ekey:', ekey.length)
-      console.debug('buffs:', buffs.length)
-      console.debug('content:', content.length, 'ebuffs:', ebuffs.length)
-      console.debug(' ')
-
-      // return { content };
+    writeStream.on('finish', () => {
+      console.log('Piping finished: All data written to '+content);
+      const filesize = getFileSizeInBytes(content);
+      console.debug("file size:", filesize);
       cb(content)
 
     });
 
-    readableStream.on('error', (err) => {
-      console.error('Error reading stream:', err);
-    });
+    // return { content };
+    // return { content };
   }
   catch (err) {
 
@@ -96,7 +118,8 @@ export async function encryptFile(file) {
   console.debug("encrypting file:", file)
   const filesize = getFileSizeInBytes(file);
   console.debug("file size:", filesize);
-  if (filesize >= 500000000) return await encryptStream(file);
+  // if (filesize >= 500000000) return await encryptStream(file);
+  return await encryptStream(file);
   try {
     const buff = fs.readFileSync(file);
     const key = crypto.randomBytes(16).toString('hex'); // 16 bytes -> 32 chars
