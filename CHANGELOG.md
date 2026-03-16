@@ -159,6 +159,11 @@
 - file stream debugging
 **1.4.8 : 12-9-2025**
 - finished debugging piping file stream with encryption + front prepended data 
+**1.4.9 : 3-2-2026**
+- added dev keys
+**1.4.10 : 3-15-2026**
+- added card schema for loonlands
+- updated prompt for handling card attributes
 
 ------------------------------------------------------------------------
 

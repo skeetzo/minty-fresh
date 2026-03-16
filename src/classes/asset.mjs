@@ -31,7 +31,8 @@ function checkCache(filepath) {
       }
     }
   } catch (err) {
-    console.error('Error reading file:', err);
+  	if (!err.message.includes("no such file or directory"))
+	    console.error('Error reading file:', err.message);
   }
   return false;
 }

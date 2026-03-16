@@ -7,6 +7,7 @@ import { loadSchemaFromFile, fromSchema } from "./schema.mjs";
 export async function promptMetadata(metadata, schema, opts={"skipAttributes":false,"skipProperties":false}) {
     // determine metadata base
     const schemaJSON = await loadSchemaFromFile(schema);
+    // console.log(schemaJSON)
     // create prompt questions for each property
     const questions = [];
     if (schemaJSON.hasOwnProperty("properties"))
@@ -20,14 +21,21 @@ export async function promptMetadata(metadata, schema, opts={"skipAttributes":fa
     // prompt for missing details if not provided as cli args
     metadata = await promptForMissing(metadata, questions);    
     // prompt to add additional properties & attributes
-    const properties = await fromSchema(schema);
+    const properties = await fromSchema(schemaJSON);
+    // console.log(properties)
     if (!opts.skipProperties)
         await promptAdditionalProperties(properties);
+    // console.log("opt.skipAttributes:", opts.skipAttributes)
+    // console.log(schemaJSON.hasOwnProperty("attributes"))
+    // console.log(schemaJSON)
     if (!opts.skipAttributes)
-        if (schemaJSON.hasOwnProperty("attributes") || Object.keys(schemaJSON).length == 0) // or if schema is 'blank'
+        if (schemaJSON.hasOwnProperty("attributes") || (schemaJSON.hasOwnProperty("properties") && schemaJSON.properties.hasOwnProperty("attributes")) || Object.keys(schemaJSON).length == 0) // or if schema is 'blank'
             await promptAdditionalAttributes(properties);
     // combine any new properties
     metadata = {...metadata, ...properties};
+    for (const key of Object.keys(schemaJSON.properties))
+        if (schemaJSON.properties[key].type == 'integer')
+            metadata[key] = parseInt(metadata[key]);
     return {
         metadata,
         schemaJSON

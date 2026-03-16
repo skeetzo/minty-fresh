@@ -13,14 +13,14 @@ export class NFT {
 
     constructor(opts) {
 
-        this.name = opts.name || null;
-        this.assets = opts.assets || [];
-        this.metadata = opts.metadata || {};
-        this.schema = opts.schema || "default";
+        this.name = opts.name ?? null;
+        this.assets = opts.assets ?? [];
+        this.metadata = opts.metadata ?? {};
+        this.schema = opts.schema ?? "default";
         this.schemaJSON = {};
         this.tokenId = parseInt(opts.tokenId);
-        this.owner = opts.owner || null;
-        this.encrypt = opts.encrypt || false;
+        this.owner = opts.owner ?? null;
+        this.encrypt = opts.encrypt ?? false;
 
         this.metadataCID = opts.metadataCID || null;
         this.metadataURI = opts.metadataURI || null;

@@ -12,7 +12,8 @@ const __dirname = path.dirname(__filename);
 const FILE_SIZE_MINIMUM = 8000000000; // 1 GB
 // const FILE_SIZE_MINIMUM = 4000000000; // 500 MB
 
-generateKeys()
+// generateKeys()
+// generateDevKeys()
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -203,6 +204,28 @@ function generateKeys() {
 
   fs.writeFileSync('keys/private.pem', privateKey)
   fs.writeFileSync('keys/public.pem', publicKey)
+}
+
+function generateDevKeys() {
+  if (fs.existsSync('keys/dev-private.pem') && fs.existsSync('keys/dev-public.pem'))
+    return;
+  
+  const { privateKey, publicKey } = crypto.generateKeyPairSync('rsa', {
+    modulusLength: 4096,
+    publicKeyEncoding: {
+      type: 'pkcs1',
+      format: 'pem',
+    },
+    privateKeyEncoding: {
+      type: 'pkcs1',
+      format: 'pem',
+      cipher: 'aes-256-cbc',
+      passphrase: '',
+    },
+  })
+
+  fs.writeFileSync('keys/dev-private.pem', privateKey)
+  fs.writeFileSync('keys/dev-public.pem', publicKey)
 }
 
 function encryptRSA(toEncrypt, pubkeyPath='keys/public.pem') {
