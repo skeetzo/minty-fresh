@@ -110,60 +110,63 @@
 	**1.3.7 : 4-26-2025**
 	- added getconfig fork w/ update to ESM
 	-- npm i getconfig@skeetzo/getconfig --save
-**1.3.8 : 4-28-2025**
-- updates /fixes to asset upload process 
-- updated tests
-- cleanup / testing how ipfs upload paths work, might remove all base paths for now
-**1.3.9 : 4-29-2025**
-- debugging prompt sequence
-- finished updating getconfig
-**1.3.10 : 4-30-2025**
-- finished updates to prompt sequence
-**1.3.11 : 7-9-2025**
-- added: skipAttributes & skipProperties to further optionally skip cli processes
-**1.3.12 : 10-27-2025**
-- updates to encryption process; passes through from asset instead of via metadata
-**1.3.13 : 10-30-2025**
-- more encryption key debugging
-**1.3.14 : 11-3-2025**
-- successfuly encryption debugging
-- removed iv & key
-**1.3.15 : 11-5-2025**
-- clean up encryption debugging process
-- figured out how to signal to encrypt an asset better (read metadata beforehand)
-- cleanup private/public.pem process for key for encrypting files; added /keys
-- updated encryption process to be able to set the private key doing the encrypting (already possible)
--- project syncs complete --
-- updated project to mint for LoveBoat, FreeWilly, ContentNFTs, etc
-- can upload (encrypted) content data --> IPFS
-**1.4.0 : 11-6-2025**
-- moved contentNFTs metadata writing server here
-**1.4.1 : 11-13-2025**
-- updated metadata client to read/write multiple files
-**1.4.2 : 11-15-2025**
-- fixed metadata writing 
-- debugged collection (batch/folder) tagging process for app
-- updated metadata client to organize uploads by collection
-- updated upload path for collections to ~/Pictures/collections
-- copied basic contract setup from contentNFTs/app for future use fetching performer data for writing metadata
-**1.4.3 : 11-27-2025**
-- updated app/index layout to match current content needs
-**1.4.4 : 11-28-2025**
-- updated to dropdown for content type
-**1.4.5 : 12-1-2025**
-- added ability to read date time from metadata
-**1.4.6 : 12-3-2025**
-- minor touchups to match contentnfts upload; quited logs more
-- updated encryptFile to account for larger file sizes
-**1.4.7 : 12-8-2025**
-- file stream debugging
-**1.4.8 : 12-9-2025**
-- finished debugging piping file stream with encryption + front prepended data 
-**1.4.9 : 3-2-2026**
-- added dev keys
-**1.4.10 : 3-15-2026**
-- added card schema for loonlands
-- updated prompt for handling card attributes
+	**1.3.8 : 4-28-2025**
+	- updates /fixes to asset upload process 
+	- updated tests
+	- cleanup / testing how ipfs upload paths work, might remove all base paths for now
+	**1.3.9 : 4-29-2025**
+	- debugging prompt sequence
+	- finished updating getconfig
+	**1.3.10 : 4-30-2025**
+	- finished updates to prompt sequence
+	**1.3.11 : 7-9-2025**
+	- added: skipAttributes & skipProperties to further optionally skip cli processes
+	**1.3.12 : 10-27-2025**
+	- updates to encryption process; passes through from asset instead of via metadata
+	**1.3.13 : 10-30-2025**
+	- more encryption key debugging
+	**1.3.14 : 11-3-2025**
+	- successfuly encryption debugging
+	- removed iv & key
+	**1.3.15 : 11-5-2025**
+	- clean up encryption debugging process
+	- figured out how to signal to encrypt an asset better (read metadata beforehand)
+	- cleanup private/public.pem process for key for encrypting files; added /keys
+	- updated encryption process to be able to set the private key doing the encrypting (already possible)
+	-- project syncs complete --
+	- updated project to mint for LoveBoat, FreeWilly, ContentNFTs, etc
+	- can upload (encrypted) content data --> IPFS
+	**1.4.0 : 11-6-2025**
+	- moved contentNFTs metadata writing server here
+	**1.4.1 : 11-13-2025**
+	- updated metadata client to read/write multiple files
+	**1.4.2 : 11-15-2025**
+	- fixed metadata writing 
+	- debugged collection (batch/folder) tagging process for app
+	- updated metadata client to organize uploads by collection
+	- updated upload path for collections to ~/Pictures/collections
+	- copied basic contract setup from contentNFTs/app for future use fetching performer data for writing metadata
+	**1.4.3 : 11-27-2025**
+	- updated app/index layout to match current content needs
+	**1.4.4 : 11-28-2025**
+	- updated to dropdown for content type
+	**1.4.5 : 12-1-2025**
+	- added ability to read date time from metadata
+	**1.4.6 : 12-3-2025**
+	- minor touchups to match contentnfts upload; quited logs more
+	- updated encryptFile to account for larger file sizes
+	**1.4.7 : 12-8-2025**
+	- file stream debugging
+	**1.4.8 : 12-9-2025**
+	- finished debugging piping file stream with encryption + front prepended data 
+	**1.4.9 : 3-2-2026**
+	- added dev keys
+	**1.4.10 : 3-15-2026**
+	- added card schema for loonlands
+	- updated prompt for handling card attributes
+**1.4.11 : 3-23-2026**
+- updated card schema
+- added card_magination schema
 
 ------------------------------------------------------------------------
 
