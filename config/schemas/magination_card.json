@@ -25,7 +25,15 @@
     "attributes": {
       "type": "array",
       "description": "The attributes which will show up on the CardShop page for the card."
+    },
+    "type": {
+      "type": "string",
+      "description": "The card type such as Magi, Creature, Spell, or Relic."
+    },
+    "region": {
+      "type": "string",
+      "description": "The region of the card."
     }
   },
-  "required": ["name", "image", "quality", "attributes"]
+  "required": ["name", "image", "quality", "attributes", "region", "type"]
 }
