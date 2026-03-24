@@ -93,7 +93,7 @@ export class NFT {
 
     static async createFromJSONFile(filePath, opts) {
         const nft = new NFT(opts);
-        nft.readJSONFile(filePath);
+        nft.metadata = nft.readJSONFile(filePath);
         await nft.init();
         return nft;
     }
