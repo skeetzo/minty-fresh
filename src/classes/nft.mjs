@@ -1,3 +1,4 @@
+import * as fs from "fs";
 
 import { Asset } from './asset.mjs';
 import { IPFS } from './ipfs.mjs';
@@ -90,6 +91,13 @@ export class NFT {
         return nft;
     }
 
+    static async createFromJSONFile(filePath, opts) {
+        const nft = new NFT(opts);
+        nft.readJSONFile(filePath);
+        await nft.init();
+        return nft;
+    }
+
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -166,6 +174,16 @@ export class NFT {
 
     async readMetadataFromFile(filePath) {
         this.metadata = {...this.metadata, ...await readMetadata(filePath, {verbose:false})};
+    }
+
+    readJSONFile(filePath) {
+        try {
+          const data = fs.readFileSync(filePath, 'utf8');          
+          return JSON.parse(data);
+        } catch (err) {
+          console.error('Error reading or parsing JSON file:', err);
+        }
+        return {}
     }
 
 }

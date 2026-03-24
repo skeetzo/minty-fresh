@@ -70,6 +70,6 @@ export function validate(metadata, schema, schemaJSON) {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-export function getSchema(schemaName) {
-    return fromSchema(loadSchemaFromFile(schemaName));
-}
+// export function getSchema(schemaName) {
+//     return fromSchema(loadSchemaFromFile(schemaName));
+// }
