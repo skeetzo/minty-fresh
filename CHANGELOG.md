@@ -169,6 +169,8 @@
 - added card_magination schema
 **1.4.12 : 3-24-2026**
 - added createFromJSONFile for creating nft from jsons
+**1.4.13 : 4-1-2026**
+- fixed dev-keys reference
 
 ------------------------------------------------------------------------
 

@@ -13,7 +13,7 @@ const FILE_SIZE_MINIMUM = 8000000000; // 1 GB
 // const FILE_SIZE_MINIMUM = 4000000000; // 500 MB
 
 // generateKeys()
-// generateDevKeys()
+generateDevKeys()
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -228,7 +228,7 @@ function generateDevKeys() {
   fs.writeFileSync('keys/dev-public.pem', publicKey)
 }
 
-function encryptRSA(toEncrypt, pubkeyPath='keys/public.pem') {
+function encryptRSA(toEncrypt, pubkeyPath='keys/dev-public.pem') {
   const absolutePath = path.resolve(pubkeyPath)
   // console.debug(absolutePath)
   const publicKey = fs.readFileSync(absolutePath, 'utf8')
@@ -237,7 +237,7 @@ function encryptRSA(toEncrypt, pubkeyPath='keys/public.pem') {
   return encrypted.toString('base64')
 }
 
-function decryptRSA(toDecrypt, privkeyPath='keys/private.pem') {
+function decryptRSA(toDecrypt, privkeyPath='keys/dev-private.pem') {
   const absolutePath = path.resolve(privkeyPath)
   // console.debug(absolutePath)
   const privateKey = fs.readFileSync(absolutePath, 'utf8')
