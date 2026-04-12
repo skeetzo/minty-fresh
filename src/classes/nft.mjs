@@ -33,6 +33,7 @@ export class NFT {
         this.base_uri = opts.base_uri || "ipfs://";
         this.skipAttributes = opts.skipAttributes || false;
         this.skipProperties = opts.skipProperties || false;
+        this.skipPrompt = opts.skipPrompt || false;
 
         this._initialized = false;
     }
@@ -73,7 +74,7 @@ export class NFT {
         if (process.env.cli) {
             if (!this.schema)
                 this.schema = await promptSchema(loadTemplates());
-            const { metadata, schemaJSON } = await promptMetadata(this.metadata, this.schema, {"skipAttributes":this.skipAttributes,"skipProperties":this.skipProperties});
+            const { metadata, schemaJSON } = await promptMetadata(this.metadata, this.schema, {"skipPrompt":this.skipPrompt,"skipAttributes":this.skipAttributes,"skipProperties":this.skipProperties});
             this.metadata = metadata;
             this.schemaJSON = schemaJSON;
         }

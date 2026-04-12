@@ -2,4 +2,4 @@
 rm *-deployment.json artifacts cache
 
 # contract json
-rm app/src/contracts/*
+rm app/src/contracts/*.json

@@ -22,7 +22,7 @@ async function main() {
     const program = new Command();
     program.name('Minty Fresh')
       .description('CLI to some JavaScript NFT utilities')
-      .version('1.2.2', '-v', '--version', 'Output the current version');
+      .version('1.4.14', '-v', '--version', 'Output the current version');
 
     // The hardhat and getconfig modules both expect to be running from the root directory of the project,
     // so we change the current directory to the parent dir of this script file to make things work

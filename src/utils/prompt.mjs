@@ -4,9 +4,10 @@ import { loadSchemaFromFile, fromSchema } from "./schema.mjs";
 
 // TODO
 // possibly add type from schema into message for entering inputs
-export async function promptMetadata(metadata, schema, opts={"skipAttributes":false,"skipProperties":false}) {
+export async function promptMetadata(metadata, schema, opts={"skipPrompt":false,"skipAttributes":false,"skipProperties":false}) {
     // determine metadata base
     const schemaJSON = await loadSchemaFromFile(schema);
+    if (opts.skipPrompt) return { metadata, schemaJSON }
     // console.log(schemaJSON)
     // create prompt questions for each property
     const questions = [];

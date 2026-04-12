@@ -5,7 +5,10 @@
   "main": "src/index.mjs",
   "scripts": {
     "test": "mocha --exit",
-    "start": "node app/app.js",
+    "start": "node src/index.js",
+    "edit": "node app/app.js",
+    "metadata-read": "node src/metadata.mjs read",
+    "metadata-write": "node src/metadata.mjs write",
     "dev": "node --watch app/app.js"
   },
   "type": "module",
