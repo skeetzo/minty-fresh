@@ -171,11 +171,21 @@
 - added createFromJSONFile for creating nft from jsons
 **1.4.13 : 4-1-2026**
 - fixed dev-keys reference
+**1.4.14 : 4-11-2026**
+- file encryption streaming bugfix
+- updating app/ metadata editor
+
 
 ------------------------------------------------------------------------
 
 
 # TODO
+
+- write a command line script for writing metadata to a whole folder of images/video
+-- use to write all general metadata values to BTS1, BTS2, BTS3, & BTS3.5
+-- then individually tag content with performers
+-- 
+
 
 - possibly update encryption scheme to minimize data size doubling due to conversion to hex
 

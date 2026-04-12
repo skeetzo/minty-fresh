@@ -103,7 +103,7 @@ async function encryptFileStream(file) {
 
 export async function encryptFile(file) {
   console.debug("encrypting file:", file)
-  if (getFileSizeInBytes(file) >= FILE_SIZE_MINIMUM) return await encryptStream(file);
+  if (getFileSizeInBytes(file) >= FILE_SIZE_MINIMUM) return await encryptFileStream(file);
   try {
     const buff = fs.readFileSync(file);
     const key = crypto.randomBytes(16).toString('hex'); // 16 bytes -> 32 chars
@@ -124,7 +124,7 @@ export async function encryptFile(file) {
     return content;
   } catch (err) {
     if (err.message.includes("Cannot create a string longer than 0x1fffffe8 characters")) {
-      return await encryptStream(file);
+      return await encryptFileStream(file);
     }
     console.debug(err)
     throw err;

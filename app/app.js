@@ -1,8 +1,12 @@
-
+import express from "express";
 import path from 'path';
 import fileUpload from 'express-fileupload';
 import { fileURLToPath } from 'url';
 import { promises as fs } from 'fs';
+import * as bodyParser_ from "body-parser";
+const bodyParser = bodyParser_.default; 
+
+import { readMetadata, writeMetadata, writeAndReadMetadata } from "../src/utils/exiftool.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -10,17 +14,11 @@ const uploadDir = path.join(__dirname, '../tmp');
 // const collectionsDir = path.join(uploadDir, "collections");
 const collectionsDir = "/home/skeetzo/Pictures/collections"
 
-import express from "express";
-import * as bodyParser_ from "body-parser";
-const bodyParser = bodyParser_.default; 
-
-import { readMetadata, writeMetadata, writeAndReadMetadata } from "../src/utils/exiftool.js";
-
 const app = express()
 const port = 3000
 
 let files = [];
-const contentTypes = ["Solo","BG","BGA","BGG","BGGG"];
+const contentTypes = ["BTS", "Solo","BG","BGA","BGG","BGGG"];
 
 function presets() {
   return {preselectedValue:contentTypes[0], Location: "", Title:"", Description:"", Performers:"", Cost:"", Type:"", Fee:"", Max:"", Date_:"", Collection:"", contentTypes}
@@ -46,7 +44,6 @@ app.use("/tmp/", express.static(path.join(__dirname, '../tmp')));
 app.set('views', path.join(__dirname));
 app.set('view engine', 'ejs');
 
-
 app.get('/', (req, res) => {
   res.render("index", { ...presets(), files });
 });
@@ -54,7 +51,10 @@ app.get('/', (req, res) => {
 app.post('/load', async (req, res) => {
   files = [];
   try {
-    console.log(req.files.upload)
+    // console.log(req)
+    // console.log(req.files)
+    // console.log(req.files.upload)
+    if (!req.files||!req.files.upload) return res.render("index", { ...presets(), files });
     let metadata = {...presets()};
     if (req.files && req.files.upload && Array.isArray(req.files.upload)) 
       for (const file of req.files.upload)
@@ -78,14 +78,18 @@ app.post('/load', async (req, res) => {
 
 app.post('/submit', async (req, res) => {
   try {
-    const { Collection, Title, Description, Performers, Cost, Type, Fee, Max, Date_ } = req.body;
+    const { Collection, Location, Title, Description, Performers, Cost, Type, Fee, Max, Date_ } = req.body;
+    const Director = "0x";
+    const Producer = "0x";
     // console.log("request:", req.body)
 
     for (const file of files) {
-      await writeMetadata(file, { Location, Title, Description, Performers, Cost, Beneficiary, Fee, Max, Director, Producer, Collection }, {"verbose":true,"keep":true});
+      await writeMetadata(file, { Location, Title, Description, Performers, Cost, Fee, Max, Director, Producer, Collection }, {"verbose":true,"keep":true});
       if (Collection != "") {
         await fs.mkdir(path.join(collectionsDir, Collection), { recursive: true });
-        fs.rename(file, path.join(collectionsDir, Collection, path.basename(file)))
+        // fs.rename(file, path.join(collectionsDir, Collection, path.basename(file)));
+        await fs.copyFile(file, path.join(collectionsDir, Collection, path.basename(file)));
+        console.log("copied file to collection dir:", path.join(collectionsDir, Collection));
       }
     }
     files = []

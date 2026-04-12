@@ -2,6 +2,10 @@
     "title": "Content Metadata",
     "type": "object",
     "properties": {
+        "date": {
+            "type": "integer",
+            "description": "The date of the content"
+        },
         "title": {
             "type": "string",
             "description": "The content title or filename"
@@ -14,13 +18,13 @@
             "type": "string",
             "description": "The content for this asset"
         },
-        "cost": {
-            "type": "integer",
-            "description": "The cost of the content in USD"
-        },
         "beneficiary": {
             "type": "string",
             "description": "The beneficiary content splitter"
+        },
+        "cost": {
+            "type": "integer",
+            "description": "The cost of the content in USD"
         },
         "fee": {
             "type": "integer",
@@ -46,13 +50,13 @@
             "type": "string",
             "description": "The content producer"
         },
-        "date": {
-            "type": "integer",
-            "description": "The date of the content"
-        },
         "location": {
             "type": "integer",
             "description": "The location of the content"
+        },
+        "tags": {
+            "type": "array",
+            "description": "The tags used to identify the content"
         }
     },
     "required": ["title", "uri", "performers"]
