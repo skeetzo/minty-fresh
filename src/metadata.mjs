@@ -45,7 +45,7 @@ async function main() {
         .option('-M, --max <number>', 'The max that can be minted')
         .option('-DA, --date <number>', 'The date created')
         .option('-C, --collection <string>', 'The collection name for reference')
-        .action(async ({filepath, ...metadata}) => {
+        .action(async ({filepath, filepathWrite, ...metadata}) => {
             for (const file of parseForFiles(filepath))
                 await writeMetadata(filepath+"/"+file, metadata, opts);
         });

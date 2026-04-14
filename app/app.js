@@ -12,7 +12,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const uploadDir = path.join(__dirname, '../tmp');
 // const collectionsDir = path.join(uploadDir, "collections");
-const collectionsDir = "/home/skeetzo/Pictures/collections"
+// const collectionsDir = "/home/skeetzo/Pictures/collections"
+const collectionsDir = "/media/skeetzo/Elements/Projects/ContentNFTs"
 
 const app = express()
 const port = 3000
@@ -21,7 +22,7 @@ let files = [];
 const contentTypes = ["BTS", "Solo","BG","BGA","BGG","BGGG"];
 
 function presets() {
-  return {preselectedValue:contentTypes[0], Location: "", Title:"", Description:"", Performers:"", Cost:"", Type:"", Fee:"", Max:"", Date_:"", Collection:"", contentTypes}
+  return {preselectedValue:contentTypes[0], Location: 0, Title:"", Description:"", Performers:"", Cost:0, Type:"", Fee:0, Max:0, Date_:"", Collection:"", contentTypes}
 }
 
 async function processFile(file) {
@@ -63,8 +64,10 @@ app.post('/load', async (req, res) => {
       metadata = {...metadata, ...await processFile(req.files.upload)}
 
     // Year, Month (0-indexed), Day, Hour, Minute, Second, Millisecond
-    metadata.Date_ = Math.floor(new Date(metadata.DateTimeOriginal.year, metadata.DateTimeOriginal.month, metadata.DateTimeOriginal.day, metadata.DateTimeOriginal.hour, metadata.DateTimeOriginal.minute, metadata.DateTimeOriginal.second).getTime() / 1000);
-    metadata.Date_ = metadata.DateTimeOriginal.rawValue;
+    if (metadata.DateTimeOriginal && (metadata.DateTimeOriginal.year && metadata.DateTimeOriginal.month && metadata.DateTimeOriginal.day && metadata.DateTimeOriginal.hour && metadata.DateTimeOriginal.minute && metadata.DateTimeOriginal.second)) {
+      metadata.Date_ = Math.floor(new Date(metadata.DateTimeOriginal.year, metadata.DateTimeOriginal.month, metadata.DateTimeOriginal.day, metadata.DateTimeOriginal.hour, metadata.DateTimeOriginal.minute, metadata.DateTimeOriginal.second).getTime() / 1000);
+      metadata.Date_ = metadata.DateTimeOriginal.rawValue;
+    }
 
     // metadata.Date_ = metadata.CreateDate.rawValue;
 
@@ -87,11 +90,12 @@ app.post('/submit', async (req, res) => {
       await writeMetadata(file, { Location, Title, Description, Performers, Cost, Fee, Max, Director, Producer, Collection }, {"verbose":true,"keep":true});
       if (Collection != "") {
         await fs.mkdir(path.join(collectionsDir, Collection), { recursive: true });
+        // not allowed to move files to external drives
         // fs.rename(file, path.join(collectionsDir, Collection, path.basename(file)));
         await fs.copyFile(file, path.join(collectionsDir, Collection, path.basename(file)));
-        console.log("copied file to collection dir:", path.join(collectionsDir, Collection));
       }
     }
+    console.log("copied file to collection dir:", path.join(collectionsDir, Collection));
     files = []
     res.render("index", { ...presets(), files });
   } catch (error) {

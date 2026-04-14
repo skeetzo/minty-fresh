@@ -1,7 +1,15 @@
 import { ExifTool, parseJSON } from "exiftool-vendored";
 import path from "path";
 
-const exiftool = new ExifTool({ exiftoolEnv: { EXIFTOOL_HOME: path.resolve("./config") }})
+// TODO: remove the keep variable as its no longer necessary, should be handled by the disposalTimeoutMs and asyncDisposalTimeoutMs
+const exiftool = new ExifTool({
+  maxProcs: 1, // More concurrent processes
+  minDelayBetweenSpawnMillis: 0, // Faster spawning
+  streamFlushMillis: 10, // Faster streaming
+  disposalTimeoutMs: 10000, // 2 seconds for sync disposal
+  asyncDisposalTimeoutMs: 30_000, // 30 seconds for async disposal
+  exiftoolEnv: { EXIFTOOL_HOME: path.resolve("./config") }
+})
 
 export async function writeMetadata(imagePath, metadata, opts={"verbose":false, "keep":false}) {
   console.debug("writing metadata to file:", imagePath);
@@ -12,8 +20,8 @@ export async function writeMetadata(imagePath, metadata, opts={"verbose":false, 
     if (opts.verbose)
       console.error("Error adding metadata:", error.message);
   } finally {
-    if (!opts.keep)
-      exiftool.end();
+    // if (!opts.keep)
+      // await exiftool.end();
   }
 }
 
@@ -30,8 +38,8 @@ export async function readMetadata(imagePath, opts={"verbose":false, "keep":fals
     if (opts.verbose)
       console.error("Error reading metadata:", error.message);
   } finally {
-    if (!opts.keep)
-      exiftool.end();
+    // if (!opts.keep)
+      // await exiftool.end();
   }
 }
 
@@ -45,6 +53,6 @@ export async function writeAndReadMetadata(imagePath, metadata) {
     if (opts.verbose)
       console.error("Error reading metadata:", error.message);
   } finally {
-    exiftool.end();
+    // await exiftool.end();
   }
 }

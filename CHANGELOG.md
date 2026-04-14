@@ -175,6 +175,8 @@
 - file encryption streaming bugfix
 - updating app/ metadata editor
 - added batch read/write script ala src/metadata
+**1.4.15 : 4-14-2026**
+- debugging exiftool batch usage
 
 ------------------------------------------------------------------------
 

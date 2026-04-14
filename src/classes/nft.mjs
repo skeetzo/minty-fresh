@@ -34,6 +34,11 @@ export class NFT {
         this.skipAttributes = opts.skipAttributes || false;
         this.skipProperties = opts.skipProperties || false;
         this.skipPrompt = opts.skipPrompt || false;
+        //
+        this.exifOpts = {
+            // keep: false,
+            verbose: false
+        }
 
         this._initialized = false;
     }
@@ -174,7 +179,7 @@ export class NFT {
 
 
     async readMetadataFromFile(filePath) {
-        this.metadata = {...this.metadata, ...await readMetadata(filePath, {verbose:false})};
+        this.metadata = {...this.metadata, ...await readMetadata(filePath, this.exifOpts)};
     }
 
     readJSONFile(filePath) {
