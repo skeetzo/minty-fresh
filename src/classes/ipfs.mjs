@@ -1,4 +1,4 @@
-
+import * as fs from "fs";
 import * as getconfig from "getconfig";
 const config = getconfig.default;
 import { CID } from 'multiformats/cid'
@@ -11,7 +11,7 @@ const uint8ArrayConcat = concat;
 const uint8ArrayToString = toString;
 // import { uint8ArrayToString } from 'uint8arrays/to-string';
 
-import { create } from "kubo-rpc-client";
+import { create, globSource } from "kubo-rpc-client";
 const IPFS_CLIENT = create({url:config.ipfsApiUrl,timeout:'10m'});
 
 // ipfs.add parameters for more deterministic CIDs
@@ -23,9 +23,9 @@ const IPFS_CLIENT = create({url:config.ipfsApiUrl,timeout:'10m'});
 export class IPFS {
     
     ipfsAddOptions = {
-      cidVersion: 1,
-      hashAlg: 'sha2-256',
-    'wrapWithDirectory':true
+      'cidVersion': 1,
+      'hashAlg': 'sha2-256',
+      'wrapWithDirectory':true
     }
 
     writeOptions = { 
@@ -47,20 +47,7 @@ export class IPFS {
 
     // file must have: name, path, and content
     static async add(file, baseUri="ipfs://") {
-        // console.debug("file:", file);
-        console.debug(`adding IPFS path: ${file.path}`);
-        const { cid: metadataCID } = await IPFS_CLIENT.add(file, IPFS.ipfsAddOptions);
-        const metadataURI = IPFS.ensureIpfsUriPrefix(metadataCID, baseUri) + "/" + file.name;
-        // TODO
-        // can use the ls check to prevent duplicates
-        // possibly add dialogue to confirm y/n to overwrite existing?
-        // for await (const filee of IPFS_CLIENT.ls(metadataCID)) {
-          // console.log(filee)
-        // }
-        // will fail if the MFS is written poorly / incorrectly
 
-        // TODO
-        // test if this is necessary at all
         async function writeMFS() {
             try {
                 await IPFS_CLIENT.files.write(file.path, file.content, IPFS.writeOptions)
@@ -77,9 +64,9 @@ export class IPFS {
 
         // https://github.com/ipfs/ipfs-webui/issues/897
         // $ ipfs files cp /ipfs/QmeoTsSvQvNtKxhHdPA3gy6RWD6ghVwdkjBeUWWPiHdmn6 /hello.txt
-        async function copyToWebUI() {
+        async function copyToWebUI(cid) {
             try {
-                await IPFS_CLIENT.files.cp(`/ipfs/${metadataCID}`, "/"+file.name, IPFS.ipfsAddOptions);
+                await IPFS_CLIENT.files.cp(`/ipfs/${cid}`, "/"+file.name, IPFS.ipfsAddOptions);
             }
             catch (err) {
                 const IPFS_DUPLICATE_CP = "directory already has entry by that name";
@@ -91,10 +78,40 @@ export class IPFS {
             }
         }
 
-        // await writeMFS();
-        await copyToWebUI();
+        console.debug("file:", file);
+        console.debug(`adding IPFS path: ${file.path}`);
 
-        return { metadataCID:metadataCID.toString(), metadataURI };
+        let cid, metadataURI;
+        if (typeof file.content === "string" && file.content.includes("/tmp/encryptions/")) {
+            console.debug("uploading large file...");
+
+            // Create the stream
+            // const stream = fs.createReadStream(file.content);
+            const stream = fs.createReadStream(file.content, { encoding: 'utf8' });
+            // const stream = fs.createReadStream(file.content, { encoding: 'base64' });
+
+            // Listen for data chunks
+            // stream.on('data', (chunk) => {
+                // console.log('Received chunk:', chunk);
+            // });
+
+            // Listen for the end of the file
+            stream.on('end', () => {
+                console.debug('successfully uploaded large file');
+            });
+
+            // Handle errors
+            stream.on('error', (err) => {
+                console.error('An error occurred:', err.message);
+            });
+
+            ({ cid } = await IPFS_CLIENT.add(stream, IPFS.ipfsAddOptions));
+        }
+        else 
+            ({ cid } = await IPFS_CLIENT.add(file, IPFS.ipfsAddOptions));
+        metadataURI = IPFS.ensureIpfsUriPrefix(cid, baseUri) + "/" + file.name;
+        await copyToWebUI(cid);
+        return { metadataCID:cid.toString(), metadataURI };
     }
 
     /**
@@ -289,8 +306,6 @@ export class IPFS {
         }
     }
 
-    // TODO: debug
-    // error messages
     static validateCIDString(possibleCIDString) {
         // console.debug("validating cid:", possibleCIDString);
         try {
@@ -298,7 +313,8 @@ export class IPFS {
             return cid;
         }
         catch (err) {
-            console.debug(err.message);
+            if (!err.message.includes("base64 decoder only supports inputs prefixed with m"))
+                console.debug(err.message);
         }
         return false;
     }
