@@ -178,9 +178,12 @@
 **1.4.15 : 4-14-2026**
 - debugging exiftool batch usage
 - asset bug fixes
+**1.4.16 : 4-18-2026**
+- fixed file streaming encryption
 
 ------------------------------------------------------------------------
 
+- clean up streaming encryption functions
 
 # TODO
 

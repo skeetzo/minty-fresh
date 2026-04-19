@@ -11,6 +11,7 @@ const __dirname = path.dirname(__filename);
 
 const FILE_SIZE_MINIMUM = 8000000000; // 1 GB
 // const FILE_SIZE_MINIMUM = 4000000000; // 500 MB
+const ALGORITHM = "aes-256-ctr"
 
 // generateKeys()
 generateDevKeys()
@@ -19,18 +20,54 @@ generateDevKeys()
 
 class PrependTransform extends Transform {
     constructor(prependData, options) {
-        super(options);
-        this.prependData = Buffer.from(prependData, "utf8").toString('utf8'); // Convert to Buffer
-        this.prepended = false; // Flag to ensure prepending only happens once
+      super(options);
+      this.prependData = Buffer.from(prependData, "base64").toString('utf8'); // Convert to Buffer
+      // this.prependData = prependData; // Convert to Buffer
+      this.prepended = false; // Flag to ensure prepending only happens once
     }
 
     _transform(chunk, encoding, callback) {
-        if (!this.prepended) {
-            this.push(this.prependData); // Prepend the data
-            this.prepended = true;
-        }
-        this.push(chunk); // Pass the original chunk
-        callback();
+      if (!this.prepended) {
+        console.log("prepending data:", this.prependData)
+        this.push(this.prependData); // Prepend the data
+        this.prepended = true;
+      }
+      this.push(chunk); // Pass the original chunk
+      callback();
+    }
+}
+
+class HexTransform extends Transform {
+    constructor(options) {
+      super(options);
+      this.skipFirst = true;
+    }
+
+    _transform(chunk, encoding, callback) {
+      this.push(Buffer.from(chunk, "hex").toString("utf8"));
+      callback();
+    }
+}
+
+class HexTransform2 extends Transform {
+    constructor(options) {
+      super(options);
+      // this.skipFirst = true;
+    }
+
+    _transform(chunk, encoding, callback) {
+
+      // this.push(Buffer.from(chunk)) // 9.67mb    hex: 19.33mb
+      // this.push(Buffer.from(chunk, "hex").toString('utf8')); //utf8 9.67mb       hex: 19.34mb
+      // this.push(Buffer.from(chunk, "utf8").toString('hex')); //utf8 19.33mb   hex: 38.68mb
+      this.push(Buffer.from(chunk, "hex"));  // 9.67.mb    hex: 19mb
+      // this.push(Buffer.from(chunk, "utf8"));  // 9.67.mb    hex: 19mb
+      // this.push(Uint8Array.from(Buffer.from(chunk, 'hex'))); // 9.67mb      hex: 19.33mb
+      // this.push(Buffer.from(Uint8Array.from(Buffer.from(chunk, 'hex')))); // 9.67mb      hex 19.33
+
+      // console.log(Buffer.from(Uint8Array.from(Buffer.from(chunk, 'hex'))))
+
+      callback();
     }
 }
 
@@ -71,6 +108,8 @@ async function toArray(asyncIterator) {
 
 export async function encryptFileStream(file) {
   console.debug("encrypting file stream:", file)
+  console.log("original size:");
+  getFileSizeInBytes(file);
   try {
     const key = crypto.randomBytes(16).toString('hex'); // 16 bytes -> 32 chars
     const iv = crypto.randomBytes(8).toString('hex');   // 8 bytes -> 16 chars
@@ -80,43 +119,32 @@ export async function encryptFileStream(file) {
       Buffer.from(ekey, 'utf8'),   // char length: 684
       Buffer.from(iv, 'utf8')     // char length: 16
     ]);
-    console.log("prependData:", Buffer.from(prependData, "utf8"));
-    console.log("prependData:", Buffer.from(prependData, "utf8").toString('utf8'));
-    console.log(prependData)
-    console.log("length:", prependData.length);
+    console.log("prepend length:", prependData.length);
     const content = path.join(__dirname, "../../tmp/encryptions/", path.basename(file));
     console.debug("tmp path:", content);
     try { fs.unlinkSync(content) } catch (err) {}
     await new Promise(async resolve => {
       const readStream = fs.createReadStream(file, { encoding: 'utf8', highWaterMark: 64 * 1024 }); // Read in 64KB chunks
-      // const readStream = fs.createReadStream(file, { encoding: 'base64'});
-      // const readStream = fs.createReadStream(file, { encoding: 'base64'});
-      const writeStream = fs.createWriteStream(content, {encoding: 'hex'});
-      // const writeStream = fs.createWriteStream(content, {encoding: 'base64'});
-      const algorithm = 'aes-256-ctr';
-      const cipher = crypto.createCipheriv(algorithm, key, iv);
+      const writeStream = fs.createWriteStream(content, { encoding: 'utf8' });
+      const cipher = crypto.createCipheriv(ALGORITHM, key, iv);
       const prependStream = new PrependTransform(prependData);
-      // Pipe the streams: readStream -> prepend data only once -> cipher -> writeStream
+      const hexStream = new HexTransform();
+
       writeStream.on('finish', () => {
         resolve();
       });
       writeStream.on('error', (err) => {
         console.error('Encryption error:', err);
       });
-      // readStream.pipe(prependStream).pipe(cipher).pipe(writeStream);
-      readStream.pipe(cipher).pipe(writeStream);
+      writeStream.write(Buffer.from(prependData, "base64").toString("utf8"))
+      readStream.pipe(cipher).pipe(hexStream).pipe(writeStream);
     });
-
-    // await prependFile(content, Buffer.from(prependData, "utf8").toString('utf8'))
-
     console.debug('ENCRYPTION --------')
     console.debug('key:', key, 'iv:', iv, 'ekey:', ekey.length)
     console.debug(' ')
     console.debug('file encrypted successfully!');
     getFileSizeInBytes(content);
-
-    // await decryptFileStream(content)
-
+    await decryptFileStream(content)
     return content;
   }
   catch (err) {
@@ -128,6 +156,8 @@ export async function encryptFile(file) {
   return await encryptFileStream(file);
   if (getFileSizeInBytes(file) >= FILE_SIZE_MINIMUM) return await encryptFileStream(file);
   console.debug("encrypting file:", file)
+  console.log("original size:");
+  getFileSizeInBytes(file);
   try {
     const buff = fs.readFileSync(file);
     const key = crypto.randomBytes(16).toString('hex'); // 16 bytes -> 32 chars
@@ -197,25 +227,47 @@ export async function decryptFile(file_data) {
 export async function decryptFileStream(file) {
   console.debug("decrypting file stream:", file)
   try {
-    // const key = crypto.randomBytes(16).toString('hex'); // 16 bytes -> 32 chars
-    // const iv = crypto.randomBytes(8).toString('hex');   // 8 bytes -> 16 chars
-    // const ekey = encryptRSA(key); // 32 chars -> 684 chars
-    // console.debug("ekey:", ekey);
-
-
     const content = path.join(__dirname, "../../tmp/decryptions/", path.basename(file));
     console.debug("tmp path:", content);
-
-    // try { fs.unlinkSync(content) } catch (err) {}
+    try { fs.unlinkSync(content) } catch (err) {}
+    let ekey, key, iv;
     await new Promise(async resolve => {
       const readStream = fs.createReadStream(file, { encoding: 'utf8', highWaterMark: 64 * 1024 }); // Read in 64KB chunks
-      const writeStream = fs.createWriteStream(content);
-      const algorithm = 'aes-256-ctr';
+      readStream.on('error', (err) => {
+        console.error('An error occurred:', err.message);
+      })
 
-
-      // const decipher = crypto.createDecipheriv(algorithm, key, iv);
+      let chunks = "";
       let decipher;
-      // Pipe the streams: readStream -> prepend data only once -> cipher -> writeStream
+      for await (const chunk of readStream) {
+        // console.log(`Received ${chunk.length} bytes of data.`);
+        if (chunks.length <= 700) {
+          chunks += chunk;
+          // return;
+        }
+        console.log("length:", chunks.length);
+
+        // determine decipher from first 700
+        if (chunks.length >= 700 && !decipher) {
+          // const edata = Buffer.concat(chunks);
+          const edata = Buffer.from(chunks, "utf8");
+          ekey = edata.slice(0, 684).toString('utf8');
+          key = decryptRSA(ekey);
+          iv = edata.slice(684, 700).toString('utf8');
+          console.log("ekey:", ekey);
+          console.log("key:", key);
+          console.log("iv:", iv);
+
+          // rest of the data needs to continue to buffer and be decrypted at the same time
+          // const econtent = edata.slice(700).toString('utf8')
+          decipher = crypto.createDecipheriv(ALGORITHM, key, iv);
+          // readStream.pause();
+          readStream.destroy();
+          break;
+        }
+      }
+
+      const writeStream = fs.createWriteStream(content, { encoding: 'utf8' });
       writeStream.on('finish', () => {
         resolve();
       });
@@ -223,37 +275,14 @@ export async function decryptFileStream(file) {
         console.error('Encryption error:', err);
       });
 
-      const chunks = [];
-      readStream.on('data', (chunk) => {
-        console.log(`Received ${chunk.length} bytes of data.`);
-        if (Buffer.concat(chunks).length <= 700) {
-          chunks.push(chunk);
-          return;
-        }
-        // determine decipher from first 700
-        if (Buffer.concat(chunks).length >= 700 && !decipher) {
-          const edata = Buffer.concat(chunks);
-          const key = edata.slice(0, 684).toString('utf8');
-          const iv = edata.slice(684, 700).toString('utf8');
-
-          // rest of the data needs to continue to buffer and be decrypted at the same time
-          // const econtent = edata.slice(700).toString('utf8')
-          decipher = crypto.createDecipheriv('aes-256-ctr', key, iv);
-          console.log("set decipher:", decipher);
-          readStream.close();
-        }
-        // Process the chunk here
-      });
-
-      readStream.read();
-      readStream.read().pipe(decipher);
-
-      // const stream2 = fs.createReadStream(file, { start: 700 });
-
+      const hexStream = new HexTransform2();
+      // const readStream2 = fs.createReadStream(file, { start:700 });
+      // const readStream2 = fs.createReadStream(file, { encoding: 'utf8', start:700 });
+      const readStream2 = fs.createReadStream(file, { encoding: 'hex', start:700 });
+      readStream2.pipe(hexStream).pipe(decipher).pipe(writeStream);
     });
-    console.debug('ENCRYPTION --------')
+    console.debug('DECRYPTION --------')
     console.debug('key:', key, 'iv:', iv, 'ekey:', ekey.length)
-    // console.debug('content:', content.length, 'ebuff:', ebuff.length)
     console.debug(' ')
     console.debug('file decrypted successfully!');
     getFileSizeInBytes(content);
@@ -271,7 +300,7 @@ export async function decryptFileStream(file) {
 ////////////////////////////////
 
 export function encryptAES(buffer, secretKey, iv) {
-  const cipher = crypto.createCipheriv('aes-256-ctr', secretKey, iv);
+  const cipher = crypto.createCipheriv(ALGORITHM, secretKey, iv);
   const data = cipher.update(buffer);
   const encrypted = Buffer.concat([data, cipher.final()]);
 
@@ -281,7 +310,7 @@ export function encryptAES(buffer, secretKey, iv) {
 }
 
 export function decryptAES(buffer, secretKey, iv) {
-  const decipher = crypto.createDecipheriv('aes-256-ctr', secretKey, iv);
+  const decipher = crypto.createDecipheriv(ALGORITHM, secretKey, iv);
   const data = decipher.update(buffer)
   const decrypted = Buffer.concat([data, decipher.final()]);
   console.debug("decrypted:", decrypted);
