@@ -9,8 +9,8 @@ import { dirname } from 'path';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const FILE_SIZE_MINIMUM = 8000000000; // 1 GB
-// const FILE_SIZE_MINIMUM = 4000000000; // 500 MB
+// const FILE_SIZE_MINIMUM = 1000000000; // 1 GB
+const FILE_SIZE_MINIMUM = 500000000; // 500 MB
 const ALGORITHM = "aes-256-ctr"
 
 // generateKeys()
@@ -174,14 +174,12 @@ class DeHexTransform extends Transform {
 }
 
 function bitsToMB(bits) {
-  // const bytes = bits / 8;
-  const megabytes = bits / (1024 * 1024);
+  const megabytes = bits / (8 * 1024 * 1024);
   return megabytes;
 }
 
 function bitsToGB(bits) {
-  // const bytes = bits / 8;
-  const gigabytes = bits / (1024 * 1024 * 1024);
+  const gigabytes = bits / (8 * 1e9); // 1 GB
   return gigabytes;
 }
 
