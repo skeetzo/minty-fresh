@@ -180,6 +180,8 @@
 - asset bug fixes
 **1.4.16 : 4-18-2026**
 - fixed file streaming encryption
+**1.4.17 : 4-19-2026**
+- finished file streaming decryption
 
 ------------------------------------------------------------------------
 

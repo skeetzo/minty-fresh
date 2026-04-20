@@ -17,7 +17,7 @@ const default_asset_types = ["image","video"];
 const cachePath = "./cache.txt";
 
 const REMOVE_ON_UPLOAD = false;
-const REMOVE_TMP_ON_UPLOAD = true;
+const REMOVE_TMP_ON_UPLOAD = false;
 
 // check local file cache for filepath
 function checkCache(filepath) {
