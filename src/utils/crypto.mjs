@@ -18,34 +18,6 @@ generateDevKeys()
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-function hexToUint8Array(hexString) {
-  if (hexString.length % 2 !== 0) {
-    throw new Error("Invalid hex string length (must be even)");
-  }
-  const result = new Uint8Array(hexString.length / 2);
-  for (let i = 0; i < hexString.length; i += 2) {
-    result[i / 2] = parseInt(hexString.substring(i, i + 2), 16);
-  }
-  return result;
-}
-
-function hexToArrayBuffer(hex) {
-  // Remove 0x prefix if it exists
-  if (hex.startsWith('0x')) hex = hex.slice(2);
-  
-  // Ensure the hex string has an even length
-  if (hex.length % 2 !== 0) hex = '0' + hex;
-
-  const view = new Uint8Array(hex.length / 2);
-
-  for (let i = 0; i < hex.length; i += 2) {
-    // Parse each pair of hex characters into a byte
-    view[i / 2] = parseInt(hex.substring(i, i + 2), 16);
-  }
-
-  return view.buffer;
-}
-
 class InspectTransform extends Transform {
     constructor(name, options) {
       super(options);
@@ -64,111 +36,13 @@ class InspectTransform extends Transform {
     }
 }
 
-class PrependTransform extends Transform {
-    constructor(prependData, options) {
-      super(options);
-      this.prependData = Buffer.from(prependData, "base64").toString('utf8'); // Convert to Buffer
-      // this.prependData = prependData; // Convert to Buffer
-      this.prepended = false; // Flag to ensure prepending only happens once
-    }
-
-    _transform(chunk, encoding, callback) {
-      if (!this.prepended) {
-        console.log("prepending data:", this.prependData)
-        this.push(this.prependData); // Prepend the data
-        this.prepended = true;
-      }
-      this.push(chunk); // Pass the original chunk
-      callback();
-    }
-}
-
-
-class uInt8Transform extends Transform {
-    constructor(options) {
-      super(options);
-    }
-
-    _transform(chunk, encoding, callback) {
-      this.push(new Uint8Array(Buffer.from(chunk, 'hex')));
-      callback();
-    }
-}
-
 class HexTransform extends Transform {
     constructor(options) {
       super(options);
-      this.skipFirst = true;
     }
 
     _transform(chunk, encoding, callback) {
-      // transform incoming chunk into hex and print as utf8 string
-
-      // HOW THE FUCK WAS THIS WORKING BEFORE???????????/
-      // this.push(Buffer.from(chunk, "hex").toString("utf8"));
-
-      // console.log("------------------------------------------------")
-      // console.log("chunk hex:", chunk.toString().substring(0,10));
-      // console.log("encoding:", encoding);
-      // console.log(Buffer.from(chunk))
-      // console.log(Buffer.from(chunk).toString("utf8").substring(0,10))
-      // console.log(Buffer.from(chunk).toString("hex").substring(0,10))
-      // console.log(Buffer.from(chunk, "utf8").toString("utf8").substring(0,10))
-      // console.log(Buffer.from(chunk, "utf8").toString("hex").substring(0,10))
-      // console.log(Buffer.from(chunk, "hex").toString("utf8").substring(0,10))
-      // console.log(Buffer.from(chunk, "hex").toString("utf8").substring(0,10))
-      // console.log("------------------------------------------------")
-      // this.push(Buffer.from(chunk));
       this.push(Buffer.from(chunk).toString("hex"));
-      // this.push(Buffer.from(chunk, "hex"));
-      // this.push(Buffer.from(chunk).toString("hex")); // outputs to hex but filesize too large
-      // this.push(Buffer.from(chunk, "hex").toString("hex")); // outputs to hex but filesize too large
-      // this.push(Buffer.from(chunk).toString("utf8"));
-      // this.push(Buffer.from(chunk).toString("utf8"));
-      // this.push(chunk);
-      callback();
-    }
-}
-
-class DeHexTransform extends Transform {
-    constructor(name, options) {
-      super(options);
-      this.name = name;
-      // this.skipFirst = true;
-    }
-
-    _transform(chunk, encoding, callback) {
-      console.log(this.name+" "+chunk.toString().substring(0,10))
-      console.log(encoding)
-      this.push(chunk);
-      // transform incoming chunk from hex and into uint8array
-      // this.push(hexToUint8Array(Buffer.from(chunk, "hex").toString('hex')));
-      // this.push(hexToUint8Array(Buffer.from(chunk, "utf8").toString('hex')));
-
-      // this.push(Buffer.from(Buffer.from(chunk).toString('utf8'), "hex"));
-
-      // its encoded as utf8, so receive it as utf8
-      // let encodedChunk = Buffer.from(chunk, "utf8").toString("hex");
-      // const bytes = Uint8Array.from(Buffer.from(chunk));
-      // const bytes = Uint8Array.from(Buffer.from(chunk, "hex"));
-      // const bytes = Uint8Array.from(Buffer.from(chunk, "hex").toString('utf8'));
-      // let encodedChunk = Buffer;
-
-      // however, it is in hex format, so, convert the recovered hex 
-      // encodedChunk = Buffer.from(encodedChunk, "hex").toString("utf8");
-
-      // this.push(Buffer.from(chunk)) // 9.67mb    hex: 19.33mb
-      // this.push(Buffer.from(chunk, "hex").toString('utf8')); //utf8 9.67mb       hex: 19.34mb
-      // this.push(Buffer.from(chunk, "hex").toString('hex'));
-      // this.push(Buffer.from(chunk, "utf8").toString('hex')); //utf8 19.33mb   hex: 38.68mb
-      // this.push(Buffer.from(chunk, "hex"));  // 9.67.mb    hex: 19mb
-      // this.push(Buffer.from(chunk, "utf8"));  // 9.67.mb    hex: 19mb
-      // this.push(Uint8Array.from(Buffer.from(chunk, 'hex'))); // 9.67mb      hex: 19.33mb
-      // this.push(Buffer.from(Uint8Array.from(Buffer.from(chunk, 'hex')))); // 9.67mb      hex 19.33
-
-      // console.log(Buffer.from(Uint8Array.from(Buffer.from(chunk, 'hex'))))
-
-      // this.push(encodedChunk);
       callback();
     }
 }
@@ -196,19 +70,7 @@ function getFileSizeInBytes(filePath) {
   }
 }
 
-async function toArray(asyncIterator) { 
-  const arr=[]; 
-  for await(const i of asyncIterator) {
-    arr.push(i); 
-  }
-  return arr;
-}
-
 ////////////////////////////////////////////////////////////////////////////////////////////////
-
-// 2.92 MB
-// 5.85 MB
-// 2.92 MB
 
 export async function encryptFileStream(file) {
   console.debug("encrypting file stream:", file)
@@ -246,24 +108,20 @@ export async function encryptFileStream(file) {
     console.debug(' ')
     console.debug('file encrypted successfully!');
     getFileSizeInBytes(content);
-    // await decryptFileStream(content)
-    // await decryptFile(content);
     return content;
   }
   catch (err) {
-
+    console.error(err);
   }
 }
 
 export async function encryptFile(file) {
-  // return await encryptFileStream(file);
   if (getFileSizeInBytes(file) >= FILE_SIZE_MINIMUM) return await encryptFileStream(file);
   console.debug("encrypting file:", file)
   console.log("original size:");
   getFileSizeInBytes(file);
   try {
     const buff = fs.readFileSync(file);
-    // console.log("buff:", buff);
     const key = crypto.randomBytes(16).toString('hex'); // 16 bytes -> 32 chars
     const iv = crypto.randomBytes(8).toString('hex');   // 8 bytes -> 16 chars
     const ekey = encryptRSA(key); // 32 chars -> 684 chars
@@ -280,16 +138,11 @@ export async function encryptFile(file) {
     console.debug('contents:', buff.length, 'buff:', buff.length)
     console.debug('content:', content.length, 'ebuff:', ebuff.length)
     console.debug(' ')
-
     const filepath = path.join(__dirname, "../../tmp/encryptions/", path.basename(file));
     console.debug("tmp path:", filepath);
     try { fs.unlinkSync(filepath) } catch (err) {}
     fs.writeFileSync(filepath, content);
     getFileSizeInBytes(filepath)
-
-    // await decryptFile(filepath);
-    // await decryptFileStream(filepath);
-
     return content;
   } catch (err) {
     if (err.message.includes("Cannot create a string longer than 0x1fffffe8 characters")) {
@@ -311,7 +164,6 @@ export async function encryptFolder(folderPath) {
   return encryptedFiles;
 }
 
-// export async function decryptFile(edata) {
 export async function decryptFile(file) {
   console.log("decrypting file:", file);
   try {
@@ -327,7 +179,6 @@ export async function decryptFile(file) {
     console.debug('key:', key, 'iv:', iv)
     console.debug('contents:', content.length, 'encrypted:', econtent.length)
     console.debug('downloaded:', edata.length)
-
     const filepath = path.join(__dirname, "../../tmp/decryptions/", path.basename(file));
     console.debug("tmp path:", filepath);
     try { fs.unlinkSync(filepath) } catch (err) {}
@@ -339,11 +190,9 @@ export async function decryptFile(file) {
       console.debug('file decrypted successfully!');
     else
       console.debug('file NOT decrypted!');
-
     return content
   } catch (err) {
-    console.debug(err)
-    throw err;
+    console.error(err)
   }
 }
 
@@ -372,7 +221,6 @@ export async function decryptFileStream(file) {
           console.log("ekey:", ekey);
           console.log("key:", key);
           console.log("iv:", iv);
-
           // rest of the data needs to continue to buffer and be decrypted at the same time
           decipher = crypto.createDecipheriv(ALGORITHM, key, iv);
           readStream.destroy();
@@ -414,7 +262,7 @@ export async function decryptFileStream(file) {
     return content;
   }
   catch (err) {
-
+    console.error(err);
   }
 }
 

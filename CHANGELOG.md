@@ -187,6 +187,8 @@
 ------------------------------------------------------------------------
 
 - clean up streaming encryption functions
+- fix the file / folder issue when used as a node module from contentNFTs
+
 
 # TODO
 
