@@ -26,11 +26,11 @@ class InspectTransform extends Transform {
 
     _transform(chunk, encoding, callback) {
       if (this.name == "first")
-        console.log("------------------------------------------------")
-      // console.log("encoding:", this.name, encoding);
-      console.log("chunk:", this.name, Buffer.from(chunk).toString().substring(0,10));
+        console.debug("------------------------------------------------")
+      // console.debug("encoding:", this.name, encoding);
+      console.debug("chunk:", this.name, Buffer.from(chunk).toString().substring(0,10));
       if (this.name == "last")
-        console.log("------------------------------------------------")
+        console.debug("------------------------------------------------")
       this.push(chunk); // Pass the original chunk
       callback();
     }
@@ -74,7 +74,7 @@ function getFileSizeInBytes(filePath) {
 
 export async function encryptFileStream(file) {
   console.debug("encrypting file stream:", file)
-  console.log("original size:");
+  console.debug("original size:");
   getFileSizeInBytes(file);
   try {
     const key = crypto.randomBytes(16).toString('hex'); // 16 bytes -> 32 chars
@@ -85,8 +85,9 @@ export async function encryptFileStream(file) {
       Buffer.from(ekey, 'utf8'),   // char length: 684
       Buffer.from(iv, 'utf8')     // char length: 16
     ]);
-    console.log("prepend length:", prependData.length);
+    console.debug("prepend length:", prependData.length);
     const content = path.join(__dirname, "../../tmp/encryptions/", path.basename(file));
+    fs.mkdirSync(path.join(__dirname, "../../tmp/encryptions"), { recursive: true });
     console.debug("tmp path:", content);
     try { fs.unlinkSync(content) } catch (err) {}
     await new Promise(async resolve => {
@@ -118,7 +119,7 @@ export async function encryptFileStream(file) {
 export async function encryptFile(file) {
   if (getFileSizeInBytes(file) >= FILE_SIZE_MINIMUM) return await encryptFileStream(file);
   console.debug("encrypting file:", file)
-  console.log("original size:");
+  console.debug("original size:");
   getFileSizeInBytes(file);
   try {
     const buff = fs.readFileSync(file);
@@ -132,13 +133,14 @@ export async function encryptFile(file) {
       Buffer.from(iv, 'utf8'),     // char length: 16
       Buffer.from(ebuff, 'utf8')
     ])
-    console.log(content)
+    console.debug(content)
     console.debug('ENCRYPTION --------')
     console.debug('key:', key, 'iv:', iv, 'ekey:', ekey.length)
     console.debug('contents:', buff.length, 'buff:', buff.length)
     console.debug('content:', content.length, 'ebuff:', ebuff.length)
     console.debug(' ')
     const filepath = path.join(__dirname, "../../tmp/encryptions/", path.basename(file));
+    fs.mkdirSync(path.join(__dirname, "../../tmp/encryptions"), { recursive: true });
     console.debug("tmp path:", filepath);
     try { fs.unlinkSync(filepath) } catch (err) {}
     fs.writeFileSync(filepath, content);
@@ -165,7 +167,7 @@ export async function encryptFolder(folderPath) {
 }
 
 export async function decryptFile(file) {
-  console.log("decrypting file:", file);
+  console.debug("decrypting file:", file);
   try {
     const originalSize = getFileSizeInBytes(file);
     let edata = fs.readFileSync(file, 'utf8');
@@ -180,6 +182,7 @@ export async function decryptFile(file) {
     console.debug('contents:', content.length, 'encrypted:', econtent.length)
     console.debug('downloaded:', edata.length)
     const filepath = path.join(__dirname, "../../tmp/decryptions/", path.basename(file));
+    fs.mkdirSync(path.join(__dirname, "../../tmp/decryptions"), { recursive: true });
     console.debug("tmp path:", filepath);
     try { fs.unlinkSync(filepath) } catch (err) {}
     fs.writeFileSync(filepath, content);
@@ -201,6 +204,7 @@ export async function decryptFileStream(file) {
   try {
     const originalSize = getFileSizeInBytes(file);
     const content = path.join(__dirname, "../../tmp/decryptions/", path.basename(file));
+    fs.mkdirSync(path.join(__dirname, "../../tmp/decryptions"), { recursive: true });
     console.debug("tmp path:", content);
     try { fs.unlinkSync(content) } catch (err) {}
     let ekey, key, iv;
@@ -218,9 +222,9 @@ export async function decryptFileStream(file) {
           ekey = edata.slice(0, 684).toString('utf8');
           key = decryptRSA(ekey);
           iv = edata.slice(684, 700).toString('utf8');
-          console.log("ekey:", ekey);
-          console.log("key:", key);
-          console.log("iv:", iv);
+          console.debug("ekey:", ekey);
+          console.debug("key:", key);
+          console.debug("iv:", iv);
           // rest of the data needs to continue to buffer and be decrypted at the same time
           decipher = crypto.createDecipheriv(ALGORITHM, key, iv);
           readStream.destroy();
