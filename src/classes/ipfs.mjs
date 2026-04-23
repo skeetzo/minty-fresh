@@ -11,8 +11,14 @@ const uint8ArrayConcat = concat;
 const uint8ArrayToString = toString;
 // import { uint8ArrayToString } from 'uint8arrays/to-string';
 
+// Source - https://stackoverflow.com/a/77005381
+// Posted by Istiaq Ahmed
+// Retrieved 2026-04-23, License - CC BY-SA 4.0
+import { fetch, setGlobalDispatcher, Agent} from 'undici';
+setGlobalDispatcher(new Agent({connect: { timeout: 300_000 }}));
+
 import { create, globSource } from "kubo-rpc-client";
-const IPFS_CLIENT = create({url:config.ipfsApiUrl,timeout:'10m'});
+const IPFS_CLIENT = create({url:config.ipfsApiUrl,timeout:'60m'});
 
 // ipfs.add parameters for more deterministic CIDs
 
