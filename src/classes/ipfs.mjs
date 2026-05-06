@@ -15,7 +15,7 @@ const uint8ArrayToString = toString;
 // Posted by Istiaq Ahmed
 // Retrieved 2026-04-23, License - CC BY-SA 4.0
 import { fetch, setGlobalDispatcher, Agent} from 'undici';
-setGlobalDispatcher(new Agent({connect: { timeout: 300_000 }}));
+setGlobalDispatcher(new Agent({connect: { timeout: 3600_000 }}));
 
 import { create, globSource } from "kubo-rpc-client";
 const IPFS_CLIENT = create({url:config.ipfsApiUrl,timeout:'60m'});

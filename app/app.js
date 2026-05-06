@@ -12,8 +12,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const uploadDir = path.join(__dirname, '../tmp');
 // const collectionsDir = path.join(uploadDir, "collections");
-// const collectionsDir = "/home/skeetzo/Pictures/collections"
-const collectionsDir = "/media/skeetzo/Elements/Projects/ContentNFTs"
+const collectionsDir = "/home/skeetzo/Projects/Content/ContentNFTs"
+// const collectionsDir = "/media/skeetzo/Elements/Projects/ContentNFTs"
 
 const app = express()
 const port = 3000
