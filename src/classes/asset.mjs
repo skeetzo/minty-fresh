@@ -14,7 +14,7 @@ import { encryptFile, encryptPublicKey } from "../utils/crypto.mjs";
 
 const default_asset_types = ["image","video"];
 
-const cachePath = "./cache.txt";
+const cachePath = `./cache-assets-${process.env.NODE_ENV}.txt`;
 
 const REMOVE_ON_UPLOAD = false;
 const REMOVE_TMP_ON_UPLOAD = true;

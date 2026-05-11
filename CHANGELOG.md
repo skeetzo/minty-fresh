@@ -183,6 +183,8 @@
 **1.4.17 : 4-19-2026**
 - finished file streaming decryption
 - adjusted file size function math
+**1.4.18 : 5-11-2026**
+- cache filepath update
 
 ------------------------------------------------------------------------
 
