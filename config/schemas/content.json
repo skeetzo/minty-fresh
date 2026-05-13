@@ -57,7 +57,15 @@
         "tags": {
             "type": "array",
             "description": "The tags used to identify the content"
+        },
+        "size": {
+            "type": "integer",
+            "description": "The filesize of the content in bits"
+        },
+        "mimetype": {
+            "type": "string",
+            "description": "The mimetype of the content"
         }
     },
-    "required": ["title", "uri", "performers"]
+    "required": ["title", "uri", "performers", "size", "mimetype"]
 }

@@ -185,6 +185,8 @@
 - adjusted file size function math
 **1.4.18 : 5-11-2026**
 - cache filepath update
+**1.4.19 : 5-13-2026**
+- updated content schema
 
 ------------------------------------------------------------------------
 
