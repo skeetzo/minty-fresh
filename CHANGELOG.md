@@ -187,6 +187,8 @@
 - cache filepath update
 **1.4.19 : 5-13-2026**
 - updated content schema
+**1.4.20 : 5-14-2026**
+- updated content schema; cost -> price
 
 ------------------------------------------------------------------------
 

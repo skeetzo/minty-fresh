@@ -22,9 +22,9 @@
             "type": "string",
             "description": "The beneficiary content splitter"
         },
-        "cost": {
+        "price": {
             "type": "integer",
-            "description": "The cost of the content in USD"
+            "description": "The price of the content in USD to 6 decimals"
         },
         "fee": {
             "type": "integer",

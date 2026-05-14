@@ -22,7 +22,7 @@ let files = [];
 const contentTypes = ["BTS", "Solo","BG","BGA","BGG","BGGG"];
 
 function presets() {
-  return {preselectedValue:contentTypes[0], Location: 0, Title:"", Description:"", Performers:"", Cost:0, Type:"", Fee:0, Max:0, Date_:"", Collection:"", contentTypes}
+  return {preselectedValue:contentTypes[0], Location: 0, Title:"", Description:"", Performers:"", Price:"", Type:"", Fee:0, Max:0, Date_:"", Collection:"", contentTypes}
 }
 
 async function processFile(file) {
@@ -72,7 +72,7 @@ app.post('/load', async (req, res) => {
     // metadata.Date_ = metadata.CreateDate.rawValue;
 
     // console.log("files:", files);
-    res.render("index", {preselectedValue:contentTypes[0] ,contentTypes, Type:metadata.Type, Title:metadata.Title, Description:metadata.Description, Performers:Array.from(metadata.Performers), Cost:parseInt(metadata.Cost), Location:metadata.Location, Fee:metadata.Fee, Max:metadata.Max, Date_:metadata.Date_, Collection:metadata.Collection, files});
+    res.render("index", {preselectedValue:contentTypes[0] ,contentTypes, Type:metadata.Type, Title:metadata.Title, Description:metadata.Description, Performers:Array.from(metadata.Performers), Price:metadata.Price, Location:metadata.Location, Fee:metadata.Fee, Max:metadata.Max, Date_:metadata.Date_, Collection:metadata.Collection, files});
    } catch (error) {
      console.error('Error processing request:', error);
      res.status(500).send('An error occurred while processing your request.');
@@ -81,13 +81,13 @@ app.post('/load', async (req, res) => {
 
 app.post('/submit', async (req, res) => {
   try {
-    const { Collection, Location, Title, Description, Performers, Cost, Type, Fee, Max, Date_ } = req.body;
+    const { Collection, Location, Title, Description, Performers, Price, Type, Fee, Max, Date_ } = req.body;
     const Director = "0x";
     const Producer = "0x";
     // console.log("request:", req.body)
 
     for (const file of files) {
-      await writeMetadata(file, { Location, Title, Description, Performers, Cost, Fee, Max, Director, Producer, Collection }, {"verbose":true,"keep":true});
+      await writeMetadata(file, { Location, Title, Description, Performers, Price, Fee, Max, Director, Producer, Collection }, {"verbose":true,"keep":true});
       if (Collection != "") {
         await fs.mkdir(path.join(collectionsDir, Collection), { recursive: true });
         // not allowed to move files to external drives

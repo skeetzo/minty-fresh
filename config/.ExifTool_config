@@ -33,7 +33,7 @@
     Collection => { Writable => 'string' },
     Beneficiary => { Writable => 'string' },
     Performers => { List => 'integer' },
-    Cost => { Writable => 'string' },
+    Price => { Writable => 'string' },
     Fee => { Writable => 'string' },
     Max => { Writable => 'integer' }
 );
