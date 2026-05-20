@@ -39,14 +39,13 @@ async function main() {
         .option('-DI, --director <address>', 'The director')
         .option('-PR, --producer <address>', 'The producer')
         .option('-B, --beneficiary <address>', 'The beneficiary contract')
-        .option('-C, --cost <number>', 'The cost to purchase')
+        .option('-Pr, --price <number>', 'The price to purchase')
         .option('-TY, --type <number>', 'The type of scene')
         .option('-F, --fee <number>', 'The fee for trades')
         .option('-M, --max <number>', 'The max that can be minted')
         .option('-DA, --date <number>', 'The date created')
         .option('-C, --collection <string>', 'The collection name for reference')
         .action(async ({filepath, filepathWrite, ...metadata}) => {
-            console.log(metadata)
             for (const file of parseForFiles(filepath))
                 await writeMetadata(filepath+"/"+file, metadata, opts);
         });
@@ -60,6 +59,3 @@ main().then(() => {
     console.error(err);
     process.exit(1);
 })
-
-
-

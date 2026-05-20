@@ -67,5 +67,5 @@
             "description": "The mimetype of the content"
         }
     },
-    "required": ["title", "uri", "performers", "size", "mimetype"]
+    "required": ["title", "uri", "performers"]
 }
