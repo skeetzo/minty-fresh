@@ -127,6 +127,23 @@ export class Asset {
 		return IPFS.getIPFS(this.cid || this.uri);
 	}
 
+	async uploadContent() {
+		// const cached = checkCache(path.basename(name));
+		// if (cached) return {metadataCID:cached.cid,metadataURI:cached.uri};
+		console.debug("uploading asset data...")
+        const file = { 
+            content: this.content,
+            // name: path.basename(this.path).replace(/\/[^a-z0-9\s]\//gi, '_'),
+            // path: `/${path.basename(this.path)}`.replace(/\/[^a-z0-9\s]\//gi, '_'),
+        };
+        const { metadataCID, metadataURI } = await IPFS.add(file, this.base_uri);
+        this.content = null;
+        this.cid = metadataCID;
+        this.uri = metadataURI;
+        // saveToCache(JSON.stringify({cid:metadataCID,uri:metadataURI}));
+        return { metadataCID, metadataURI };
+    }
+
     // When you add an object to IPFS with a directory prefix in its path,
     // IPFS will create a directory structure for you. This is nice, because
     // it gives us URIs with descriptive filenames in them e.g.
@@ -138,6 +155,8 @@ export class Asset {
 			throw "found folder instead of file";
 		if (!this.path)
 			throw "missing content for upload";
+			// return await this.uploadContent();
+
 		// TODO: add config or runtime toggle to skip cache check
 		// check if asset has been uploaded recently already; return it if it has
 		const cached = checkCache(path.basename(this.path));
@@ -183,10 +202,10 @@ export class Asset {
         const assets = [];
         const assetTypes = [...default_asset_types, ...Asset.loadAssetsForSchema(schema)];
         const unique = [...new Set(assetTypes)];
-		const asset = new Asset({encrypt});
         for (const key of unique)
             for (const [_key, value] of Object.entries(metadata)) {
                 if (key == _key) { 
+					const asset = new Asset({encrypt});
             		asset.name = key;
                 	if (value) {
                 		// cid uri or path
@@ -208,7 +227,7 @@ export class Asset {
 	static loadAssetsForSchema(schema) {
 		// console.log("loading assets for schema:", schema);
 		if (schema == "content")
-			return ["uri"];
+			return ["uri","thumbnail"];
 		// TODO: update this to some how dynamically return "assets" which are basically files that could be many different things or groups of things
 		return []
 	}

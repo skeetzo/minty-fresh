@@ -65,6 +65,10 @@
         "mimetype": {
             "type": "string",
             "description": "The mimetype of the content"
+        },
+        "thumbnail": {
+            "type": "string",
+            "description": "The uri of the thumbnail for the content"
         }
     },
     "required": ["title", "uri", "performers"]

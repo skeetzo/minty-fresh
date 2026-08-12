@@ -53,6 +53,7 @@
     "exiftool-vendored": "^35.16.0",
     "express": "^5.1.0",
     "express-fileupload": "^1.5.1",
+    "fluent-ffmpeg": "^2.1.3",
     "getconfig": "github:skeetzo/getconfig",
     "inquirer": "^12.5.2",
     "it-all": "^3.0.7",

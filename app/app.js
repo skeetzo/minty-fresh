@@ -94,8 +94,9 @@ app.post('/submit', async (req, res) => {
         // fs.rename(file, path.join(collectionsDir, Collection, path.basename(file)));
         await fs.copyFile(file, path.join(collectionsDir, Collection, path.basename(file)));
       }
+      console.log("updated:", file);
     }
-    console.log("copied file to collection dir:", path.join(collectionsDir, Collection));
+    console.log("copied to:", path.join(collectionsDir, Collection));
     files = []
     res.render("index", { ...presets(), files });
   } catch (error) {

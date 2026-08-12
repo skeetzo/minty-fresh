@@ -84,8 +84,8 @@ export class IPFS {
             }
         }
 
-        console.debug("file:", file);
         console.debug(`adding IPFS path: ${file.path}`);
+        console.debug("file:", file);
 
         let cid, metadataURI;
         if (typeof file.content === "string" && file.content.includes("/tmp/encryptions/")) {
