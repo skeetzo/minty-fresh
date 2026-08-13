@@ -1,9 +1,5 @@
-import { exec, spawn } from 'child_process';
-import * as path from 'path';
 // import * as fs from "fs";
 import * as fs from "fs/promises";
-
-import ffmpeg from 'fluent-ffmpeg';
 
 import { Asset } from './asset.mjs';
 import { IPFS } from './ipfs.mjs';
@@ -11,6 +7,7 @@ import { IPFS } from './ipfs.mjs';
 import { readMetadata, writeMetadata } from "../utils/exiftool.js";
 import { promptSchema, promptMetadata } from '../utils/prompt.mjs';
 import { fromSchema, loadSchemaFromFile, loadTemplates, validate } from '../utils/schema.mjs';
+import { generateThumbnail } from '../utils/ffmpeg.js';
 
 // const ERC20_interfaceId = "0x36372b07",
       // ERC721_interfaceId = "0x80ac58cd";
@@ -44,7 +41,7 @@ export class NFT {
             // keep: false,
             verbose: false
         }
-        this.thumbnail = false; // generate thumbnail based on metadata
+        this.thumbnail = opts.thumbnail || false; // generate thumbnail based on metadata
 
         this._initialized = false;
     }
@@ -110,46 +107,6 @@ export class NFT {
         return nft;
     }
 
-    // get initial frames
-    // create thumbnail
-    static async generateThumbnail(filepath) {
-        console.debug("generating thumbnail...");
-        const filename = path.basename(filepath).split(".")[0];
-        const outpath = "/tmp/thumbnails/"+filename+"-thumbnail.png";
-        // -ss: timestamp (5 seconds in)
-        // -i: input video file
-        // -vframes: extract 1 frame
-        // -vf: scale width to 320px and keep aspect ratio (-1)
-        // const command = `ffmpeg -ss 5 -i ${filepath} -vframes 1 -vf "scale=320:-1" ${outpath}`;
-        // return new Promise((resolve, reject) => {
-        //     exec(command, (error, stdout, stderr) => {
-        //         if (error) {
-        //             console.error(`Error executing FFmpeg: ${error.message}`);
-        //             reject(err); // Reject promise if error exists
-        //         }
-        //         console.log('Thumbnail created successfully!');
-        //         console.debug(outpath);
-        //         resolve(outpath);
-        //     });
-        // });
-        ffmpeg(filepath)
-          .screenshots({
-            // Will take a screenshot at 5 seconds into the video
-            timestamps: [5], 
-            // The filename format for the output image
-            filename, 
-            folder: "/tmp/thumbnails/",
-            // Optional: Resize the thumbnail (width x height)
-            size: '320x240' 
-          })
-          .on('end', () => {
-            console.log('Thumbnail successfully extracted and saved!');
-          })
-          .on('error', (err) => {
-            console.error('An error occurred: ' + err.message);
-          });
-    }
-
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -185,13 +142,11 @@ export class NFT {
         // console.log(this.metadata)
         // IPFS.list(this.metadata.title)
         // return
-
-        // do i check each asset key?
         if (this.thumbnail && !this.metadata.thumbnail)
-            this.metadata.thumbnail = await generateThumbnail(this.metadata);
+            this.metadata.thumbnail = await generateThumbnail(this.metadata.uri);
 
         // upload all asset objects
-        await this.uploadAssets(); // NOTE: is this used?
+        // await this.uploadAssets(); // NOTE: is this used?
 
         // upload each asset detected in metadata
         await Asset.uploadAssets(this.metadata, this.schema, this.encrypt);

@@ -64,6 +64,7 @@
     "multiformats": "^13.3.2",
     "prompt-sync": "^4.2.0",
     "secp256k1": "^5.0.1",
+    "sharp": "^0.35.3",
     "undici": "^7.25.0"
   },
   "repository": "git@github.com:skeetzo/minty"

@@ -189,17 +189,15 @@
 - updated content schema
 **1.4.20 : 5-14-2026**
 - updated content schema; cost -> price
+**1.4.21 : 8-12-2026**
+- cleaned up /tmp file deletion process
 
 ------------------------------------------------------------------------
 
 - clean up streaming encryption functions
-- fix the file / folder issue when used as a node module from contentNFTs
 
 
 # TODO
-
-- possibly update encryption scheme to minimize data size doubling due to conversion to hex
-
 
 (app)
 - update w/ web3/ipfs database to pull from to get the performer IDs
@@ -218,6 +216,7 @@
 - update / add docstring comments
 
 (todo eventually)
+- possibly update encryption scheme to minimize data size doubling due to conversion to hex
 - update app/index to build off of schemas dynamically and populate based on loaded schema
 - update contract interactions to work with other tokens --> ERC20s, ERC1155s
 - add ability to mint from schemas found already uploaded on IPFS aka add loading schemas from IPFS cid

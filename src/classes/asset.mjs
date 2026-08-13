@@ -1,4 +1,3 @@
-
 import * as getconfig from "getconfig";
 const config = getconfig.default;
 import * as fs from 'fs';
@@ -7,6 +6,11 @@ import * as path from "path";
 import { fileExists } from '../utils/helpers.mjs';
 import { IPFS } from './ipfs.mjs';
 import { encryptFile, encryptPublicKey } from "../utils/crypto.mjs";
+
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // meant to model basic expected FileObject from 
 // https://github.com/ipfs/js-ipfs/blob/master/docs/core-api/FILES.md#ipfsfileswritepath-content-options
@@ -70,6 +74,7 @@ export class Asset {
 		// File mode to store the entry with (see https://en.wikipedia.org/wiki/File_system_permissions#Numeric_notation)
 		  // mode?: number | string
 		this.mode = opts.mode || null;
+		this.tmp = opts.tmp || false;
 
 		this.encrypt = opts.encrypt || false;
 		this.encrypted = opts.encrypted || false;
@@ -153,15 +158,13 @@ export class Asset {
     	if (this.cid) return { metadataCID: this.cid, metadataURI: this.uri }
 		if (this.path && fs.lstatSync(this.path).isDirectory())
 			throw "found folder instead of file";
-		if (!this.path)
-			throw "missing content for upload";
-			// return await this.uploadContent();
+		if (!this.path) throw "missing content for upload";
 
 		// TODO: add config or runtime toggle to skip cache check
 		// check if asset has been uploaded recently already; return it if it has
 		const cached = checkCache(path.basename(this.path));
 		if (cached) return {metadataCID:cached.cid,metadataURI:cached.uri};
-		console.debug("uploading asset...")
+		console.debug("uploading asset:", this.name);
 		const content = await this.getFile();
         const file = { 
             content,
@@ -175,11 +178,18 @@ export class Asset {
         this.cid = metadataCID;
         this.uri = metadataURI;
         saveToCache(JSON.stringify({path:file.path,name:file.name,cid:metadataCID,uri:metadataURI}));
-
 	    try {
 	    	// removes temporary upload location
-	    	if (REMOVE_TMP_ON_UPLOAD && typeof content === 'string')
+	    	if (REMOVE_TMP_ON_UPLOAD && typeof content === 'string' && content.includes("/tmp/"))
 		    	fs.unlinkSync(content);
+		    else if (REMOVE_TMP_ON_UPLOAD && this.path.includes("/tmp/")) {
+		    	fs.unlinkSync(this.path);
+			    fs.unlinkSync(this.path.replace("thumbnails", "encryptions"))
+		    }
+		    else if (REMOVE_TMP_ON_UPLOAD) {
+		    	// removes any leftover encrypted files
+		    	fs.unlinkSync(path.join(__dirname, "../../tmp/encryptions/", path.basename(this.path)));
+		    }
 		    // removes original upload location
 		    if (REMOVE_ON_UPLOAD)
 		    	fs.unlinkSync(this.path);
@@ -205,15 +215,17 @@ export class Asset {
         for (const key of unique)
             for (const [_key, value] of Object.entries(metadata)) {
                 if (key == _key) { 
+                	console.debug("found asset:", key);
 					const asset = new Asset({encrypt});
             		asset.name = key;
                 	if (value) {
+	                	console.debug("asset value:", value);
                 		// cid uri or path
                 		if (Buffer.isBuffer(value)) asset.content = value;
                 		else if (IPFS.validateCIDString(value)) asset.cid = value;
 		                else asset.path = value;
                 	}
-                	// console.log("asset:", asset);
+                	console.debug("asset:", asset);
                 	assets.push(asset);
                 }
             }
