@@ -65,7 +65,7 @@ async function parseImage(filePath) {
       })
       .toFormat('png', { quality: 80 }) // Compresses the file size
       .toFile(path.join(OUTPUT_DIR, filename));
-    console.log('Image Thumbnail successfully created!');
+    console.debug('Image Thumbnail successfully created!');
     return path.join(OUTPUT_DIR, filename);
   }
   catch (err) {
@@ -79,10 +79,10 @@ function parseVideo(filePath) {
   return new Promise((resolve, reject) => {
     ffmpeg(filePath)
       // .on('filenames', function(filenames) {
-      //   console.log('Will generate ' + filenames.join(', '));
+      //   console.debug('Will generate ' + filenames.join(', '));
       // })
       .on('end', () => {
-        console.log('Video Thumbnail successfully extracted and saved!');
+        console.debug('Video Thumbnail successfully extracted and saved!');
         resolve(path.join(OUTPUT_DIR, filename));
       })
       .on('error', (err) => {
