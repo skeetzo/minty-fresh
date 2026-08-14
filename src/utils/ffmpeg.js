@@ -9,6 +9,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const OUTPUT_DIR = path.join(__dirname, '../../tmp/thumbnails');
+fs.mkdir(OUTPUT_DIR, { recursive: true });
 
 function checkFileType(filePath) {
   return new Promise((resolve, reject) => {
@@ -44,6 +45,7 @@ function checkFileType(filePath) {
 }
 
 export async function generateThumbnail(filePath) {
+
   console.debug("generating thumbnail:", filePath);
   const status = await checkFileType(filePath);
   // console.debug("status:", status);

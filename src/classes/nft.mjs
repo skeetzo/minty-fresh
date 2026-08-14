@@ -142,7 +142,7 @@ export class NFT {
         // console.log(this.metadata)
         // IPFS.list(this.metadata.title)
         // return
-        if (this.thumbnail && !this.metadata.thumbnail)
+        if (this.thumbnail && (!this.metadata.thumbnail || this.metadata.thumbnail == ""))
             this.metadata.thumbnail = await generateThumbnail(this.metadata.uri);
 
         // upload all asset objects
