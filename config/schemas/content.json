@@ -69,6 +69,14 @@
         "thumbnail": {
             "type": "string",
             "description": "The uri of the thumbnail for the content"
+        },
+        "extras": {
+            "type": "array",
+            "description": "The extras in the content"
+        },
+        "others": {
+            "type": "array",
+            "description": "A list of anyone else who participated in the making of the content either directly or indirectly such as hair and makeup, personal assistants, or drivers"
         }
     },
     "required": ["title", "uri", "performers"]

@@ -1,5 +1,5 @@
 // import * as fs from "fs";
-import * as fs from "fs/promises";
+import * as fs from "node:fs/promises";
 
 import { Asset } from './asset.mjs';
 import { IPFS } from './ipfs.mjs';

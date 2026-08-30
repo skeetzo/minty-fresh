@@ -117,6 +117,7 @@ export class IPFS {
             ({ cid } = await IPFS_CLIENT.add(file, IPFS.ipfsAddOptions));
         metadataURI = IPFS.ensureIpfsUriPrefix(cid, baseUri) + "/" + file.name;
         await copyToWebUI(cid);
+        // await IPFS.pin(cid);
         return { metadataCID:cid.toString(), metadataURI };
     }
 
@@ -182,16 +183,18 @@ export class IPFS {
      * @returns {Promise<void>}
      */
     static async pin(cidOrURI) {
-        const cid = IPFS.extractCID(cidOrURI);
+        console.debug("pinning:", cidOrURI);
+        // const cid = IPFS.extractCID(cidOrURI);
         // Make sure IPFS is set up to use our preferred pinning service.
-        await IPFS._configurePinningService();
+        // await IPFS._configurePinningService();
         // Check if we've already pinned this CID to avoid a "duplicate pin" error.
-        const pinned = await IPFS.isPinned(cid);
-        if (pinned) return;
+        if (await IPFS.isPinned(cidOrURI)) return;
         // Ask the remote service to pin the content.
         // Behind the scenes, this will cause the pinning service to connect to our local IPFS node
         // and fetch the data using Bitswap, IPFS's transfer protocol.
-        await IPFS_CLIENT.pin.remote.add(cid, { service: config.pinningService.name });
+        await IPFS_CLIENT.pin.add(cidOrURI);
+        console.log("pinned:", cidOrURI);
+        // await IPFS_CLIENT.pin.remote.add(cid, { service: config.pinningService.name });
     }
 
     /**
