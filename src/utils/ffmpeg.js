@@ -14,30 +14,21 @@ fs.mkdir(OUTPUT_DIR, { recursive: true });
 function checkFileType(filePath) {
   return new Promise((resolve, reject) => {
     ffmpeg.ffprobe(filePath, (err, metadata) => {
-      if (err) {
-        return reject(new Error(`Failed to parse file: ${err.message}`));
-      }
-
+      if (err) return reject(new Error(`Failed to parse file: ${err.message}`));
       // 1. Check for the presence of a video stream
       const videoStream = metadata.streams.find(stream => stream.codec_type === 'video');
-
-      if (!videoStream) {
-        return resolve({ type: 'audio_or_other', isVideo: false, isImage: false });
-      }
-
+      if (!videoStream) return resolve({ type: 'audio_or_other', isVideo: false, isImage: false });
       // 2. Identify common image container formats detected by FFmpeg
       const formatName = metadata.format.format_name || '';
-      const isImageFormat = formatName.includes('image2') || formatName.includes('png_pipe') || formatName.includes('pip_jpeg');
-
+      console.debug("formatName:", formatName);
+      const isImageFormat = formatName.includes('image2') || formatName.includes('png_pipe') || formatName.includes('pip_jpeg') || formatName.includes('jpeg_pipe');
       // 3. Fallback logic: check duration and frame count
       // Videos have an explicit duration. Images typically have a duration of 0 or undefined, and exactly 1 frame.
       const duration = parseFloat(metadata.format.duration || 0);
       const nbFrames = parseInt(videoStream.nb_frames || 0, 10);
-
       if (isImageFormat || (duration === 0 && nbFrames === 1)) {
         return resolve({ type: 'image', isVideo: false, isImage: true });
       }
-
       // It has a video stream, a valid duration, or multiple frames, making it a true video
       return resolve({ type: 'video', isVideo: true, isImage: false });
     });
@@ -48,7 +39,7 @@ export async function generateThumbnail(filePath) {
 
   console.debug("generating thumbnail:", filePath);
   const status = await checkFileType(filePath);
-  // console.debug("status:", status);
+  console.debug("status:", status);
   if (status.isImage)
     return await parseImage(filePath);
   else if (status.isVideo)
