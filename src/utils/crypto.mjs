@@ -290,7 +290,7 @@ export function decryptAES(buffer, secretKey, iv) {
   return decrypted;
 }
 
-export function encryptRSA(toEncrypt, pubkeyPath='keys/dev-public.pem') {
+export function encryptRSA(toEncrypt, pubkeyPath=process.cwd()+'/keys/dev-public.pem') {
   console.debug("encrypting rsa:", toEncrypt);
   const absolutePath = path.resolve(pubkeyPath)
   // console.debug(absolutePath)
@@ -301,7 +301,7 @@ export function encryptRSA(toEncrypt, pubkeyPath='keys/dev-public.pem') {
   return encrypted.toString('base64')
 }
 
-export function decryptRSA(toDecrypt, privkeyPath='keys/dev-private.pem') {
+export function decryptRSA(toDecrypt, privkeyPath=process.cwd()+'/keys/dev-private.pem') {
   console.debug("decrypting rsa:", toDecrypt);
   const absolutePath = path.resolve(privkeyPath)
   // console.debug(absolutePath)
@@ -318,7 +318,7 @@ export function decryptRSA(toDecrypt, privkeyPath='keys/dev-private.pem') {
 ////////////////////////////////
 
 function generateKeys() {
-  if (fs.existsSync('keys/private.pem') && fs.existsSync('keys/public.pem'))
+  if (fs.existsSync(process.cwd()+'/keys/private.pem') && fs.existsSync(process.cwd()+'/keys/public.pem'))
     return;
   
   const { privateKey, publicKey } = crypto.generateKeyPairSync('rsa', {
@@ -340,7 +340,7 @@ function generateKeys() {
 }
 
 function generateDevKeys() {
-  if (fs.existsSync('keys/dev-private.pem') && fs.existsSync('keys/dev-public.pem'))
+  if (fs.existsSync(process.cwd()+'/keys/dev-private.pem') && fs.existsSync(process.cwd()+'/keys/dev-public.pem'))
     return;
   
   const { privateKey, publicKey } = crypto.generateKeyPairSync('rsa', {
@@ -357,8 +357,8 @@ function generateDevKeys() {
     },
   })
 
-  fs.writeFileSync('keys/dev-private.pem', privateKey)
-  fs.writeFileSync('keys/dev-public.pem', publicKey)
+  fs.writeFileSync(process.cwd()+'/keys/dev-private.pem', privateKey)
+  fs.writeFileSync(process.cwd()+'/keys/dev-public.pem', publicKey)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
