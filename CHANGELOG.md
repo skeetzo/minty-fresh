@@ -191,6 +191,8 @@
 - updated content schema; cost -> price
 **1.4.21 : 8-12-2026**
 - cleaned up /tmp file deletion process
+**1.4.22 : 10-2-2026**
+- fixed key path
 
 ------------------------------------------------------------------------
 
