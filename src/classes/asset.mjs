@@ -166,7 +166,9 @@ export class Asset {
 		// check if asset has been uploaded recently already; return it if it has
 		const cached = checkCache(path.basename(this.path));
 		if (cached) return {metadataCID:cached.cid,metadataURI:cached.uri};
-		console.debug("uploading asset:", this.name);
+		console.debug("uploading asset:");
+		console.debug("- name:", path.basename(this.path).replace(/\/[^a-z0-9\s]\//gi, '_'));
+		console.debug("- path:", `${this.base_path}/${path.basename(this.path)}`.replace(/\/[^a-z0-9\s]\//gi);
 		const content = await this.getFile();
         const file = { 
             content,
