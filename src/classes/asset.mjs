@@ -69,6 +69,8 @@ export class Asset {
 		this.content = opts.content || null;
 		// path to local file
 		this.path = opts.path || null;
+		// base path to use in IPFS filesystem
+		this.base_path = opts.base_path || "";
 		// locally stored object data of the asset
 		// data = opts.data || null;
 		// File mode to store the entry with (see https://en.wikipedia.org/wiki/File_system_permissions#Numeric_notation)
@@ -132,22 +134,22 @@ export class Asset {
 		return IPFS.getIPFS(this.cid || this.uri);
 	}
 
-	async uploadContent() {
-		// const cached = checkCache(path.basename(name));
-		// if (cached) return {metadataCID:cached.cid,metadataURI:cached.uri};
-		console.debug("uploading asset data...")
-        const file = { 
-            content: this.content,
-            // name: path.basename(this.path).replace(/\/[^a-z0-9\s]\//gi, '_'),
-            // path: `/${path.basename(this.path)}`.replace(/\/[^a-z0-9\s]\//gi, '_'),
-        };
-        const { metadataCID, metadataURI } = await IPFS.add(file, this.base_uri);
-        this.content = null;
-        this.cid = metadataCID;
-        this.uri = metadataURI;
-        // saveToCache(JSON.stringify({cid:metadataCID,uri:metadataURI}));
-        return { metadataCID, metadataURI };
-    }
+	// async uploadContent() {
+	// 	// const cached = checkCache(path.basename(name));
+	// 	// if (cached) return {metadataCID:cached.cid,metadataURI:cached.uri};
+	// 	console.debug("uploading asset data...")
+    //     const file = { 
+    //         content: this.content,
+    //         // name: path.basename(this.path).replace(/\/[^a-z0-9\s]\//gi, '_'),
+    //         // path: `/${path.basename(this.path)}`.replace(/\/[^a-z0-9\s]\//gi, '_'),
+    //     };
+    //     const { metadataCID, metadataURI } = await IPFS.add(file, this.base_uri);
+    //     this.content = null;
+    //     this.cid = metadataCID;
+    //     this.uri = metadataURI;
+    //     // saveToCache(JSON.stringify({cid:metadataCID,uri:metadataURI}));
+    //     return { metadataCID, metadataURI };
+    // }
 
     // When you add an object to IPFS with a directory prefix in its path,
     // IPFS will create a directory structure for you. This is nice, because
@@ -169,7 +171,7 @@ export class Asset {
         const file = { 
             content,
             name: path.basename(this.path).replace(/\/[^a-z0-9\s]\//gi, '_'),
-            path: `/${path.basename(this.path)}`.replace(/\/[^a-z0-9\s]\//gi, '_'),
+            path: `${this.base_path}/${path.basename(this.path)}`.replace(/\/[^a-z0-9\s]\//gi, '_'),
             // path: `/${this.name}s/${path.basename(this.path)}`.replace(/\/[^a-z0-9\s]\//gi, '_'),
             // path: `/assets/${this.name}s/${path.basename(this.path)}`.replace(/\/[^a-z0-9\s]\//gi, '_'),
             // path: `/assets/${this.name}s`.replace(/\/[^a-z0-9\s]\//gi, '_'),
