@@ -150,7 +150,7 @@ export class NFT {
         // await this.uploadAssets(); // NOTE: is this used?
 
         // upload each asset detected in metadata
-        await Asset.uploadAssets(this.metadata, this.schema, this.encrypt);
+        await Asset.uploadAssets(this.metadata, this.schema, this.encrypt, this.base_path);
         validate(this.metadata, this.schema, this.schemaJSON);
         
         // upload the final metadata containing each uploaded assets' cids
