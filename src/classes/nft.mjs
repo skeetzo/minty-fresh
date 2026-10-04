@@ -174,7 +174,7 @@ export class NFT {
             path: `${this.base_path}/${this.name}.json`,
             content: JSON.stringify(this.metadata)
         };
-        const { metadataCID, metadataURI } = await IPFS.add(file, this.base_uri);
+        const { metadataCID, metadataURI } = await IPFS.add(file, this.base_uri, this.base_path);
         this.metadataCID = metadataCID;
         this.metadataURI = metadataURI;
     }

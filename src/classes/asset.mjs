@@ -173,16 +173,16 @@ export class Asset {
 		const content = await this.getFile();
         const file = { 
             content,
-            // name: path.basename(this.path).replace(/\/[^a-z0-9\s]\//gi, '_'),
+            name: path.basename(this.path).replace(/\/[^a-z0-9\s]\//gi, '_'),
             // path: this.base_path+"/"+`${path.basename(this.path)}`.replace(/\/[^a-z0-9\s]\//gi, '_'),
-            name: this.base_path+"/"+path.basename(this.path),
+            // name: this.base_path+"/"+path.basename(this.path),
             path: this.base_path+"/"+path.basename(this.path),
             // path: `${path.basename(this.path)}`.replace(/\/[^a-z0-9\s]\//gi, '_'),
             // path: `/assets/${this.name}s/${path.basename(this.path)}`.replace(/\/[^a-z0-9\s]\//gi, '_'),
             // path: `/assets/${this.name}s`.replace(/\/[^a-z0-9\s]\//gi, '_'),
         };
         console.debug("- file:", file);
-        const { metadataCID, metadataURI } = await IPFS.add(file, this.base_uri);
+        const { metadataCID, metadataURI } = await IPFS.add(file, this.base_uri, this.base_path);
         this.cid = metadataCID;
         this.uri = metadataURI;
         saveToCache(JSON.stringify({path:file.path,name:file.name,cid:metadataCID,uri:metadataURI}));

@@ -52,7 +52,7 @@ export class IPFS {
     }
 
     // file must have: name, path, and content
-    static async add(file, baseUri="ipfs://") {
+    static async add(file, baseUri="ipfs://", basePath="") {
 
         async function writeMFS() {
             try {
@@ -72,7 +72,7 @@ export class IPFS {
         // $ ipfs files cp /ipfs/QmeoTsSvQvNtKxhHdPA3gy6RWD6ghVwdkjBeUWWPiHdmn6 /hello.txt
         async function copyToWebUI(cid) {
             try {
-                await IPFS_CLIENT.files.cp(`/ipfs/${cid}`, "/"+file.name, IPFS.ipfsAddOptions);
+                await IPFS_CLIENT.files.cp(`/ipfs/${cid}`, basePath+file.name, IPFS.ipfsAddOptions);
             }
             catch (err) {
                 const IPFS_DUPLICATE_CP = "directory already has entry by that name";
