@@ -117,6 +117,7 @@ export class IPFS {
             ({ cid } = await IPFS_CLIENT.add(stream, IPFS.ipfsAddOptions));
         }
         else {
+            console.log("file:", file);
             const data = await IPFS_CLIENT.add(file, IPFS.ipfsAddOptions);
             console.log(data);
             cid = data.cid;
