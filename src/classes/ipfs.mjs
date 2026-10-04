@@ -58,8 +58,7 @@ export class IPFS {
 
         async function writeMFS() {
             try {
-                await IPFS_CLIENT.files.add(file, IPFS.writeOptions)
-                // await IPFS_CLIENT.files.write(file.path, file.content, IPFS.writeOptions)
+                await IPFS_CLIENT.files.write(file.path, file.content, IPFS.writeOptions)
             }
             catch (err) {
                 const IPFS_MISSING_FILE = "file does not exist";
@@ -117,8 +116,11 @@ export class IPFS {
 
             ({ cid } = await IPFS_CLIENT.add(stream, IPFS.ipfsAddOptions));
         }
-        else 
-            ({ cid } = await IPFS_CLIENT.add(file, IPFS.ipfsAddOptions));
+        else {
+            const data = await IPFS_CLIENT.add(file, IPFS.ipfsAddOptions);
+            console.log(data);
+            cid = data.cid;
+        }
         // metadataURI = IPFS.ensureIpfsUriPrefix(cid, baseUri) + "/" + file.name;
         metadataURI = IPFS.ensureIpfsUriPrefix(cid, baseUri) + file.name;
         await copyToWebUI(cid);
