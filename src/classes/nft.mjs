@@ -33,6 +33,7 @@ export class NFT {
 
         // TODO: cleanup how this is implemented
         this.base_uri = opts.base_uri || "ipfs://";
+        this.base_path = opts.base_path || "";
         this.skipAttributes = opts.skipAttributes || false;
         this.skipProperties = opts.skipProperties || false;
         this.skipPrompt = opts.skipPrompt || false;
@@ -158,6 +159,7 @@ export class NFT {
 
     async uploadAssets() {
         for (const asset of this.assets) {
+            asset.base_path = this.base_path;
             const { metadataCID, metadataURI, key } = await asset.upload();
             this.metadata["key"] = key;
             // TODO: do something with this?
