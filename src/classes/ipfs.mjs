@@ -72,7 +72,7 @@ export class IPFS {
         // $ ipfs files cp /ipfs/QmeoTsSvQvNtKxhHdPA3gy6RWD6ghVwdkjBeUWWPiHdmn6 /hello.txt
         async function copyToWebUI(cid) {
             try {
-                await IPFS_CLIENT.files.cp(`/ipfs/${cid}`, basePath+"/"+file.name, IPFS.ipfsAddOptions);
+                await IPFS_CLIENT.files.cp(`/ipfs/${cid}`, file.name.replace(basePath), IPFS.ipfsAddOptions);
             }
             catch (err) {
                 const IPFS_DUPLICATE_CP = "directory already has entry by that name";

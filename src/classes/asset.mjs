@@ -173,9 +173,9 @@ export class Asset {
 		const content = await this.getFile();
         const file = { 
             content,
-            name: path.basename(this.path).replace(/\/[^a-z0-9\s]\//gi, '_'),
+            // name: path.basename(this.path).replace(/\/[^a-z0-9\s]\//gi, '_'),
             // path: this.base_path+"/"+`${path.basename(this.path)}`.replace(/\/[^a-z0-9\s]\//gi, '_'),
-            // name: this.base_path+"/"+path.basename(this.path),
+            name: this.base_path+"/"+path.basename(this.path),
             path: this.base_path+"/"+path.basename(this.path),
             // path: `${path.basename(this.path)}`.replace(/\/[^a-z0-9\s]\//gi, '_'),
             // path: `/assets/${this.name}s/${path.basename(this.path)}`.replace(/\/[^a-z0-9\s]\//gi, '_'),
