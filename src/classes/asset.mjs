@@ -168,12 +168,14 @@ export class Asset {
 		if (cached) return {metadataCID:cached.cid,metadataURI:cached.uri};
 		console.debug("uploading asset:");
 		console.debug("- name:", path.basename(this.path).replace(/\/[^a-z0-9\s]\//gi, '_'));
-		console.debug("- path:", `${this.base_path}/${path.basename(this.path)}`.replace(/\/[^a-z0-9\s]\//gi));
+		console.debug("- base_path:", this.base_path);
+		// console.debug("- path:", `${this.base_path}/${path.basename(this.path)}`.replace(/\/[^a-z0-9\s]\//gi));
 		const content = await this.getFile();
         const file = { 
             content,
             name: path.basename(this.path).replace(/\/[^a-z0-9\s]\//gi, '_'),
-            path: this.base_path+"/"+`${path.basename(this.path)}`.replace(/\/[^a-z0-9\s]\//gi, '_'),
+            // path: this.base_path+"/"+`${path.basename(this.path)}`.replace(/\/[^a-z0-9\s]\//gi, '_'),
+            path: this.base_path+"/"+path.basename(this.path),
             // path: `/${this.name}s/${path.basename(this.path)}`.replace(/\/[^a-z0-9\s]\//gi, '_'),
             // path: `/assets/${this.name}s/${path.basename(this.path)}`.replace(/\/[^a-z0-9\s]\//gi, '_'),
             // path: `/assets/${this.name}s`.replace(/\/[^a-z0-9\s]\//gi, '_'),
