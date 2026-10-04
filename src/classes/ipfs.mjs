@@ -56,7 +56,8 @@ export class IPFS {
 
         async function writeMFS() {
             try {
-                await IPFS_CLIENT.files.write(file.path, file.content, IPFS.writeOptions)
+                await IPFS_CLIENT.files.add(file, IPFS.writeOptions)
+                // await IPFS_CLIENT.files.write(file.path, file.content, IPFS.writeOptions)
             }
             catch (err) {
                 const IPFS_MISSING_FILE = "file does not exist";
