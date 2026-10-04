@@ -72,7 +72,8 @@ export class IPFS {
         // $ ipfs files cp /ipfs/QmeoTsSvQvNtKxhHdPA3gy6RWD6ghVwdkjBeUWWPiHdmn6 /hello.txt
         async function copyToWebUI(cid) {
             try {
-                await IPFS_CLIENT.files.cp(`/ipfs/${cid}`, "/"+file.name, IPFS.ipfsAddOptions);
+                // await IPFS_CLIENT.files.cp(`/ipfs/${cid}`, "/"+file.name, IPFS.ipfsAddOptions);
+                await IPFS_CLIENT.files.cp(`/ipfs/${cid}`, file.path, IPFS.ipfsAddOptions);
             }
             catch (err) {
                 const IPFS_DUPLICATE_CP = "directory already has entry by that name";
@@ -115,8 +116,9 @@ export class IPFS {
         }
         else 
             ({ cid } = await IPFS_CLIENT.add(file, IPFS.ipfsAddOptions));
-        metadataURI = IPFS.ensureIpfsUriPrefix(cid, baseUri) + "/" + file.name;
-        // await copyToWebUI(cid);
+        // metadataURI = IPFS.ensureIpfsUriPrefix(cid, baseUri) + "/" + file.name;
+        metadataURI = IPFS.ensureIpfsUriPrefix(cid, baseUri) + file.path;
+        await copyToWebUI(cid);
         // await IPFS.pin(cid);
         return { metadataCID:cid.toString(), metadataURI };
     }
