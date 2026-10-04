@@ -170,7 +170,7 @@ export class NFT {
     async uploadMetadata() {
         const file = { 
             name: `${this.name}.json`,
-            // path: `metadata/${this.name}.json`,
+            path: `/metadata/${this.name}.json`,
             // path: `${this.base_path}/${this.name}.json`,
             // path: `${this.name}.json`,
             content: JSON.stringify(this.metadata)
